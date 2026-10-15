@@ -988,7 +988,7 @@ function attack(){
   const reach=w.proj?w.range:w.range*1.5;let best=null,bd=1e9;
   for(const m of S.mons){if(m.under)continue;const d=Math.hypot(m.x-p.x,m.y-p.y);if(d<reach&&d<bd){bd=d;best=m}}
   let dir=p.face;if(best){const d=Math.max(1,bd);dir={x:(best.x-p.x)/d,y:(best.y-p.y)/d}}
-  p.face=dir;p.atkDir=dir;p.atkT=S.t;p.lastAtk=S.t;SND.swing(it.type);
+  p.face=dir;p.atkDir=dir;p.combo=S.t-(p.atkT||-9)<.75?((p.combo||0)+1)%3:0;p.atkT=S.t;p.lastAtk=S.t;SND.swing(it.type);
   const col=RAR[it.rar].color;
   if(w.proj){S.proj.push({x:p.x+dir.x*14,y:p.y-18+dir.y*14,vx:dir.x*560,vy:dir.y*560,life:w.range/560,it,col});return}
   for(const m of S.mons){
@@ -997,7 +997,10 @@ function attack(){
     if(ang<=w.arc/2||d<m.r+8)hit(m,calcDmg(it),dir);
   }
   if(it.type==='spear')S.fx.push({k:'pierce',x:p.x,y:p.y-26/TILT,dir,range:w.range,t:0,dur:.24,col});
-  else S.fx.push({k:'crescent',x:p.x,y:p.y-14,dir,range:w.range,arc:w.arc,fl:(heroArt!=='old'&&Math.abs(dir.x)>.35)?1:(dir.x<0?-1:1),t:0,dur:it.type==='dagger'?.22:.34,col,small:it.type==='dagger'});
+  else{const heavy=p.combo===2,fl0=(heroArt!=='old'&&Math.abs(dir.x)>.35)?1:(dir.x<0?-1:1);
+    /* visual combo: 1st and 2nd swings sweep opposite ways, the 3rd is a heavy finisher (damage unchanged) */
+    S.fx.push({k:'crescent',x:p.x,y:p.y-14,dir,range:w.range,arc:w.arc,fl:p.combo===1?-fl0:fl0,t:0,dur:it.type==='dagger'?.22:heavy?.42:.34,col,small:it.type==='dagger',heavy});
+    if(heavy){S.fx.push({k:'ring',x:p.x+dir.x*w.range*.8,y:p.y+dir.y*w.range*.8,t:.04,dur:.4,col:'rgba(255,120,40,.9)',big:true});S.shake=Math.max(S.shake,.22)}}
 }
 
 /* elemental reactions between your army's elements */
@@ -1771,7 +1774,7 @@ function drawHeroArt(c,x,y,face,moving,t,weapon,atk){
   if(dir===2&&face.x<0)c.scale(-1,1);
   /* arm angle: hang + walk sway, or a weighted swing while attacking */
   const ph=k/8*Math.PI*2,sway=moving?-Math.sin(ph)*(dir===2?16:5)*Math.PI/180:0;
-  const a=Math.atan2(face.y,dir===2?Math.abs(face.x):face.x),fl=dir===2?1:(atk?atk.flip:1);
+  const a=Math.atan2(face.y,dir===2?Math.abs(face.x):face.x),fl=dir===2?(atk&&atk.combo===1?-1:1):(atk?atk.flip:1);
   const easeOut=x=>1-Math.pow(1-x,3),easeIn=x=>x*x;
   const melee=atk&&atk.type!=='spear'&&atk.type!=='bow';
   /* swing profile in the ground plane: wind-up (pull back) -> snap through -> follow-through */
@@ -1781,12 +1784,15 @@ function drawHeroArt(c,x,y,face,moving,t,weapon,atk){
     return a+(A-.35*A*easeOut((kk-.48)/.52))*fl};
   const pose=kk=>{let th=sway,reach=0,fs=1;
     if(atk&&kk<1){let phi=a;
-      if(melee)phi=swingPhi(kk);
+      if(melee&&atk.combo!==2)phi=swingPhi(kk);
       if(atk.type==='spear')reach=kk<.25?-4*easeIn(kk/.25):kk<.45?-4+15*easeOut((kk-.25)/.2):11*(1-easeOut((kk-.45)/.55));
       if(atk.type==='bow')reach=kk<.15?-3*kk/.15:-3*(1-easeOut((kk-.15)/.85));
       const vx=Math.cos(phi),vy=Math.sin(phi)*TILT;th=Math.atan2(vy,vx)-Math.PI/2;fs=Math.max(.55,Math.hypot(vx,vy));
       /* side view: add a little height to the arc (raised wind-up, cut down through the target) so the sweep reads on screen */
-      if(melee&&dir===2){const L=atk.type==='dagger'?.4:1;th+=L*(kk<.22?-.5*easeIn(kk/.22):kk<.48?-.5+.85*easeOut((kk-.22)/.26):.35-.15*easeOut((kk-.48)/.52))}}
+      if(melee&&atk.combo===2){/* finisher: raise the weapon overhead, then slam it down through the target */
+        const up=-Math.PI+(dir===2?.35:0),tg=th+.25,lerp=(x,y,t)=>x+(((y-x+Math.PI*3)%(Math.PI*2))-Math.PI)*t;
+        th=kk<.28?lerp(th,up,easeOut(kk/.28)):kk<.5?lerp(up,tg,easeIn((kk-.28)/.22)):tg}
+      else if(melee&&dir===2){const L=atk.type==='dagger'?.4:1;th+=L*(kk<.22?-.5*easeIn(kk/.22):kk<.48?-.5+.85*easeOut((kk-.22)/.26):.35-.15*easeOut((kk-.48)/.52))}}
     const cs=Math.cos(th),sn=Math.sin(th),fx=R.fist[0]-R.pv[0],fy=R.fist[1]-R.pv[1],af=Math.max(.75,fs);
     const ux=Math.cos(th+Math.PI/2),uy=Math.sin(th+Math.PI/2);
     const hx=sh[0]+cs*fx-sn*fy*af+ux*reach,hy=sh[1]+sn*fx+cs*fy*af+uy*reach;
@@ -2461,7 +2467,7 @@ function drawSlashFx(c,f){
   c.save();c.globalCompositeOperation='lighter';
   if(f.k==='crescent'){
     c.globalCompositeOperation='source-over';
-    const a=Math.atan2(f.dir.y,f.dir.x),span=f.small?1.9:3.3,Ro=f.small?f.range*.95:f.range*1.05,thick=f.small?12:24;
+    const a=Math.atan2(f.dir.y,f.dir.x),span=f.small?1.9:f.heavy?4.4:3.3,Ro=f.small?f.range*.95:f.range*(f.heavy?1.25:1.05),thick=f.small?12:f.heavy?32:24;
     /* head races across the arc, tail chases it; the band is thickest in the middle and tapers to points */
     const head=Math.min(1,k/.35),tail=Math.max(0,(k-.12)/.88),fade=k<.55?1:1-(k-.55)/.45,grow=1+k*.08;
     if(head-tail<.02){c.restore();return}
@@ -2562,7 +2568,7 @@ function render(){
       if(S.t<(p.rootT||0)){c.strokeStyle='#5f9a3a';c.lineWidth=3;for(let j=0;j<5;j++){const a=j*1.26;c.beginPath();c.moveTo(p.x+Math.cos(a)*16,p.y+Math.sin(a)*6);c.quadraticCurveTo(p.x+Math.cos(a)*6,p.y-10,p.x+Math.cos(a+1)*4,p.y-18);c.stroke()}}
       if(S.t<(p.slowT||0)){c.strokeStyle='rgba(159,227,255,.85)';c.lineWidth=3;c.beginPath();c.ellipse(p.x,p.y,18,18*TILT,0,0,Math.PI*2);c.stroke()}
       if(S.t<(p.invT||0))c.globalAlpha=.5;
-      if(!drawHeroArt(c,p.x,p.y,p.face,p.moving,S.t,{type:it.type,col:RAR[it.rar].color},since<.26?{k:since/.26,type:it.type,flip:p.atkDir.x<0?-1:1}:null))drawHero(c,p.x,p.y,1,look,S.t,p.moving,{x:p.face.x,y:p.face.y},{type:it.type,col:RAR[it.rar].color},swing,S.t-p.lastHit<.4,{helm:hg&&RAR[hg.rar].color,armor:ag&&RAR[ag.rar].color,...Object.fromEntries(['gloves','boots','amulet'].map(t=>{const w=wornGear(t);return[t,w&&RAR[w.rar].color]}))});
+      if(!drawHeroArt(c,p.x,p.y,p.face,p.moving,S.t,{type:it.type,col:RAR[it.rar].color},since<.26?{k:since/.26,type:it.type,flip:(p.atkDir.x<0?-1:1)*(p.combo===1?-1:1),combo:p.combo||0}:null))drawHero(c,p.x,p.y,1,look,S.t,p.moving,{x:p.face.x,y:p.face.y},{type:it.type,col:RAR[it.rar].color},swing,S.t-p.lastHit<.4,{helm:hg&&RAR[hg.rar].color,armor:ag&&RAR[ag.rar].color,...Object.fromEntries(['gloves','boots','amulet'].map(t=>{const w=wornGear(t);return[t,w&&RAR[w.rar].color]}))});
       c.globalAlpha=1}});
   }
   for(const a of S.army)ents.push({y:a.y,d:()=>drawAlly(c,a,S.t)});
