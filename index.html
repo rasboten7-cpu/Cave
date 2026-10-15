@@ -996,7 +996,8 @@ function attack(){
     const ang=Math.abs(Math.atan2(dir.x*dy-dir.y*dx,dir.x*dx+dir.y*dy));
     if(ang<=w.arc/2||d<m.r+8)hit(m,calcDmg(it),dir);
   }
-  S.fx.push({k:it.type==='spear'?'thrust':'slash',x:p.x,y:p.y-14,dir,range:w.range,arc:w.arc,t:0,dur:it.type==='dagger'?.12:.2,col});
+  if(it.type==='spear')S.fx.push({k:'pierce',x:p.x,y:p.y-26/TILT,dir,range:w.range,t:0,dur:.24,col});
+  else S.fx.push({k:'crescent',x:p.x,y:p.y-14,dir,range:w.range,arc:w.arc,fl:(heroArt!=='old'&&Math.abs(dir.x)>.35)?1:(dir.x<0?-1:1),t:0,dur:it.type==='dagger'?.22:.34,col,small:it.type==='dagger'});
 }
 
 /* elemental reactions between your army's elements */
@@ -1775,8 +1776,8 @@ function drawHeroArt(c,x,y,face,moving,t,weapon,atk){
   const melee=atk&&atk.type!=='spear'&&atk.type!=='bow';
   /* swing profile in the ground plane: wind-up (pull back) -> snap through -> follow-through */
   const swingPhi=kk=>{const A=atk.type==='dagger'?.35:.75;
-    if(kk<.22)return a-A*1.15*easeIn(kk/.22)*fl;
-    if(kk<.48)return a+(-A*1.15+(A*2.15)*easeOut((kk-.22)/.26))*fl;
+    if(kk<.1)return a-A*1.15*easeIn(kk/.1)*fl;
+    if(kk<.4)return a+(-A*1.15+(A*2.15)*easeOut((kk-.1)/.3))*fl;
     return a+(A-.35*A*easeOut((kk-.48)/.52))*fl};
   const pose=kk=>{let th=sway,reach=0,fs=1;
     if(atk&&kk<1){let phi=a;
@@ -1796,8 +1797,8 @@ function drawHeroArt(c,x,y,face,moving,t,weapon,atk){
   if(atk&&atk.k<1&&atk.type!=='bow'){const l=atk.k<.2?-1.5*atk.k/.2:atk.k<.45?-1.5+5.5*easeOut((atk.k-.2)/.25):4*(1-easeOut((atk.k-.45)/.55));c.translate(Math.round(Math.cos(a)*l),Math.round(Math.sin(a)*l*TILT))}
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   /* blade smear: the area swept by the weapon over the last moments of the snap */
-  const trail=()=>{if(!weapon||!atk||atk.k>=.75||atk.k<.2)return;
-    const pts=[];for(let i=0;i<=8;i++){const kk=Math.max(.2,atk.k-.2*(1-i/8));pts.push(pose(kk))}
+  const trail=()=>{if(!weapon||!atk||atk.k>=.7||atk.k<.1)return;
+    const pts=[];for(let i=0;i<=8;i++){const kk=Math.max(.1,atk.k-.2*(1-i/8));pts.push(pose(kk))}
     const strong=atk.k<.55?1:1-(atk.k-.55)/.2;
     c.save();c.globalCompositeOperation='lighter';
     for(let i=1;i<pts.length;i++){const p0=pts[i-1],p1=pts[i],al=(i/pts.length)*.55*strong;
@@ -1807,9 +1808,9 @@ function drawHeroArt(c,x,y,face,moving,t,weapon,atk){
     c.restore()};
   const wpn=()=>{if(!weapon)return;c.save();c.translate(hx,hy);if(!drawWeaponArt(c,weapon.type,weapon.col,th+Math.PI/2,fs)){drawWeapon(c,weapon.type,weapon.col,th+Math.PI/2,0)}c.restore()};
   const drawArm=()=>{if(!arm.complete)return;c.save();c.translate(sh[0],sh[1]);c.rotate(th);c.scale(1,P.af);c.drawImage(arm,-R.pv[0],-R.pv[1]);c.restore()};
-  if(dir===1){trail();wpn()}
+  if(dir===1){wpn()}
   c.drawImage(HERO_SHEET,col*64,dir*64,64,64,-32,-62,64,64);
-  if(dir!==1){trail();wpn()}
+  if(dir!==1){wpn()}
   drawArm();
   c.imageSmoothingEnabled=sm;c.restore();return true;
 }
@@ -2451,6 +2452,44 @@ function drawLighting(c){
   const v=c.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*.35,VW/2,VH/2,Math.max(VW,VH)*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.55)');c.fillStyle=v;c.fillRect(0,0,VW,VH);
 }
 
+
+/* ---- slash VFX (drawn flat on the ground): a burning crescent that sweeps around the hero ---- */
+function slashPal(col){const tint=col&&col!=='#c9cfdc'?col:null;return{core:'255,236,190',mid:'255,128,40',edge:tint?hexRgb(tint):'190,20,20'}}
+function hexRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return`${n>>16&255},${n>>8&255},${n&255}`}
+function drawSlashFx(c,f){
+  const k=f.t/f.dur;if(k<0||k>1)return;const P=slashPal(f.col);
+  c.save();c.globalCompositeOperation='lighter';
+  if(f.k==='crescent'){
+    c.globalCompositeOperation='source-over';
+    const a=Math.atan2(f.dir.y,f.dir.x),span=f.small?1.9:3.3,Ro=f.small?f.range*.95:f.range*1.05,thick=f.small?12:24;
+    /* head races across the arc, tail chases it; the band is thickest in the middle and tapers to points */
+    const head=Math.min(1,k/.35),tail=Math.max(0,(k-.12)/.88),fade=k<.55?1:1-(k-.55)/.45,grow=1+k*.08;
+    if(head-tail<.02){c.restore();return}
+    const a0=a-span/2*f.fl,a1=a+span/2*f.fl,ang=u=>a0+(a1-a0)*u,N=30;
+    const ring=(rf,tf)=>{const o=[],n=[];for(let i=0;i<=N;i++){const u=tail+(head-tail)*i/N,v=(u-tail)/(head-tail),w=Math.pow(Math.sin(Math.PI*v),.8)*Math.min(1,v*3+.15),an=ang(u),ro=Ro*grow*rf;
+      o.push([f.x+Math.cos(an)*ro,f.y+Math.sin(an)*ro]);n.push([f.x+Math.cos(an)*(ro-thick*tf*w),f.y+Math.sin(an)*(ro-thick*tf*w)])}return[o,n]};
+    const fillBand=([o,n],style)=>{c.fillStyle=style;c.beginPath();o.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));for(let i=n.length-1;i>=0;i--)c.lineTo(n[i][0],n[i][1]);c.closePath();c.fill()};
+    fillBand(ring(1.02,1.15),`rgba(40,0,0,${.35*fade})`);                 /* dark rim for contrast */
+    fillBand(ring(1,1),`rgba(${P.edge},${.92*fade})`);
+    fillBand(ring(.985,.62),`rgba(${P.mid},${.95*fade})`);
+    c.globalCompositeOperation='lighter';
+    fillBand(ring(.975,.28),`rgba(${P.core},${.9*fade})`);
+    /* torn fiery edge */
+    c.lineCap='round';
+    for(let j=0;j<4;j++){c.strokeStyle=`rgba(${j%2?P.mid:P.edge},${.55*fade})`;c.lineWidth=j?1.2:1.8;c.beginPath();
+      for(let i=0;i<=N;i++){const u=tail+(head-tail)*i/N,v=(u-tail)/(head-tail),an=ang(u)-(.05+j*.03)*f.fl,r=Ro*grow-thick*(.25+j*.18)*Math.sin(Math.PI*v)+Math.sin(u*55+j*1.7)*1.6;const x=f.x+Math.cos(an)*r,y=f.y+Math.sin(an)*r;i?c.lineTo(x,y):c.moveTo(x,y)}c.stroke()}
+    /* embers thrown off the leading edge */
+    if(!f.em){f.em=Array.from({length:f.small?6:14},()=>({u:Math.random(),d:Math.random()*16+4,s:Math.random()*1.4+.8}))}
+    for(const e of f.em){if(e.u>head||e.u<tail-.1)continue;const an=ang(e.u),r=Ro*grow+e.d*k*2;c.fillStyle=`rgba(${P.mid},${fade})`;c.fillRect(f.x+Math.cos(an)*r,f.y+Math.sin(an)*r,e.s*1.8,e.s*1.8)}
+    const mid=ang((head+tail)/2);addLight(f.x+Math.cos(mid)*Ro,f.y+Math.sin(mid)*Ro,200*fade,'255,90,30',true);
+  }else{ /* pierce: a burning lance of light */
+    const a=Math.atan2(f.dir.y,f.dir.x),L=f.range*1.25,e=Math.min(1,k/.3),fade=k<.4?1:1-(k-.4)/.6,ux=Math.cos(a),uy=Math.sin(a),nx=-uy,ny=ux;
+    const len=L*e,x0=f.x+ux*14,y0=f.y+uy*14;
+    for(const [w,col,al] of [[9,P.edge,.6],[5,P.mid,.8],[2,P.core,1]]){c.fillStyle=`rgba(${col},${al*fade})`;c.beginPath();c.moveTo(x0+nx*w*.4,y0+ny*w*.4);c.lineTo(x0+ux*len*.7+nx*w,y0+uy*len*.7+ny*w);c.lineTo(x0+ux*len,y0+uy*len);c.lineTo(x0+ux*len*.7-nx*w,y0+uy*len*.7-ny*w);c.lineTo(x0-nx*w*.4,y0-ny*w*.4);c.closePath();c.fill()}
+    addLight(x0+ux*len*.8,y0+uy*len*.8,140*fade,'255,110,40',true);
+  }
+  c.restore();
+}
 function render(){
   S.lights=[];
   const c=ctx;c.setTransform(DPR*ZM,0,0,DPR*ZM,0,0);c.clearRect(0,0,VW,VH);
@@ -2479,6 +2518,7 @@ function render(){
   for(const m of S.mons)if(m.kind==='pod'){const k=1-m.fuse/3.2;gc(m.x,m.y,115,'200,106,168',k,'255,180,230')}
   for(const o of S.pend)if(o.t>=o.delay){c.strokeStyle='rgba(255,233,160,.7)';c.lineWidth=2.5;c.beginPath();c.arc(o.x,o.y,55,0,Math.PI*2);c.stroke()}
   for(const f of S.fx){
+    if(f.k==='crescent'||f.k==='pierce'){drawSlashFx(c,f);continue}
     if(f.k==='ripple'){const k=f.t/f.dur;c.save();
       for(let j=0;j<3;j++){const kk=Math.max(0,k-j*.15);if(kk<=0)continue;const R0=f.R*(.3+kk*.9);c.globalAlpha=(1-kk)*.55;c.strokeStyle=j?'rgba(120,200,255,.9)':'rgba(255,255,255,.95)';c.lineWidth=2.5;c.beginPath();c.arc(f.x,f.y,R0,0,Math.PI*2);c.stroke()}
       c.globalAlpha=(1-k)*.25;c.fillStyle='#3a8ee8';c.beginPath();c.arc(f.x,f.y,f.R*.8,0,Math.PI*2);c.fill();c.restore()}
@@ -2528,7 +2568,7 @@ function render(){
   for(const a of S.army)ents.push({y:a.y,d:()=>drawAlly(c,a,S.t)});
   ents.sort((a,b)=>a.y-b.y).forEach(e=>at(e.y,e.d));
   for(const pr of S.proj)at(pr.y,()=>{c.save();c.translate(pr.x,pr.y-14);c.rotate(Math.atan2(pr.vy*TILT,pr.vx));c.strokeStyle='#d9c7a0';c.lineWidth=2;c.beginPath();c.moveTo(-14,0);c.lineTo(4,0);c.stroke();c.fillStyle=pr.col;c.beginPath();c.moveTo(4,-3);c.lineTo(10,0);c.lineTo(4,3);c.fill();c.restore()});
-  const FLAT={ring:1,tide:1,ripple:1,frost:1,emit:1};
+  const FLAT={ring:1,tide:1,ripple:1,frost:1,emit:1,crescent:1,pierce:1};
   for(const f of S.fx){
     if(FLAT[f.k])continue;
     const k=f.t/f.dur;if(k<0)continue;
