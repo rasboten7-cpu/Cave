@@ -270,12 +270,12 @@ th{color:var(--muted);font-weight:500}
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px calc(96px + env(safe-area-inset-bottom,0px))}
 .story-card{width:min(640px,100%);background:var(--panel-solid);border:1.5px solid var(--line);border-radius:18px;padding:18px 20px;display:grid;gap:10px;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:pop .3s ease-out}
 .story-who{font-size:13px;font-weight:800;letter-spacing:.04em}
-.story-text{margin:0;font-family:var(--display);font-size:clamp(17px,3.6vw,20px);line-height:1.8;text-wrap:pretty}
+.story-text{margin:0;font-family:var(--body);font-weight:500;font-size:clamp(17px,3.6vw,21px);line-height:1.9;color:#f4f2ff;text-wrap:pretty}
 .story-next{justify-self:start;padding:9px 20px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-weight:800}
 .intro{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#24264a,#07070f 75%);pointer-events:auto;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
 .intro-card{width:min(600px,100%);text-align:center;display:grid;gap:22px;justify-items:center}
-.intro-text{margin:0;font-family:var(--display);font-size:clamp(20px,4.6vw,28px);line-height:1.85;text-wrap:balance;min-height:7.5em;display:grid;align-items:center;animation:fadeup .9s ease-out}
+.intro-text{margin:0;font-family:var(--body);font-weight:500;font-size:clamp(20px,4.4vw,27px);line-height:1.9;color:#f4f2ff;text-wrap:balance;min-height:7.5em;display:grid;align-items:center;animation:fadeup .9s ease-out}
 .intro-dots{display:flex;gap:6px}
 .intro-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18)}
 .intro-dots i.on{background:var(--accent)}
@@ -334,7 +334,7 @@ th{color:var(--muted);font-weight:500}
   .toasts{bottom:auto!important;top:calc(70px + env(safe-area-inset-top,0px));width:min(340px,60vw)}
   .toast{font-size:11px;padding:4px 10px}.toast.big{font-size:13px;padding:6px 12px}
   .story{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
-  .story-card{padding:10px 14px;gap:6px}.story-text{font-size:15px;line-height:1.6}
+  .story-card{padding:10px 14px;gap:6px}.story-text{font-size:16px;line-height:1.75}
 }
 @media (pointer:coarse) and (max-height:480px){
   .ally-card:nth-child(n+3){display:none}
@@ -405,7 +405,7 @@ th{color:var(--muted);font-weight:500}
       <p id="cpBody"></p>
       <p class="note" id="cpNote"></p>
       <p class="note warn" id="cpWarn"></p>
-      <div class="actions"><button type="button" class="primary" id="enterCave">ادخل المغارة</button><button type="button" id="cancelCave">مو الحين</button></div>
+      <div class="actions"><button type="button" class="primary" id="enterCave">ادخل المغارة</button><button type="button" id="cancelCave">ليس الآن</button></div>
     </div>
   </div>
 
@@ -413,9 +413,9 @@ th{color:var(--muted);font-weight:500}
     <div class="card prompt-card" role="dialog" aria-labelledby="spTitle">
       <span class="eyebrow">تجنيد</span>
       <h2 id="spTitle">روح ملكة الوحل</h2>
-      <p>تقدر تحاول تجنّده. لازم تقاتل روحه، وهي <b style="color:var(--r-imperial)">أقوى بـ ٥٠٪</b> من الزعيم اللي هزمته.</p>
+      <p>يمكنك محاولة تجنيده، لكن عليك أن تقاتل روحه، وهي <b style="color:var(--r-imperial)">أقوى بـ ٥٠٪</b> من الزعيم الذي هزمته.</p>
       <p class="note" id="spNote"></p>
-      <p class="note warn">فرصة وحدة فقط. إذا سقطت، الروح تضيع وتحتاج تهزم الزعيم من جديد.</p>
+      <p class="note warn">فرصة واحدة فقط. إن سقطت ضاعت الروح، وعليك أن تهزم الزعيم من جديد.</p>
       <div class="actions"><button type="button" class="primary" id="fightSoul">قاتل الروح</button><button type="button" id="leaveSoul">اتركها ترحل</button></div>
     </div>
   </div>
@@ -434,11 +434,11 @@ th{color:var(--muted);font-weight:500}
     </div>
   </div>
 
-  <div class="death" id="death" hidden><div><h2>سقطت!</h2><p id="deathTxt">تعود للحياة بعد لحظات…</p></div></div>
+  <div class="death" id="death" hidden><div><h2>سقطت!</h2><p id="deathTxt">تعود إلى الحياة بعد لحظات…</p></div></div>
 
   <aside class="drawer" id="drawer" hidden aria-label="الحقيبة">
     <div class="drawer-head"><h2>الحقيبة</h2><button class="close" id="closeInv" type="button" aria-label="إغلاق">✕</button></div>
-    <label class="toggle" for="autoMergeIn"><input type="checkbox" id="autoMergeIn" checked><span><b>دمج تلقائي</b><small>أي أداة تدخل الحقيبة تندمج مع أداة من نفس النوع والتقييم</small></span></label>
+    <label class="toggle" for="autoMergeIn"><input type="checkbox" id="autoMergeIn" checked><span><b>دمج تلقائي</b><small>كل أداة تدخل الحقيبة تندمج مع أداة من النوع والتقييم نفسيهما</small></span></label>
     <div class="eq-panel"><div class="eq-slots" id="eqSlots"></div><div class="eq-stats" id="eqStats"></div></div>
     <div class="grid" id="invGrid"></div>
     <div class="detail" id="detail"></div>
@@ -452,7 +452,7 @@ th{color:var(--muted);font-weight:500}
     <div class="skill-list" id="skillList"></div>
     <div class="table-wrap">
       <table>
-        <caption>نسب الدروب من الوحوش الضعيفة</caption>
+        <caption>نسب الغنائم من الوحوش الضعيفة</caption>
         <thead><tr><th>التقييم</th><th>النسبة</th><th>مضاعف القوة</th></tr></thead>
         <tbody>
           <tr><td class="c-common">عادي</td><td>٩٩٪</td><td>×1.0</td></tr>
@@ -462,30 +462,30 @@ th{color:var(--muted);font-weight:500}
         </tbody>
       </table>
     </div>
-    <p class="note">كل وحش ضعيف عنده فرصة ٣٥٪ يسقط أداة. قوة الأداة تكبر مع مستوى الوحش اللي أسقطها. لما تمتلئ الحقيبة (حجمها يكبر من التاجر) تضيع الأدوات العادية الجديدة.</p>
-    <p class="note"><b style="color:var(--ink)">الدمج:</b> ادمج أداتين من نفس النوع ونفس التقييم (سيف عادي مع سيف عادي) فيرتفع مستوى الأداة. مستويات الأداتين تنجمع، وكل مستوى يزيد قوتها ٧٪. إذا تجاوزت المستوى ١٠ تترقى للتقييم الأعلى، والزيادة تنحسب لها.</p>
-    <p class="note"><b style="color:var(--ink)">جرعات الصحة:</b> كل وحش عنده فرصة ١٠٪ يسقط جرعة. الجرعة ترجّع ٤٥٪ من صحتك، وتقدر تحمل ٩ بحد أقصى. وصحتك ترجع لحالها إذا ما انضربت ٣ ثواني.</p>
-    <p class="note"><b style="color:var(--ink)">زعيم المغارة:</b> يضمن أداة فريدة على الأقل، مع ٢٥٪ أسطوري و٥٪ إمبراطوري.</p>
+    <p class="note">لكل وحش ضعيف فرصة ٣٥٪ لإسقاط أداة، وتزداد قوة الأداة بارتفاع مستوى الوحش الذي أسقطها. وإذا امتلأت الحقيبة (ويمكن توسيعها عند التاجر) ضاعت الأدوات العادية الجديدة.</p>
+    <p class="note"><b style="color:var(--ink)">الدمج:</b> ادمج أداتين من النوع والتقييم نفسيهما (سيف عادي مع سيف عادي) ليرتفع مستوى الأداة؛ إذ تُجمع مستويات الأداتين، وكل مستوى يزيد قوتها ٧٪. وإذا تجاوزت المستوى ١٠ ارتقت إلى التقييم الأعلى واحتُسبت لها الزيادة.</p>
+    <p class="note"><b style="color:var(--ink)">جرعات الصحة:</b> لكل وحش فرصة ١٠٪ لإسقاط جرعة، والجرعة تعيد ٤٥٪ من صحتك، ويمكنك حمل ٩ جرعات على الأكثر. وتتعافى صحتك تلقائياً إن لم تُصَب مدة ٣ ثوانٍ.</p>
+    <p class="note"><b style="color:var(--ink)">زعيم المغارة:</b> يُسقط أداة مضمونة ترتفع مع كل زعيم: الزعيم الأول يُسقط أداة عادية من المستوى ١٠، وكل زعيم بعده يرفعها ٣ مستويات (الثاني فريدة من المستوى ٣، والثالث فريدة من المستوى ٦، وهكذا).</p>
     <h3 class="drawer-sub">نقل الحفظ</h3>
-    <p class="note">تبي تكمل نفس شخصيتك على جهاز ثاني أو في نسخة الويب؟ انسخ كود الحفظ والصقه هناك من شاشة البداية.</p>
-    <button class="ghost-btn" id="exportBtn" type="button">انسخ كود الحفظ</button>
+    <p class="note">أتريد مواصلة اللعب بشخصيتك نفسها على جهاز آخر أو في نسخة الويب؟ انسخ رمز الحفظ والصقه هناك من شاشة البداية.</p>
+    <button class="ghost-btn" id="exportBtn" type="button">انسخ رمز الحفظ</button>
   </aside>
   <div class="overlay" id="xfer" hidden style="z-index:60">
     <div class="creator" style="width:min(520px,100%);gap:12px">
-      <h2 class="drawer-sub" id="xferTitle">كود الحفظ</h2>
+      <h2 class="drawer-sub" id="xferTitle">رمز الحفظ</h2>
       <p class="note" id="xferNote"></p>
       <textarea class="text-in" id="xferTxt" rows="5" style="resize:vertical;font-size:11px;direction:ltr" spellcheck="false"></textarea>
       <div class="actions"><button class="primary" id="xferGo" type="button">حمّل الحفظ</button><button id="xferClose" type="button">إغلاق</button></div>
     </div>
   </div>
-  <div class="rotate" id="rotateHint"><div><b>لف الجوال بالعرض</b><small>اللعبة مصممة للشاشة العرضية</small><button class="ghost-btn" type="button" id="rotateSkip">العب كذا</button></div></div>
+  <div class="rotate" id="rotateHint"><div><b>أدِر الجوال أفقياً</b><small>صُممت اللعبة للشاشة الأفقية</small><button class="ghost-btn" type="button" id="rotateSkip">العب هكذا</button></div></div>
 
   <div class="overlay" id="creator">
     <div class="creator">
       <header>
-        <span class="eyebrow">تحديث الزون الرابع · نسخة تجريبية</span>
+        <span class="eyebrow">تحديث المنطقة الرابعة · نسخة تجريبية</span>
         <h1>مغارات الأرواح</h1>
-        <p>صمّم شخصيتك، واطلع للمروج. اصطد الوحوش، ارفع مستوى أسلحتك بالدمج، واهزم زعماء المغارات وجنّد أرواحهم. كل زعيم يفتح لك بوابة زون جديد: المروج ثم الصحراء القرمزية ثم الأراضي المتجمدة ثم الغابة المسحورة.</p>
+        <p>صمّم شخصيتك وانطلق إلى المروج. اصطد الوحوش، وارفع مستوى أسلحتك بالدمج، واهزم زعماء المغارات وجنّد أرواحهم. كل زعيم يفتح لك بوابة منطقة جديدة: المروج ثم الصحراء القرمزية ثم الأراضي المتجمدة ثم الغابة المسحورة.</p>
       </header>
       <div class="continue" id="contBox" hidden>
         <div class="cont-info"><span class="eyebrow">حفظ موجود</span><b id="contName">—</b><small id="contMeta"></small></div>
@@ -503,7 +503,7 @@ th{color:var(--muted);font-weight:500}
           <div class="field"><span>لون الزي</span><div class="swatches" id="outfitSw"></div></div>
           <button class="start" id="startBtn" type="button">ابدأ المغامرة</button>
           <button class="ghost-btn" id="replayIntro" type="button">شاهد المقدمة</button>
-          <button class="ghost-btn" id="importBtn" type="button">عندي كود حفظ من جهاز ثاني</button>
+          <button class="ghost-btn" id="importBtn" type="button">لديّ رمز حفظ من جهاز آخر</button>
         </div>
       </div>
     </div>
@@ -538,24 +538,24 @@ const WEAP={
   sword:{name:'سيف',range:64,arc:1.7,cd:.42,pow:1.0,desc:'ضربة قوس متوسطة'},
   dagger:{name:'خنجر',range:46,arc:1.3,cd:.20,pow:.5,desc:'سريع جداً، مدى قصير'},
   spear:{name:'رمح',range:104,arc:.55,cd:.60,pow:1.25,desc:'طعنة مستقيمة بعيدة'},
-  bow:{name:'قوس',range:250,cd:.66,pow:.62,proj:true,desc:'سهام من مسافة، أبطأ وأضعف ضربة'},
+  bow:{name:'قوس',range:250,cd:.66,pow:.62,proj:true,desc:'سهام من بعيد، لكنها أبطأ وأضعف'},
 };
 const ADJ={common:['صدئ','حديدي','خشبي','قديم'],unique:['مصقول','الفضة','الريح'],legend:['التنين','العاصفة','القمر'],imperial:['الإمبراطور','العرش السماوي']};
 const ADJ_F={common:['صدئة','حديدية','جلدية','قديمة'],unique:['مصقولة','الفضة','الريح'],legend:['التنين','العاصفة','القمر'],imperial:['الإمبراطور','العرش السماوي']};
 const ADJ_A={common:['صدئ','حديدي','جلدي','قديم'],unique:['مصقول','الفضة','الريح'],legend:['التنين','العاصفة','القمر'],imperial:['الإمبراطور','العرش السماوي']};
 const GEAR={
-  helm:{name:'خوذة',adj:'F',desc:'تحمي راسك: تقلل الضرر اللي تاخذه وتزيد صحتك.'},
+  helm:{name:'خوذة',adj:'F',desc:'تحمي رأسك: تقلل الضرر الذي تتلقاه وتزيد صحتك.'},
   armor:{name:'درع',adj:'A',desc:'يحمي جسمك: دفاع أعلى وصحة أكثر من الخوذة.'},
   gloves:{name:'قفازات',adj:'F',desc:'تسرّع هجومك.'},
-  boots:{name:'جزمة',adj:'F',desc:'تسرّع حركتك. مفيدة ضد الذئاب والزعماء السريعين.'},
-  ring:{name:'خاتم',adj:'M',desc:'يزيد فرصة الضربة الحرجة وضررها. تقدر تلبس خاتمين مع بعض.'},
+  boots:{name:'حذاء',adj:'A',desc:'يسرّع حركتك، وهو مفيد ضد الذئاب والزعماء السريعين.'},
+  ring:{name:'خاتم',adj:'M',desc:'يزيد فرصة الضربة الحرجة وضررها، ويمكنك ارتداء خاتمين معاً.'},
   amulet:{name:'قلادة',adj:'F',desc:'تزيد المانا وتقلل وقت انتظار المهارات.'},
 };
 const isGear=t=>!!GEAR[t];
 const itemName=(t,rid)=>`${(WEAP[t]||GEAR[t]).name} ${pick(({F:ADJ_F,A:ADJ_A}[(GEAR[t]||{}).adj]||ADJ)[rid])}`;
 const DROP_W=[['helm',.1],['armor',.1],['gloves',.09],['boots',.09],['ring',.09],['amulet',.07]];
 const dropType=()=>{let r=Math.random();for(const[t,w]of DROP_W){if(r<w)return t;r-=w}return pick(Object.keys(WEAP))};
-const GSLOTS=[['helm','eqHelm','خوذة'],['armor','eqArmor','درع'],['gloves','eqGloves','قفازات'],['boots','eqBoots','جزمة'],['ring','eqRing1','خاتم'],['ring','eqRing2','خاتم'],['amulet','eqAmulet','قلادة']];
+const GSLOTS=[['helm','eqHelm','خوذة'],['armor','eqArmor','درع'],['gloves','eqGloves','قفازات'],['boots','eqBoots','حذاء'],['ring','eqRing1','خاتم'],['ring','eqRing2','خاتم'],['amulet','eqAmulet','قلادة']];
 const EQK=['eq',...GSLOTS.map(g=>g[1])];
 const slotKey=t=>t==='helm'?'eqHelm':t==='armor'?'eqArmor':t==='gloves'?'eqGloves':t==='boots'?'eqBoots':t==='amulet'?'eqAmulet':t==='ring'?'eqRing1':'eq';
 const isEquipped=uid=>!!uid&&EQK.some(k=>S[k]===uid);
@@ -573,13 +573,16 @@ function gearMain(it){const c=gearContrib(it);switch(it.type){
   case'amulet':return{v:c.cdr,txt:`مانا +${AR(c.mana)} · انتظار المهارات −${pct(c.cdr)}`,fmt:pct};}return{v:0,txt:'',fmt:String}}
 /* boss unique items */
 const UNIQ={
-  crown:{boss:'queen',type:'helm',ilvl:10,name:'تاج ملكة الوحل',fx:'كل ضربة منك لها فرصة ١٥٪ تطلق موجة مد حولك تدفع الأعداء.'},
-  stinger:{boss:'scorp',type:'spear',ilvl:20,name:'ذيل ملك العقارب',fx:'ضرباتك تسمّم الأعداء: ٤٠٪ ضرر إضافي على ٣ ثواني.'},
-  heart:{boss:'frost',type:'amulet',ilvl:30,name:'قلب تنين الصقيع',fx:'كل ضربة منك لها فرصة ١٢٪ تجمّد الوحش ثانية ونص.'},
-  thornbow:{boss:'thorn',type:'bow',ilvl:40,name:'قوس سيدة الأشواك',fx:'كل سهم له فرصة ٢٠٪ يقيّد الوحش بالجذور ثانيتين، والسهم يخترق ويكمل لوحش ثاني.'},
+  crown:{boss:'queen',type:'helm',ilvl:10,name:'تاج ملكة الوحل',fx:'لكل ضربة منك فرصة ١٥٪ لإطلاق موجة مدّ من حولك تدفع الأعداء.'},
+  stinger:{boss:'scorp',type:'spear',ilvl:20,name:'ذيل ملك العقارب',fx:'ضرباتك تسمّم الأعداء: ٤٠٪ ضرر إضافي على مدى ٣ ثوانٍ.'},
+  heart:{boss:'frost',type:'amulet',ilvl:30,name:'قلب تنين الصقيع',fx:'لكل ضربة منك فرصة ١٢٪ لتجميد الوحش ثانية ونصف الثانية.'},
+  thornbow:{boss:'thorn',type:'bow',ilvl:40,name:'قوس سيدة الأشواك',fx:'لكل سهم فرصة ٢٠٪ لتقييد الوحش بالجذور ثانيتين، ويخترق السهم الوحش ليصيب وحشاً آخر خلفه.'},
 };
-function makeUnique(id){const U=UNIQ[id],base=rand(5,7)*RAR[2].mult*(1+U.ilvl*.15)*1.15;
-  return{uid:++uidc,type:U.type,rar:2,ilvl:U.ilvl,base,grade:1,power:Math.round(base),name:U.name,uniq:id}}
+/* boss loot climbs 3 grades per boss: queen = common Lv10, scorp = unique Lv3, frost = unique Lv6 … */
+const BOSS_ORDER=['queen','scorp','frost','thorn'];
+function bossTier(b){const i=Math.max(0,BOSS_ORDER.indexOf(b)),tot=10+3*i;return{rar:Math.min(3,Math.floor((tot-1)/10)),grade:tot>40?10:(tot-1)%10+1}}
+function makeUnique(id,bt){const U=UNIQ[id];bt=bt||bossTier(U.boss);const base=rand(5,7)*RAR[bt.rar].mult*(1+U.ilvl*.15)*1.15;
+  const it={uid:++uidc,type:U.type,rar:bt.rar,ilvl:U.ilvl,base,grade:bt.grade,power:0,name:U.name,uniq:id};it.power=Math.round(base*(1+(it.grade-1)*.07));return it}
 const wornUniq=id=>[eqItemRaw(),...GSLOTS.map(g=>S.inv.find(i=>i.uid===S[g[1]]))].some(i=>i&&i.uniq===id);
 const eqItemRaw=()=>S.inv.find(i=>i.uid===S.eq);
 const setCount=()=>Object.keys(UNIQ).filter(wornUniq).length;
@@ -606,7 +609,7 @@ const CONS={
   rage:{name:'إكسير الغضب',col:'#ff5d5d',price:150,dur:120,desc:'+٣٠٪ ضرر لك ولمهاراتك لمدة دقيقتين.'},
   iron:{name:'إكسير الحديد',col:'#b8c4d8',price:150,dur:120,desc:'+٢٥٪ حماية إضافية لمدة دقيقتين.'},
   luck:{name:'إكسير الحظ',col:'#7ce0a0',price:250,dur:300,desc:'فرصة الأدوات النادرة ×٢ لمدة ٥ دقائق.'},
-  recall:{name:'لفافة العودة',col:'#e8c27a',price:60,desc:'ترجعك للتاجر فوراً مع جيشك (زر T). ما تشتغل داخل المغارات.',scroll:true},
+  recall:{name:'لفافة العودة',col:'#e8c27a',price:60,desc:'تعيدك إلى التاجر فوراً مع جيشك (زر T). لا تعمل داخل المغارات.',scroll:true},
 };
 const CICON={flask:'<svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5L5.5 16a4 4 0 0 0 3.5 6h6a4 4 0 0 0 3.5-6L14 8V3M7.5 14h9"/></svg>',scroll:'<svg viewBox="0 0 24 24"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8M6 4a2 2 0 0 0-2 2v1h4V6a2 2 0 0 0-2-2zM8 20a2 2 0 0 1-2-2V7M11 9h5M11 13h5"/></svg>'};
 const buffOn=k=>(S.buffs&&S.buffs[k]||0)>S.t;
@@ -615,7 +618,9 @@ function makeItem(type,rar,ilvl){
   return{uid:++uidc,type,rar,ilvl,base,grade:1,power:Math.round(base),name:itemName(type,R.id)};
 }
 const itemPower=it=>Math.round(it.base*(1+(it.grade-1)*.07));
-function fixItem(it){if(!it.grade){it.grade=1;it.base=it.power}return it}
+function fixItem(it){if(!it.grade){it.grade=1;it.base=it.power}
+  if(it.type==='boots'&&/^جزمة /.test(it.name||'')){const adj=it.name.slice(5),m={'صدئة':'صدئ','حديدية':'حديدي','جلدية':'جلدي','قديمة':'قديم','مصقولة':'مصقول'};it.name='حذاء '+(m[adj]||adj)}
+  return it}
 const sameKind=(a,b)=>a.type===b.type&&a.rar===b.rar&&(a.uniq||'')===(b.uniq||'');
 const mergeFodder=it=>S.inv.filter(x=>x.uid!==it.uid&&sameKind(x,it))
   .sort((a,b)=>isEquipped(a.uid)-isEquipped(b.uid)||a.grade-b.grade||a.base-b.base)[0];
@@ -635,8 +640,8 @@ function mergeInto(it,f){
   if(g>10&&it.rar<3&&!it.uniq){
     const old=RAR[it.rar].mult;it.rar++;it.base=it.base/old*RAR[it.rar].mult;g-=10;
     it.name=itemName(it.type,RAR[it.rar].id);
-    toast(`ترقية! ${it.name} صار ${RAR[it.rar].name}`,RAR[it.rar].color,true);
-  }else{g=Math.min(10,g);toast(`${it.name} وصل للمستوى ${AR(g)}`,RAR[it.rar].color)}
+    toast(`ترقية! أصبح ${it.name} ${RAR[it.rar].name}`,RAR[it.rar].color,true);
+  }else{g=Math.min(10,g);toast(`بلغ ${it.name} المستوى ${AR(g)}`,RAR[it.rar].color)}
   it.grade=g;it.power=itemPower(it);saveSoon();
   for(const k of EQK)if(S[k]===f.uid)S[k]=it.uid;
   S.inv=S.inv.filter(x=>x!==f);
@@ -652,26 +657,26 @@ const BAG_UP=[{to:30,price:500},{to:36,price:1500},{to:42,price:4000},{to:48,pri
 const buyPrice=it=>Math.round(it.power*12*(it.rar+1));
 const sellPrice=it=>Math.max(1,Math.round(it.power*2*(it.rar+1)));
 const ZONES={
-  1:{name:'الزون الأول',title:'المروج',spawn:{x:S.W/2,y:S.H/2},lo:1,hi:10,kinds:[['wisp',.2],['slime',.48],['shroom',.32]]},
-  2:{name:'الزون الثاني',title:'الصحراء القرمزية',spawn:{x:S.W/2,y:S.H-470},lo:11,hi:20,kinds:[['ember',.22],['scorp',.48],['cactus',.3]]},
-  3:{name:'الزون الثالث',title:'الأراضي المتجمدة',spawn:{x:S.W/2,y:S.H-470},lo:21,hi:30,kinds:[['frost',.22],['wolf',.48],['golem',.3]]},
-  4:{name:'الزون الرابع',title:'الغابة المسحورة',spawn:{x:S.W/2,y:S.H-470},lo:31,hi:40,kinds:[['pixie',.22],['spider',.48],['treant',.3]]},
+  1:{name:'المنطقة الأولى',title:'المروج',spawn:{x:S.W/2,y:S.H/2},lo:1,hi:10,kinds:[['wisp',.2],['slime',.48],['shroom',.32]]},
+  2:{name:'المنطقة الثانية',title:'الصحراء القرمزية',spawn:{x:S.W/2,y:S.H-470},lo:11,hi:20,kinds:[['ember',.22],['scorp',.48],['cactus',.3]]},
+  3:{name:'المنطقة الثالثة',title:'الأراضي المتجمدة',spawn:{x:S.W/2,y:S.H-470},lo:21,hi:30,kinds:[['frost',.22],['wolf',.48],['golem',.3]]},
+  4:{name:'المنطقة الرابعة',title:'الغابة المسحورة',spawn:{x:S.W/2,y:S.H-470},lo:31,hi:40,kinds:[['pixie',.22],['spider',.48],['treant',.3]]},
 };
 const ZCOL={1:'#7ce0c3',2:'#ffb347',3:'#9fe3ff',4:'#9be36a'},ZSHORT={1:'المروج',2:'الصحراء',3:'الجليد',4:'الغابة'};
-const ZNOTE={1:'ترجع للمروج الخضراء عند البوابة الشمالية.',2:'أرض حارّة فيها عقارب سريعة، صبّار صلب صعب تكسره، وأرواح نار ترمي كرات. وفي وسطها عرين ملك العقارب.',
-  3:'برد قارس: ذئاب تنقضّ عليك، عمالقة جليد يضربون الأرض، وأرواح صقيع تبطّئك. وفي أعلاها عرش تنين الصقيع.',
-  4:'أشجار تتنفس: عناكب تقفز عليك، أشجار حية تقيّدك بجذورها، وجنيات تسرق المانا. وفي قلبها سيدة الأشواك.'};
+const ZNOTE={1:'تعود إلى المروج الخضراء عند البوابة الشمالية.',2:'أرض لاهبة فيها عقارب سريعة، وصبّار صلب يصعب كسره، وأرواح نار تقذف الكرات. وفي وسطها عرين ملك العقارب.',
+  3:'برد قارس: ذئاب تنقضّ عليك، وعمالقة جليد يضربون الأرض، وأرواح صقيع تُبطئك. وفي أعلاها عرش تنين الصقيع.',
+  4:'أشجار تتنفس: عناكب تقفز عليك، وأشجار حية تقيّدك بجذورها، وجنيات تسرق المانا. وفي قلبها سيدة الأشواك.'};
 const CAVES=[{zone:1,x:S.W/2+480,y:S.H/2-360,boss:'queen'},{zone:2,x:S.W/2-520,y:S.H/2-420,boss:'scorp'},{zone:3,x:S.W/2+520,y:S.H/2-420,boss:'frost'},{zone:4,x:S.W/2-520,y:S.H/2-420,boss:'thorn'}];
 const GATES=[{zone:1,x:S.W/2,y:150,to:2,need:'queen'},{zone:2,x:S.W/2,y:S.H-150,to:1},{zone:2,x:S.W/2,y:150,to:3,need:'scorp'},{zone:3,x:S.W/2,y:S.H-150,to:2},{zone:3,x:S.W/2,y:150,to:4,need:'frost'},{zone:4,x:S.W/2,y:S.H-150,to:3}];
 const BOSSES={
   queen:{name:'ملكة الوحل',cave:'مغارة ملكة الوحل',lvl:6,hp:1500,atk:16,r:46,spd:68,rec:5,xp:320,ang:'ملكة الوحل غضبت!',
-    desc:'تطلق كرات وحل في كل الاتجاهات، وتقفز عليك من بعيد. تحت نصف صحتها تغضب وتستدعي صغارها.'},
+    desc:'تطلق كرات الوحل في كل الاتجاهات، وتقفز عليك من بعيد. وإذا نقصت صحتها عن النصف غضبت واستدعت صغارها.'},
   scorp:{name:'ملك العقارب',cave:'عرين ملك العقارب',lvl:16,hp:6500,atk:42,r:44,spd:92,rec:16,xp:1400,ang:'ملك العقارب غضب!',
-    desc:'يندفع عليك بسرعة رهيبة، يرشّ إبر ذيله، ويغوص تحت الرمل ويطلع من تحتك. تحت نصف صحته يستدعي عقاربه.'},
+    desc:'يندفع نحوك بسرعة رهيبة، ويرشق إبر ذيله، ويغوص في الرمل ليخرج من تحتك. وإذا نقصت صحته عن النصف استدعى عقاربه.'},
   frost:{name:'تنين الصقيع',cave:'عرش تنين الصقيع',lvl:26,hp:13000,atk:80,r:54,spd:82,rec:26,xp:4000,ang:'تنين الصقيع غضب!',
-    desc:'ينفث صقيع على شكل مروحة قدامه، يزرع رماح جليد تحتك، ويطير وينقض عليك من فوق. تحت نصف صحته يستدعي ذئابه.'},
+    desc:'ينفث الصقيع على شكل مروحة أمامه، ويزرع رماح الجليد تحتك، ويطير لينقضّ عليك من الأعلى. وإذا نقصت صحته عن النصف استدعى ذئابه.'},
   thorn:{name:'سيدة الأشواك',cave:'قلب الغابة المسحورة',lvl:36,hp:20000,atk:115,r:52,spd:70,rec:36,xp:9000,ang:'سيدة الأشواك غضبت!',
-    desc:'تفجّر خطوط أشواك من الأرض، تقيّدك بالجذور، وتنبت أزهاراً سامة تنفجر إذا ما كسرتها بسرعة. تحت نصف صحتها تستدعي عناكبها.'},
+    desc:'تفجّر خطوط الأشواك من الأرض، وتقيّدك بالجذور، وتُنبت أزهاراً سامة تنفجر إن لم تكسرها سريعاً. وإذا نقصت صحتها عن النصف استدعت عناكبها.'},
 };
 const ALLIES={
   queen:{fem:true,tier:1,name:'ملكة الوحل',evoName:'ملكة المد الأزرق',start:1,max:20,evo:10,hpMul:1,dmgMul:1,ui:'#a9c4ff',col:'#9b8cff',evoCol:'#4fb8ff'},
@@ -680,7 +685,8 @@ const ALLIES={
   frost:{tier:3,name:'تنين الصقيع',evoName:'تنين الشتاء الأبدي',start:21,max:40,evo:30,hpMul:2.4,dmgMul:2.8,ui:'#9fe3ff',col:'#7fc8ff',evoCol:'#e6f7ff'},
 };
 const ALLY_DMG=.55,ALLY_HP=.75;
-const allyMaxHp=a=>Math.round((60+a.lvl*25)*ALLIES[a.type].hpMul*ALLY_HP),allyDmg=a=>(4+a.lvl*3.5)*ALLIES[a.type].dmgMul*ALLY_DMG*((a.buffT||0)>S.t?1.5:1)*(1+setBonus().a),allyNeed=l=>Math.floor(30*Math.pow(l,1.35));
+const allyEL=a=>{const A=ALLIES[a.type];return a.lvl+Math.max(0,A.max-a.lvl)*.35};
+const allyMaxHp=a=>Math.round((60+allyEL(a)*25)*ALLIES[a.type].hpMul*ALLY_HP),allyDmg=a=>(4+allyEL(a)*3.5)*ALLIES[a.type].dmgMul*ALLY_DMG*((a.buffT||0)>S.t?1.5:1)*(1+setBonus().a),allyNeed=l=>Math.floor(30*Math.pow(l,1.35));
 const allyEvo=a=>a.lvl>=ALLIES[a.type].evo;
 const allyR=a=>18+(a.lvl-ALLIES[a.type].start)*.6+(ALLIES[a.type].tier-1)*5+(allyEvo(a)?6:0);
 const tierStars=a=>'★'.repeat(ALLIES[a.type].tier);
@@ -707,10 +713,10 @@ const mhp=()=>maxHp(S.p.lvl)+gearStats().hp;
 const dmgReduce=()=>{const d=gearStats().def;return Math.min(.75,Math.min(.6,d/(d+80))+(buffOn('iron')?.25:0))};
 const dmgMul=()=>(1+setBonus().p)*(buffOn('rage')?1.3:1);
 const SKILLS=[
-  {id:'whirl',lvl:20,name:'إعصار السيوف',mana:20,step:6,cd:4,desc:'تدور بسلاحك وتضرب كل الوحوش حولك.',ico:'<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 1-8.5 6M12 8a4 4 0 1 1-3.8 2.7M3 4v5h5"/></svg>'},
+  {id:'whirl',lvl:20,name:'إعصار السيوف',mana:20,step:6,cd:4,desc:'تدور بسلاحك فتضرب كل الوحوش من حولك.',ico:'<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 1-8.5 6M12 8a4 4 0 1 1-3.8 2.7M3 4v5h5"/></svg>'},
   {id:'stars',lvl:40,name:'مطر النجوم',mana:35,step:8,cd:7,desc:'نجوم تسقط على أقرب ١٠ وحوش وتنفجر.',ico:'<svg viewBox="0 0 24 24"><path d="m12 3 2.2 4.6 5 .7-3.6 3.5.9 5L12 14.5 7.5 16.8l.9-5L4.8 8.3l5-.7zM5 21l3-3M12 22v-3M19 21l-3-3"/></svg>'},
-  {id:'blink',lvl:60,name:'خطوة البرق',mana:30,step:7,cd:5,desc:'تندفع للأمام وتضرب كل اللي في طريقك، وما ينضرب فيك وقت الاندفاع.',ico:'<svg viewBox="0 0 24 24"><path d="M13 2 5 13h6l-1 9 8-11h-6z"/></svg>'},
-  {id:'rally',lvl:80,name:'صرخة الجيش',mana:60,step:10,cd:25,desc:'يتعالج جيشك ٥٠٪ ويزيد ضرره ٥٠٪ لمدة ١٠ ثواني، وتتعالج أنت ٢٥٪.',ico:'<svg viewBox="0 0 24 24"><path d="M4 10v4h3l5 4V6L7 10zM16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14"/></svg>'},
+  {id:'blink',lvl:60,name:'خطوة البرق',mana:30,step:7,cd:5,desc:'تندفع إلى الأمام وتضرب كل ما في طريقك، ولا تُصاب أثناء الاندفاع.',ico:'<svg viewBox="0 0 24 24"><path d="M13 2 5 13h6l-1 9 8-11h-6z"/></svg>'},
+  {id:'rally',lvl:80,name:'صرخة الجيش',mana:60,step:10,cd:25,desc:'يُشفى جيشك بنسبة ٥٠٪ ويزيد ضرره ٥٠٪ لمدة ١٠ ثوانٍ، وتُشفى أنت بنسبة ٢٥٪.',ico:'<svg viewBox="0 0 24 24"><path d="M4 10v4h3l5 4V6L7 10zM16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14"/></svg>'},
   {id:'judge',lvl:100,name:'حكم الإمبراطور',mana:120,step:15,cd:30,desc:'انفجار هائل يضرب كل شيء حولك بقوة ضخمة.',ico:'<svg viewBox="0 0 24 24"><path d="M4 18h16l-2-9-4 4-2-7-2 7-4-4zM4 21h16"/></svg>'},
 ];
 const maxMana=()=>50+S.p.lvl*5+gearStats().mana;
@@ -837,8 +843,8 @@ function attack(){
 /* elemental reactions between your army's elements */
 const REACT={
   deep:{name:'تجمّد عميق',col:'#9fe3ff',recipe:'مبلول + تجميد',fx:'التجميد يدوم ضعف المدة.'},
-  shatter:{name:'تحطيم',col:'#e6f7ff',recipe:'ضربة على وحش متجمد',fx:'ضرر إضافي ٦٠٪ وينكسر الجليد بشظايا.'},
-  spread:{name:'انتشار السم',col:'#8be36a',recipe:'مسموم + مبلول',fx:'السم ينتقل لكل الوحوش القريبة.'},
+  shatter:{name:'تحطيم',col:'#e6f7ff',recipe:'ضربة على وحش متجمد',fx:'ضرر إضافي ٦٠٪، ويتحطم الجليد شظايا.'},
+  spread:{name:'انتشار السم',col:'#8be36a',recipe:'مسموم + مبلول',fx:'ينتقل السم إلى كل الوحوش القريبة.'},
   thornpoison:{name:'شوك مسموم',col:'#c6f26a',recipe:'مقيّد بالجذور + مسموم',fx:'ضرر السم يتضاعف.'},
 };
 function rootMon(m,dur){if(m.kind==='boss'||m.kind==='pod')return;m.rootT=S.t+dur;if(m.poison&&S.t<m.poison.until&&!m.poison.dbl){m.poison.dps*=2;m.poison.dbl=1;react('thornpoison',m)}}
@@ -889,7 +895,7 @@ function kill(m){
     if(Math.random()<.3)S.drops.push({x:m.x-20,y:m.y+6,it:{cons:pick(['rage','iron','luck'])},t:0});
     for(let i=0;i<24;i++)S.fx.push({k:'spark',x:m.x,y:m.y-12,vx:rand(-220,220),vy:rand(-280,40),t:0,dur:rand(.4,.8),col:pick(['#ffd36e','#fff2b0','#ffb347'])});
     S.fx.push({k:'ring',x:m.x,y:m.y,t:0,dur:.8,col:'#ffd36e',big:true});
-    toast(`هزمت ${m.eName}! سقط شي ${RAR[rar].name}`,RAR[rar].color,true);SND.victory();
+    toast(`هزمت ${m.eName}! سقط شيء ${RAR[rar].name}`,RAR[rar].color,true);SND.victory();
   }else if(Math.random()<.35){
     const rar=rollRarity();const it=makeItem(dropType(),rar,m.lvl);
     S.drops.push({x:m.x,y:m.y,it,t:0});
@@ -913,7 +919,7 @@ function useSkill(i){
   const rank=skillRank(sk);
   if(!rank){toast(`${sk.name} تنفتح عند المستوى ${AR(sk.lvl)}`,'#5fa8ff');return}
   if(S.t-(S.skillT[sk.id]??-99)<skCd(sk))return;
-  const cost=skillCost(sk);if(p.mana<cost){toast('المانا ما تكفي','#5fa8ff');return}
+  const cost=skillCost(sk);if(p.mana<cost){toast('المانا لا تكفي','#5fa8ff');return}
   p.mana-=cost;S.skillT[sk.id]=S.t;SND.skill(sk.id);
   const it=eqItem(),base=playerAtk(it)*WEAP[it.type].pow*skillMult(sk)*dmgMul();
   const dmg=k=>({d:Math.round(base*k*rand(.9,1.1)),crit:false});
@@ -934,7 +940,7 @@ function useSkill(i){
   }else if(sk.id==='rally'){
     for(const a of S.army){if(a.down){a.down=false;a.x=p.x-40;a.y=p.y+30}a.hp=Math.min(allyMaxHp(a),a.hp+allyMaxHp(a)*.5);a.buffT=S.t+10;S.fx.push({k:'ring',x:a.x,y:a.y,t:0,dur:.7,col:'#ffd36e',big:true})}
     p.hp=Math.min(mhp(),p.hp+mhp()*.25);S.fx.push({k:'ring',x:p.x,y:p.y,t:0,dur:.8,col:'#ffd36e',big:true});
-    toast(S.army.length?'جيشك تشجّع! ضرره زاد ٥٠٪':'تعالجت، لكن ما عندك جيش يسمع صرختك','#ffd36e');
+    toast(S.army.length?'تحمّس جيشك! زاد ضرره ٥٠٪':'شُفيت، لكن ليس لديك جيش يسمع صرختك','#ffd36e');
   }else if(sk.id==='judge'){
     for(const m of [...S.mons])if(Math.hypot(m.x-p.x,m.y-p.y)<320)hit(m,dmg(6),dirTo(m));
     S.shake=.6;for(let i=0;i<3;i++)S.fx.push({k:'ring',x:p.x,y:p.y,t:-i*.12,dur:.8,col:i%2?'#ff4f7a':'#ffd36e',big:true});
@@ -943,9 +949,9 @@ function useSkill(i){
   floatTxt(p.x,p.y-70,sk.name,'#9fd0ff',16);
 }
 function toggleArmy(){
-  if(!S.army.length){toast('ما عندك جيش للحين. اهزم زعيم وجنّد روحه','#a9c4ff');return}
+  if(!S.army.length){toast('ليس لديك جيش بعد. اهزم زعيماً وجنّد روحه','#a9c4ff');return}
   const p=S.p;
-  if(S.armyMode==='follow'){S.armyMode='hunt';S.army.forEach(a=>{a.wx=0});toast('جيشك انطلق يصيد. اضغط R عشان تستدعيهم','#7ce0c3',true)}
+  if(S.armyMode==='follow'){S.armyMode='hunt';S.army.forEach(a=>{a.wx=0});toast('انطلق جيشك للصيد. اضغط R لاستدعائه','#7ce0c3',true)}
   else{S.armyMode='follow';
     S.army.forEach((a,i)=>{S.fx.push({k:'ring',x:a.x,y:a.y,t:0,dur:.5,col:ALLIES[a.type].ui});
       a.x=p.x+(i?50:-50);a.y=p.y+25;a.dashT=0;S.fx.push({k:'ring',x:a.x,y:a.y,t:0,dur:.7,col:ALLIES[a.type].ui,big:true})});
@@ -955,10 +961,10 @@ function useCons(k){
   const C=CONS[k],p=S.p;if(p.dead)return;
   if(!(S.cons[k]>0)){toast(`ما عندك ${C.name}`,C.col);return}
   if(k==='recall'){
-    if(S.scene==='cave'){toast('لفافة العودة ما تشتغل داخل المغارة','#e8c27a');return}
+    if(S.scene==='cave'){toast('لفافة العودة لا تعمل داخل المغارة','#e8c27a');return}
     const mer=MERCHANTS[S.zone];S.fx.push({k:'ring',x:p.x,y:p.y,t:0,dur:.6,col:C.col,big:true});
     p.x=mer.x+90;p.y=mer.y+60;S.army.forEach((a,i)=>{a.x=p.x+(i-1)*40;a.y=p.y+40});S.cam.x=p.x-VW/2;S.cam.y=p.y*TILT-VH/2;S.shopCool=true;
-    S.fx.push({k:'ring',x:p.x,y:p.y,t:0,dur:.8,col:C.col,big:true});S.cons[k]--;toast('رجعت للتاجر',C.col);saveSoon();return;
+    S.fx.push({k:'ring',x:p.x,y:p.y,t:0,dur:.8,col:C.col,big:true});S.cons[k]--;toast('عدت إلى التاجر',C.col);saveSoon();return;
   }
   S.cons[k]--;S.buffs[k]=Math.max(S.t,S.buffs[k]||0)+C.dur;
   S.fx.push({k:'ring',x:p.x,y:p.y,t:0,dur:.7,col:C.col,big:true});toast(`${C.name}: ${C.desc}`,C.col);saveSoon();
@@ -1010,7 +1016,7 @@ function hurtPlayer(dmg){
   dmg=Math.max(1,Math.round(dmg*(1-dmgReduce())*rand(.88,1.12)));p.hp-=dmg;p.lastHit=S.t;
   floatTxt(p.x,p.y-56,'-'+dmg,'#ff5d7a',16);SND.hurt();
   if(p.hp<=0){p.hp=0;p.dead=true;p.deadT=3;$('death').hidden=false;SND.death();S.eproj=[];S.haz=[];
-    $('deathTxt').textContent=S.phase==='soulfight'?`الروح انتصرت وضاعت فرصة التجنيد. اهزم ${bossDef().name} من جديد عشان تحصل فرصة ثانية.`:S.scene==='cave'?`${bossDef().name} طردك من المغارة. قوّ نفسك وارجع.`:'تعود للحياة بعد لحظات. في المرحلة ٥ راح نضيف العقوبة الكاملة.';
+    $('deathTxt').textContent=S.phase==='soulfight'?`انتصرت الروح وضاعت فرصة التجنيد. اهزم ${bossDef().name} من جديد لتحظى بفرصة أخرى.`:S.scene==='cave'?`${bossDef().name} طردك من المغارة. قوِّ نفسك وعُد.`:'تعود إلى الحياة بعد لحظات.';
     for(const mm of S.mons)mm.aggro=false}
 }
 
@@ -1023,32 +1029,33 @@ function bossDown(m){
   for(let i=0;i<40;i++)S.fx.push({k:'spark',x:m.x,y:m.y-30,vx:rand(-260,260),vy:rand(-320,60),t:0,dur:rand(.5,1),col:pick(cols)});
   S.fx.push({k:'ring',x:m.x,y:m.y,t:0,dur:1,col:cols[0],big:true});
   gainExp(D.xp,m);
-  const r=Math.random(),rar=r<.05?3:r<.30?2:1;
-  S.drops.push({x:m.x-20,y:m.y+10,it:makeItem(dropType(),rar,D.lvl+2),t:0});
-  S.drops.push({x:m.x+30,y:m.y+20,it:makeItem(dropType(),Math.random()<.5?1:0,D.lvl+1),t:0});
+  const bt=bossTier(m.bossType),rar=bt.rar;
+  const main=makeItem(dropType(),rar,D.lvl+2);main.grade=bt.grade;main.power=itemPower(main);
+  S.drops.push({x:m.x-20,y:m.y+10,it:main,t:0});
+  S.drops.push({x:m.x+30,y:m.y+20,it:makeItem(dropType(),0,D.lvl+1),t:0});
   S.drops.push({x:m.x-50,y:m.y+30,it:{potion:true},t:0},{x:m.x+60,y:m.y-10,it:{potion:true},t:0},{x:m.x,y:m.y+40,it:{gold:D.lvl*50},t:0},{x:m.x-30,y:m.y-40,it:{cons:pick(['rage','iron','luck'])},t:0},{x:m.x+20,y:m.y-30,it:{manaPot:true},t:0});
   S.uniqPity=S.uniqPity||{};const uid=Object.keys(UNIQ).find(k=>UNIQ[k].boss===m.bossType);
   if(uid){S.uniqGot=S.uniqGot||{};const owned=S.uniqGot[uid]||S.inv.some(i=>i.uniq===uid),ch=owned?.2+(S.uniqPity[uid]||0):1;
-    if(Math.random()<ch){S.uniqPity[uid]=0;S.uniqGot[uid]=1;S.drops.push({x:m.x,y:m.y-20,it:makeUnique(uid),t:-.4});setTimeout(()=>toast(`سقط غرض زعيم: ${UNIQ[uid].name}!`,'#ff9f1c',true),900)}
+    if(Math.random()<ch){S.uniqPity[uid]=0;S.uniqGot[uid]=1;S.drops.push({x:m.x,y:m.y-20,it:makeUnique(uid,bt),t:-.4});setTimeout(()=>toast(`سقط غرض زعيم: ${UNIQ[uid].name}!`,'#ff9f1c',true),900)}
     else S.uniqPity[uid]=(S.uniqPity[uid]||0)+.1}
   toast(`هزمت ${D.name}!`,'#ffd36e',true);SND.victory();
   if(first)storyEvent('b_'+m.bossType,3600);
-  toast(`سقطت أداة ${RAR[rar].name}`,RAR[rar].color,true);
-  if(first&&m.bossType==='queen')setTimeout(()=>toast('بوابة الصحراء القرمزية انفتحت في شمال المروج!','#ffb347',true),3200);
-  if(first&&m.bossType==='frost')setTimeout(()=>toast('بوابة الغابة المسحورة انفتحت في شمال الجليد!','#9be36a',true),3200);
-  if(first&&m.bossType==='thorn')setTimeout(()=>toast('هزمت سيدة الأشواك! الزون الخامس قريباً… وأستفان ينتظرك فيه.','#ff6b6b',true),3200);
-  if(first&&m.bossType==='scorp')setTimeout(()=>toast('بوابة الأراضي المتجمدة انفتحت في شمال الصحراء!','#9fe3ff',true),3200);
-  if(S.army.some(a=>a.type===m.bossType)){S.phase='clear';setTimeout(()=>{if(S.scene==='cave')toast('روحه موجودة في جيشك. الباب انفتح','#7ce0c3')},2200);return}
+  toast(`سقطت أداة ${RAR[rar].name} من المستوى ${AR(bt.grade)}`,RAR[rar].color,true);
+  if(first&&m.bossType==='queen')setTimeout(()=>toast('انفتحت بوابة الصحراء القرمزية في شمال المروج!','#ffb347',true),3200);
+  if(first&&m.bossType==='frost')setTimeout(()=>toast('انفتحت بوابة الغابة المسحورة في شمال الجليد!','#9be36a',true),3200);
+  if(first&&m.bossType==='thorn')setTimeout(()=>toast('هزمت سيدة الأشواك! المنطقة الخامسة قادمة قريباً… وأستفان ينتظرك فيها.','#ff6b6b',true),3200);
+  if(first&&m.bossType==='scorp')setTimeout(()=>toast('انفتحت بوابة الأراضي المتجمدة في شمال الصحراء!','#9fe3ff',true),3200);
+  if(S.army.some(a=>a.type===m.bossType)){S.phase='clear';setTimeout(()=>{if(S.scene==='cave')toast('روحه في جيشك بالفعل. انفتح الباب','#7ce0c3')},2200);return}
   S.phase='soul';S.soul={x:m.x,y:m.y,t:0,type:m.bossType};S.soulCool=false;
-  setTimeout(()=>{if(S.scene==='cave'&&S.phase==='soul')toast('روحه تحوم… امشِ لها إذا تبغى تجنّدها','#e8a6ff',true)},2200);
-  setTimeout(()=>{if(S.scene==='cave'&&S.phase==='soul')toast('الباب انفتح. امشِ له عشان تطلع','#7ce0c3')},4200);
+  setTimeout(()=>{if(S.scene==='cave'&&S.phase==='soul')toast('روحه تحوم… اقترب منها إن أردت تجنيدها','#e8a6ff',true)},2200);
+  setTimeout(()=>{if(S.scene==='cave'&&S.phase==='soul')toast('انفتح الباب. امشِ إليه لتخرج','#7ce0c3')},4200);
 }
 
 function openSoulPrompt(){
   const type=S.soul.type,D=BOSSES[type],A=ALLIES[type];
   S.paused=true;S.soulCool=true;atkHeld=false;keys.clear();
   $('spTitle').textContent='روح '+D.name;
-  $('spNote').textContent=`إذا فزت، ينضم لجيشك بقوة أقل (المستوى ${AR(A.start)}) ويتطور مع كل وحش يقتله، ويتحول لـ«${A.evoName}» عند المستوى ${AR(A.evo)}.`;
+  $('spNote').textContent=`إن فزت انضم إلى جيشك بقوة أقل (المستوى ${AR(A.start)})، وتطوّر مع كل وحش يقتله، وتحوّل إلى «${A.evoName}» عند المستوى ${AR(A.evo)}.`;
   $('soulPrompt').hidden=false;$('fightSoul').focus();
 }
 function closeSoulPrompt(){$('soulPrompt').hidden=true;S.paused=false}
@@ -1059,7 +1066,7 @@ function startSoulFight(){
   const b=makeBoss(so.type,true);b.x=ARW/2;b.y=260;S.mons.push(b);S.fx.push({k:'ring',x:so.x,y:so.y,t:0,dur:.6,col:'#c9b5ff'});
   $('bossName').textContent='روح '+BOSSES[so.type].name;$('bossBar').hidden=false;S.shake=.3;
   for(let i=0;i<24;i++)S.fx.push({k:'spark',x:b.x,y:b.y-30,vx:rand(-200,200),vy:rand(-240,40),t:0,dur:rand(.4,.8),col:'#c9b5ff'});
-  toast('الباب انغلق. فرصة وحدة!','#ff4f7a',true);
+  toast('انغلق الباب. فرصة واحدة!','#ff4f7a',true);
 }
 function newAlly(type,x,y){
   const A=ALLIES[type],a={type,lvl:A.start,exp:0,hp:0,x,y,down:false,downT:0,atkT:-9,burstT:2,shotT:2,dashT:0,dashCd:2,lastHurt:-9,flash:0,face:1};
@@ -1073,8 +1080,8 @@ function recruitWin(m){
   for(let i=0;i<40;i++)S.fx.push({k:'spark',x:m.x,y:m.y-30,vx:rand(-200,200),vy:rand(-300,40),t:0,dur:rand(.5,1),col:pick([A.ui,'#c9b5ff','#ffd36e'])});
   gainExp(Math.round(BOSSES[m.bossType].xp*.45),m);
   S.army.push(newAlly(m.bossType,m.x,m.y));
-  toast(`${A.name} ${gv(m.bossType,'انضم','انضمت')} لجيشك!`,A.ui,true);saveSoon();
-  setTimeout(()=>toast(gv(m.bossType,`خلّه يقتل وحوش عشان يتطور. عند المستوى ${AR(A.evo)} يتغير شكله`,`خلّها تقتل وحوش عشان تتطور. عند المستوى ${AR(A.evo)} يتغير شكلها`),A.ui),2400);
+  toast(`${A.name} ${gv(m.bossType,'انضم','انضمت')} إلى جيشك!`,A.ui,true);saveSoon();
+  setTimeout(()=>toast(gv(m.bossType,`دَعه يقتل الوحوش ليتطور. عند المستوى ${AR(A.evo)} يتغيّر شكله`,`دَعها تقتل الوحوش لتتطور. عند المستوى ${AR(A.evo)} يتغيّر شكلها`),A.ui),2400);
 }
 
 function allyGain(a,n){
@@ -1083,7 +1090,7 @@ function allyGain(a,n){
   while(a.lvl<A.max&&a.exp>=allyNeed(a.lvl)){
     a.exp-=allyNeed(a.lvl);a.lvl++;a.hp=allyMaxHp(a);
     S.fx.push({k:'ring',x:a.x,y:a.y,t:0,dur:.7,col:A.ui});
-    if(a.lvl===A.evo){toast(`${gv(a.type,'تطوّر','تطوّرت')}! ${A.name} ${gv(a.type,'صار','صارت')} «${A.evoName}»`,A.evoCol,true);S.fx.push({k:'ring',x:a.x,y:a.y,t:0,dur:1,col:A.evoCol,big:true})}
+    if(a.lvl===A.evo){toast(`${gv(a.type,'تطوّر','تطوّرت')}! ${A.name} ${gv(a.type,'أصبح','أصبحت')} «${A.evoName}»`,A.evoCol,true);S.fx.push({k:'ring',x:a.x,y:a.y,t:0,dur:1,col:A.evoCol,big:true})}
     else if(a.lvl===A.max)toast(`${A.evoName} ${gv(a.type,'وصل','وصلت')} أعلى مستوى!`,'#ffd36e',true);
     else floatTxt(a.x,a.y-70,'Lv '+a.lvl,A.ui,16);
   }
@@ -1093,7 +1100,7 @@ function hurtAlly(a,dmg){
   if(!allyUp(a))return;
   dmg=Math.round(dmg*rand(.88,1.12));a.hp-=dmg;a.lastHurt=S.t;a.flash=.12;
   floatTxt(a.x,a.y-50,'-'+dmg,ALLIES[a.type].ui,14);
-  if(a.hp<=0){a.hp=0;a.down=true;a.downT=12;toast(`${allyName(a)} ${gv(a.type,'سقط. يرجع','سقطت. ترجع')} بعد ١٢ ثانية`,ALLIES[a.type].ui)}
+  if(a.hp<=0){a.hp=0;a.down=true;a.downT=12;toast(`${allyName(a)} ${gv(a.type,'سقط، وسيعود','سقطت، وستعود')} بعد ١٢ ثانية`,ALLIES[a.type].ui)}
 }
 const allyName=a=>allyEvo(a)?ALLIES[a.type].evoName:ALLIES[a.type].name;
 const gv=(type,m,f)=>ALLIES[type].fem?f:m;
@@ -1105,7 +1112,7 @@ function nearestTarget(m){
 function updateAlly(a,dt,idx){
   const p=S.p,A=ALLIES[a.type];
   a.flash=Math.max(0,a.flash-dt);
-  if(a.down){a.downT-=dt;if(a.downT<=0){a.down=false;a.hp=allyMaxHp(a)*.5;a.x=p.x-40;a.y=p.y+30;toast(`${allyName(a)} ${gv(a.type,'رجع','رجعت')} للقتال`,A.ui)}return}
+  if(a.down){a.downT-=dt;if(a.downT<=0){a.down=false;a.hp=allyMaxHp(a)*.5;a.x=p.x-40;a.y=p.y+30;toast(`${allyName(a)} ${gv(a.type,'عاد','عادت')} إلى القتال`,A.ui)}return}
   if(p.dead)return;
   const r=allyR(a),evo=allyEvo(a),dmg=allyDmg(a);let tgt=null,bd=1e9;
   const hunt=S.armyMode==='hunt'&&S.scene==='field',cx=hunt?a.x:p.x,cy=hunt?a.y:p.y,range=hunt?520:340;
@@ -1172,14 +1179,14 @@ function openCavePrompt(cave){
   const D=BOSSES[cave.boss];S.promptCool=true;
   openPrompt({eyebrow:`مغارة زعيم · ${ZONES[cave.zone].name}`,title:D.cave,color:cave.zone===2?'#ffb347':'#e8a6ff',
     body:`المستوى المقترح: <b>${AR(D.rec)}</b> · مستواك: <b>${AR(S.p.lvl)}</b>`,note:D.desc,
-    warn:S.p.lvl<D.rec?'مستواك أقل من المقترح. القتال راح يكون صعب جداً، والباب ينغلق خلفك.':'إذا دخلت، ينغلق الباب خلفك حتى تهزم الزعيم أو تسقط.',
+    warn:S.p.lvl<D.rec?'مستواك أقل من المقترح. سيكون القتال صعباً جداً، وسينغلق الباب خلفك.':'إذا دخلت، ينغلق الباب خلفك حتى تهزم الزعيم أو تسقط.',
     ok:'ادخل المغارة',action:()=>enterCave(cave)});
 }
 function openGatePrompt(g){
   S.gateCool=true;const Z=ZONES[g.to];
   openPrompt({eyebrow:'بوابة',title:Z.title,color:ZCOL[g.to],
     body:`${Z.name} · وحوش من المستوى <b>${AR(Z.lo)}</b> إلى <b>${AR(Z.hi)}</b> · مستواك: <b>${AR(S.p.lvl)}</b>`,
-    note:g.to>g.zone?ZNOTE[g.to]:`ترجع لـ${Z.title} عند بوابتها الشمالية.`,
+    note:g.to>g.zone?ZNOTE[g.to]:`تعود إلى ${Z.title} عند بوابتها الشمالية.`,
     warn:g.to>g.zone&&S.p.lvl<Z.lo?`مستواك أقل من أضعف وحوش ${ZSHORT[g.to]}. انتبه.`:'',
     ok:g.to>g.zone?`ادخل ${ZSHORT[g.to]}`:`ارجع لـ${ZSHORT[g.to]}`,action:()=>travelTo(g.to)});
 }
@@ -1357,7 +1364,7 @@ function updateThorn(m,dt){
       }else if(m.next==='bloom'){
         const n=m.ph2?4:3;for(let i=0;i<n;i++){const a=i/n*Math.PI*2+rand(0,1),pd=makeMon('pod',m.lvl,clamp(p.x+Math.cos(a)*180,140,ARW-140),clamp(p.y+Math.sin(a)*120,170,ARH-110));
           pd.hp=pd.max=Math.round(m.max*.03);pd.fuse=3.2;pd.dmg=85*m.mul;pd.aggro=false;S.mons.push(pd);S.fx.push({k:'ring',x:pd.x,y:pd.y,t:0,dur:.5,col:'#c86aa8'})}
-        m.state='chase';m.stT=rand(2,2.8)*fast;toast('أزهار سامة! اكسرها قبل ما تنفجر','#c86aa8');
+        m.state='chase';m.stT=rand(2,2.8)*fast;toast('أزهار سامة! اكسرها قبل أن تنفجر','#c86aa8');
       }else{for(let i=0;i<2;i++){const a=i*Math.PI+rand(0,1),mm=makeMon('spider',34,m.x+Math.cos(a)*100,m.y+Math.sin(a)*100);mm.aggro=true;S.mons.push(mm)}
         m.state='chase';m.stT=2*fast}
     }
@@ -1439,7 +1446,7 @@ function update(dt){
       if(Math.min(...dgs)>120)S.gateCool=false;
       const gi=dgs.findIndex(d=>d<56);
       if(gi>=0&&!S.gateCool){const g=gs[gi];
-        if(g.need&&!S.cleared[g.need]){S.gateCool=true;toast(`البوابة مختومة. اهزم ${BOSSES[g.need].name} عشان تنفتح`,ZCOL[g.to],true)}
+        if(g.need&&!S.cleared[g.need]){S.gateCool=true;toast(`البوابة مختومة. اهزم ${BOSSES[g.need].name} لتنفتح`,ZCOL[g.to],true)}
         else{openGatePrompt(g);return}
       }
     }else if(S.phase==='soul'&&S.soul){
@@ -1447,7 +1454,7 @@ function update(dt){
       if(ds>130)S.soulCool=false;
       if(ds<60&&!S.soulCool){openSoulPrompt();return}
     }
-    if(S.scene==='cave'&&S.bossWon&&Math.hypot(p.x-ARW/2,p.y-(ARH-70))<50){leaveCave();toast('رجعت لـ'+ZONES[S.zone].title,'#7ce0c3');return}
+    if(S.scene==='cave'&&S.bossWon&&Math.hypot(p.x-ARW/2,p.y-(ARH-70))<50){leaveCave();toast('عدت إلى '+ZONES[S.zone].title,'#7ce0c3');return}
     const it=eqItem();
     if(atkHeld&&$('drawer').hidden&&S.t-p.lastAtk>=WEAP[it.type].cd/(1+gearStats().aspd))attack();
     if(S.t-p.lastHit>3)p.hp=Math.min(mhp(),p.hp+mhp()*.03*dt);
@@ -1880,7 +1887,7 @@ function drawAlly(c,a,t){
   const A=ALLIES[a.type],r=allyR(a),evo=allyEvo(a),scorp=a.type==='scorp',drag=a.type==='frost',thorn=a.type==='thorn',s=scorp?r/34:drag?r/40:thorn?r/44:r/46;
   c.save();c.translate(a.x,a.y);
   if(a.down){c.globalAlpha=.35;c.fillStyle=A.ui;ell(c,0,-3,r,r*.35);c.globalAlpha=1;
-    c.font='700 11px Tajawal,system-ui,sans-serif';c.textAlign='center';c.fillStyle=A.ui;c.fillText(`${gv(a.type,'يرجع','ترجع')} بعد ${Math.ceil(a.downT)}`,0,-14);c.restore();return}
+    c.font='700 11px Tajawal,system-ui,sans-serif';c.textAlign='center';c.fillStyle=A.ui;c.fillText(`${gv(a.type,'يعود','تعود')} بعد ${Math.ceil(a.downT)}`,0,-14);c.restore();return}
   c.strokeStyle=evo?A.evoCol:'rgba(124,224,195,.55)';c.lineWidth=2;c.beginPath();c.ellipse(0,0,r+6,(r+6)*.36,0,0,Math.PI*2);c.stroke();
   c.fillStyle='rgba(0,0,0,.25)';ell(c,0,0,r,r*.33);
   c.save();c.scale(s*a.face,s);
@@ -2281,7 +2288,7 @@ function renderArmy(){
     f('name').textContent=allyName(a)+' '+tierStars(a);f('lvl').textContent=`Lv${a.lvl} / ${A.max}`;
     f('hpb').style.width=(a.hp/amh*100)+'%';f('hpt').textContent=`${Math.ceil(a.hp)} / ${amh}`;
     f('xpb').style.width=(max?100:a.exp/an*100)+'%';f('xpt').textContent=max?'أعلى مستوى':`${a.exp} / ${an}`;
-    f('st').textContent=(a.down?'':`رتبة ${AR(A.tier)} · `)+(a.down?`${gv(a.type,'ساقط · يرجع','ساقطة · ترجع')} بعد ${AR(Math.ceil(a.downT))} ث`:`ضرر ${Math.round(allyDmg(a))} · ${allyEvo(a)?gv(a.type,'متطور','متطورة'):gv(a.type,'يتطور','تتطور')+' عند المستوى '+AR(A.evo)}`);
+    f('st').textContent=(a.down?'':`رتبة ${AR(A.tier)} · `)+(a.down?`${gv(a.type,'ساقط · يعود','ساقطة · تعود')} بعد ${AR(Math.ceil(a.downT))} ث`:`ضرر ${Math.round(allyDmg(a))} · ${allyEvo(a)?gv(a.type,'متطور','متطورة'):gv(a.type,'يتطور','تتطور')+' عند المستوى '+AR(A.evo)}`);
   });
 }
 
@@ -2404,11 +2411,11 @@ const INTRO=[
   ()=>'أنت الطفل السابع لهاشيرال. موهبتك نادرة ومنبوذة: تربط أرواح الوحوش التي تهزمها، فتقاتل معك. إخوتك ضحكوا منها… وأكثرهم ضحكاً كان أستفان.',
 ];
 const STORY={
-  arrive:{lines:[['me','السفينة رحلت بدون ما تلتفت. لا طريق للرجوع… إلا عبر تسع أراضٍ.'],
-    ['me','يقولون إن زعيم كل أرض يحرس البوابة اللي بعدها. أول خطوة: ملكة الوحل، في مكان ما بهذي المروج.']]},
+  arrive:{lines:[['me','رحلت السفينة دون أن تلتفت. لا طريق للعودة… إلا عبر تسع أراضٍ.'],
+    ['me','يقال إن زعيم كل أرض يحرس البوابة التي تليها. الخطوة الأولى: ملكة الوحل، في مكانٍ ما من هذه المروج.']]},
   b_queen:{alive:8,page:'queen',lines:[['page',()=>PAGES.queen.txt],
     ['raven','سقط الأمير الثاني والأميرة الخامسة في مروج القارة. بقي من إخوتك ثمانية.'],
-    ['me','اثنين من إخوتي… ما تجاوزوا حتى الأرض الأولى.']]},
+    ['me','اثنان من إخوتي… لم يتجاوزا حتى الأرض الأولى.']]},
   z2:{alive:7,lines:[['me','الرمل يحرق حتى من خلال الحذاء. وفي الأفق… بقايا مخيم محروق.'],
     ['raven','الأميرة التاسعة ابتلعتها رمال الصحراء. بقي سبعة.']]},
   b_scorp:{alive:5,page:'scorp',lines:[['page',()=>PAGES.scorp.txt],
@@ -2417,18 +2424,18 @@ const STORY={
     ['raven','سقط الأمير العاشر والأمير الحادي عشر. بقي خمسة.']]},
   z3:{alive:4,lines:[['stone','«إن كنت تقرأ هذا، فأنت متأخر كعادتك. — أستفان»'],
     ['raven','الأمير الأول، أكبركم وأقواكم، تجمّد عند سفوح هذه الجبال. بقي أربعة.'],
-    ['me','حتى أقوانا سقط هنا… لازم أكون أقوى منه.']]},
+    ['me','حتى أقوانا سقط هنا… يجب أن أكون أقوى منه.']]},
   b_frost:{alive:3,page:'frost',lines:[['page',()=>PAGES.frost.txt],
     ['me','التنين… كان يعرف اسم أبي؟'],
     ['astefan','سمعت أنك أسقطت التنين. لا تفرح. أمامك ست أراضٍ، وأنا أنتظرك في آخرها. ونصيحة أخيرة: لا تتعلق بوحوشك كثيراً.'],
     ['raven','الأميرة الثامنة اختفت في الجليد. بقي ثلاثة: أستفان، واثنان لا نعرف مكانهما.']]},
-  z4:{alive:2,lines:[['me','الأشجار هنا أطول من أي قلعة… وتتحرك لما ما أطالعها.'],
+  z4:{alive:2,lines:[['me','الأشجار هنا أعلى من أي قلعة… وتتحرك حين لا أنظر إليها.'],
     ['raven','الأمير السادس وُجد معلقاً بين الأغصان. بقي اثنان: أستفان، وأخت لا نعرف مكانها.']]},
   b_thorn:{page:'thorn',lines:[['page',()=>PAGES.thorn.txt],
-    ['astefan','وصلت للغابة؟ يبدو أنك أعند مما ظننت. في المستنقع القادم سأنتظرك. تعال وحدك… أو بحيواناتك، لا فرق.'],
-    ['me','أخيراً… راح أشوفه وجهاً لوجه.']]},
+    ['astefan','بلغت الغابة؟ يبدو أنك أعند مما ظننت. في المستنقع القادم سأنتظرك. تعال وحدك… أو بحيواناتك، لا فرق.'],
+    ['me','أخيراً… سألقاه وجهاً لوجه.']]},
   recap:{lines:[['king','«عرشي لا يُورَّث… بل يُنتزَع. من يعد إليّ من قارة الموت يحكم بعدي.»'],
-    ['me',()=>`أنا ${kid().n} لهاشيرال. موهبتي ربط أرواح الوحوش… وأستفان يلتهمها. واحد منا بس راح يرجع.`]]},
+    ['me',()=>`أنا ${kid().n} لهاشيرال. موهبتي ربط أرواح الوحوش… وأستفان يلتهمها. واحد منا فقط سيعود.`]]},
 };
 function newStory(){return{seen:{},alive:10,pages:[]}}
 function storyEvent(id,delay=0){
@@ -2447,7 +2454,7 @@ function catchUpStory(){
 S.storyQ=[];
 function nextStory(){
   const l=S.storyQ.shift();
-  if(!l){$('story').hidden=true;S.paused=!$('shop').hidden||!$('cavePrompt').hidden||!$('soulPrompt').hidden;return}
+  if(!l){$('story').hidden=true;S.paused=!$('shop').hidden||!$('cavePrompt').hidden||!$('soulPrompt').hidden||!$('drawer').hidden;return}
   S.paused=true;atkHeld=false;keys.clear();
   const[w,txt]=l,W=WHO[w];
   $('stWho').textContent=W.t();$('stWho').style.color=W.c;$('storyCard').style.borderColor=W.c+'66';
@@ -2469,7 +2476,7 @@ function showIntro(done){
 function renderPages(){
   const box=$('pagesList');if(!box)return;const st=S.story||newStory();
   box.innerHTML=st.pages.length?st.pages.map(k=>`<div class="page-row"><b>${PAGES[k].title}</b><p>${PAGES[k].txt}</p><small>${PAGES[k].from}</small></div>`).join('')
-    :'<p class="note">ما لقيت أي صفحة للحين. يقولون إن الزعماء يحرسون بقايا من مرّوا قبلك.</p>';
+    :'<p class="note">لم تجد أي صفحة بعد. يقال إن الزعماء يحرسون بقايا من مرّوا قبلك.</p>';
 }
 
 /* ---------- shop ---------- */
@@ -2479,9 +2486,9 @@ function genStock(){
   S.stockZone=S.zone;
 }
 function openShop(){S.shopCool=true;S.paused=true;atkHeld=false;keys.clear();if(!S.stock.length||S.stockZone!==S.zone)genStock();renderShop();$('shop').hidden=false;$('closeShop').focus()}
-function closeShop(){$('shop').hidden=true;S.paused=false}
+function closeShop(){$('shop').hidden=true;S.paused=!$('drawer').hidden}
 $('closeShop').onclick=closeShop;
-function spend(n){if(S.gold<n){toast('الذهب ما يكفي','#ffd36e');return false}S.gold-=n;saveSoon();return true}
+function spend(n){if(S.gold<n){toast('الذهب لا يكفي','#ffd36e');return false}S.gold-=n;saveSoon();return true}
 const COIN_S='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/></svg>';
 const priceBtn=(id,n,dis)=>`<button type="button" class="buy" id="${id}" ${dis||S.gold<n?'disabled':''}>${COIN_S}${AR(n)}</button>`;
 function wareRow(icon,col,title,sub,btn){return`<div class="ware"><span class="wico" style="color:${col}">${icon}</span><div class="winfo"><b style="color:${col}">${title}</b><small>${sub}</small></div>${btn}</div>`}
@@ -2491,48 +2498,51 @@ function renderShop(){
   const bag='<svg viewBox="0 0 24 24"><path d="M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2"/></svg>';
   const up=BAG_UP.find(b=>b.to>S.bagMax);
   let h=`<section class="shop-sec"><h3>الحقيبة</h3>
-    ${up?wareRow(bag,'#ffd36e',`وسّع الحقيبة إلى ${AR(up.to)} خانة`,`حقيبتك الحين ${AR(S.bagMax)} خانة · أكبر حجم ${AR(60)}`,priceBtn('bBag',up.price)):wareRow(bag,'#ffd36e','حقيبة أكبر','وصلت أكبر حقيبة (٦٠ خانة)','<span></span>')}</section>
+    ${up?wareRow(bag,'#ffd36e',`وسّع الحقيبة إلى ${AR(up.to)} خانة`,`حقيبتك الآن ${AR(S.bagMax)} خانة · أكبر حجم ${AR(60)}`,priceBtn('bBag',up.price)):wareRow(bag,'#ffd36e','حقيبة أكبر','وصلت أكبر حقيبة (٦٠ خانة)','<span></span>')}</section>
     <section class="shop-sec"><h3>إكسيرات ولفائف</h3>
-    ${Object.keys(CONS).map(k=>{const C=CONS[k];return wareRow(C.scroll?CICON.scroll:CICON.flask,C.col,C.name,`${C.desc} · عندك ${AR(S.cons[k]||0)} من ٩`,priceBtn('bC_'+k,C.price,(S.cons[k]||0)>=POT_MAX))}).join('')}</section>
+    ${Object.keys(CONS).map(k=>{const C=CONS[k];return wareRow(C.scroll?CICON.scroll:CICON.flask,C.col,C.name,`${C.desc} · لديك ${AR(S.cons[k]||0)} من ٩`,priceBtn('bC_'+k,C.price,(S.cons[k]||0)>=POT_MAX))}).join('')}</section>
     <section class="shop-sec"><h3>جرعات</h3>
-    ${wareRow(flask,'#ff8fa3','جرعة صحة',`ترجّع ٤٥٪ من صحتك · عندك ${AR(S.potions)} من ٩`,priceBtn('bHp',25,S.potions>=POT_MAX))}
-    ${wareRow(flask,'#7fb8ff','جرعة مانا',`ترجّع ٥٠٪ من المانا (زر E) · عندك ${AR(S.manaPots)} من ٩`,priceBtn('bMp',40,S.manaPots>=POT_MAX))}</section>
+    ${wareRow(flask,'#ff8fa3','جرعة صحة',`تعيد ٤٥٪ من صحتك · لديك ${AR(S.potions)} من ٩`,priceBtn('bHp',25,S.potions>=POT_MAX))}
+    ${wareRow(flask,'#7fb8ff','جرعة مانا',`تعيد ٥٠٪ من المانا (زر E) · لديك ${AR(S.manaPots)} من ٩`,priceBtn('bMp',40,S.manaPots>=POT_MAX))}</section>
 
     <section class="shop-sec"><h3>بضاعة ${ZONES[S.zone].title}</h3>`;
   S.stock.forEach((it,i)=>{const R=RAR[it.rar],g=isGear(it.type);
     const sub=g?`${R.name} · ${gearMain(it).txt}`:`${R.name} · قوة ${it.power} · ${WEAP[it.type].desc}`;
-    h+=wareRow(ICON[it.type],R.color,it.name,sub+(S.autoMerge&&mergeTarget(it)?' · ينضاف لأداتك بالدمج':''),priceBtn('bS'+i,buyPrice(it),S.inv.length>=S.bagMax&&!(S.autoMerge&&mergeTarget(it))))});
-  if(!S.stock.length)h+='<p class="note">بعت كل البضاعة! جدّدها تحت.</p>';
+    h+=wareRow(ICON[it.type],R.color,it.name,sub+(S.autoMerge&&mergeTarget(it)?' · يُضاف إلى أداتك بالدمج':''),priceBtn('bS'+i,buyPrice(it),S.inv.length>=S.bagMax&&!(S.autoMerge&&mergeTarget(it))))});
+  if(!S.stock.length)h+='<p class="note">نفدت البضاعة! جدّدها من الأسفل.</p>';
   h+=`<button type="button" class="ghost-btn" id="bRestock" ${S.gold<60?'disabled':''}>بضاعة جديدة · ${AR(60)} ذهب</button>
-    ${S.inv.length>=S.bagMax?'<p class="note warn">حقيبتك ممتلئة. بع أو فكّك شي من الحقيبة قبل ما تشتري.</p>':''}</section>
-    <p class="note">تقدر تبيع أدواتك من الحقيبة (I). الأدوات الأندر والأقوى تنباع بسعر أعلى.</p>`;
+    ${S.inv.length>=S.bagMax?'<p class="note warn">حقيبتك ممتلئة. بِع شيئاً منها قبل أن تشتري.</p>':''}</section>
+    <p class="note">يمكنك بيع أدواتك من الحقيبة (I). تُباع الأدوات الأندر والأقوى بسعر أعلى.</p>`;
   $('shopBody').innerHTML=h;
   const on=(id,f)=>{const b=$(id);if(b)b.onclick=()=>{f();renderShop()}};
   on('bHp',()=>{if(spend(25)){S.potions++;toast('+١ جرعة صحة','#ff8fa3')}});
   for(const k of Object.keys(CONS))on('bC_'+k,()=>{if(spend(CONS[k].price)){S.cons[k]=(S.cons[k]||0)+1;toast(`+١ ${CONS[k].name}`,CONS[k].col)}});
   on('bMp',()=>{if(spend(40)){S.manaPots++;toast('+١ جرعة مانا','#7fb8ff')}});
-  if(up)on('bBag',()=>{if(spend(up.price)){S.bagMax=up.to;toast(`حقيبتك صارت ${AR(up.to)} خانة`,'#ffd36e',true)}});
+  if(up)on('bBag',()=>{if(spend(up.price)){S.bagMax=up.to;toast(`أصبحت حقيبتك ${AR(up.to)} خانة`,'#ffd36e',true)}});
   S.stock.forEach((it,i)=>on('bS'+i,()=>{if(S.inv.length>=S.bagMax&&!(S.autoMerge&&mergeTarget(it)))return;if(spend(buyPrice(it))){S.inv.push(it);S.stock.splice(i,1);toast(`اشتريت ${it.name}`,RAR[it.rar].color,true);autoMerge(it)}}));
   on('bRestock',()=>{if(spend(60))genStock()});
 }
 
 /* ---------- inventory ---------- */
-function toggleInv(force){const d=$('drawer');const open=force===undefined?d.hidden:force;d.hidden=!open;if(open){S.sel=S.sel&&S.inv.some(i=>i.uid===S.sel)?S.sel:S.eq;renderInv();$('closeInv').focus()}else $('invBtn').focus()}
+/* double-tap (or double-click) an item to equip / unequip it */
+let lastTap={u:0,t:0};
+function dblTap(u){const now=performance.now(),hit=lastTap.u===u&&now-lastTap.t<420;lastTap={u,t:hit?0:now};if(hit&&S.sel===u){const b=$('eqBtn');if(b&&!b.disabled)b.click();return true}return false}
+function toggleInv(force){const d=$('drawer');const open=force===undefined?d.hidden:force;d.hidden=!open;S.paused=open||!$('shop').hidden||!$('cavePrompt').hidden||!$('soulPrompt').hidden||!$('story').hidden;if(open){atkHeld=false;keys.clear()}if(open){S.sel=S.sel&&S.inv.some(i=>i.uid===S.sel)?S.sel:S.eq;renderInv();$('closeInv').focus()}else $('invBtn').focus()}
 $('invBtn').onclick=()=>toggleInv();$('closeInv').onclick=()=>toggleInv(false);
-$('autoMergeIn').onchange=e=>{S.autoMerge=e.target.checked;toast(S.autoMerge?'الدمج التلقائي شغّال':'الدمج التلقائي متوقف');
+$('autoMergeIn').onchange=e=>{S.autoMerge=e.target.checked;toast(S.autoMerge?'الدمج التلقائي مفعّل':'الدمج التلقائي متوقف');
   if(S.autoMerge)for(const it of [...S.inv])if(S.inv.includes(it))autoMerge(it);saveSoon();renderInv()};
 function renderEquip(){
   const slots=[['eq','سلاح','sword'],...GSLOTS.map(g=>[g[1],g[2],g[0]])];
   $('eqSlots').innerHTML=slots.map(([k,lbl,t],i)=>{const it=S.inv.find(x=>x.uid===S[k]);
     return it?`<button type="button" class="eq-slot on ${it.uid===S.sel?'sel':''} ${it.uniq?'uniq':''}" data-u="${it.uid}" style="color:${it.uniq?'#ff9f1c':RAR[it.rar].color}" aria-label="${it.name}">${ICON[it.type]}<span>${it.grade>1?'Lv'+it.grade:lbl}</span></button>`
       :`<button type="button" class="eq-slot" disabled aria-label="${lbl} فارغ">${ICON[t]}<span>${lbl}</span></button>`}).join('');
-  $('eqSlots').querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{S.sel=+b.dataset.u;renderInv()});
+  $('eqSlots').querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{if(dblTap(+b.dataset.u))return;S.sel=+b.dataset.u;renderInv()});
   const gs=gearStats(),it=eqItem(),w=WEAP[it.type];
   $('eqStats').innerHTML=`<span>الهجوم <b>${AR(Math.round(playerAtk(it)*w.pow))}</b></span><span>سرعة الهجوم <b>+${pct(gs.aspd)}</b></span>
     <span>الحرجة <b>${pct(.1+gs.crit)}</b> ×<b>${(1.8+gs.critDmg).toFixed(2)}</b></span><span>الحماية <b>${pct(dmgReduce())}</b></span>
     <span>سرعة الحركة <b>+${pct(gs.mspd)}</b></span><span>انتظار المهارات <b>−${pct(gs.cdr)}</b></span>
     <span>الصحة <b>${AR(mhp())}</b></span><span>المانا <b>${AR(maxMana())}</b></span>
-    ${setCount()?`<span style="grid-column:1/-1;color:#ff9f1c">طقم الزعماء ${AR(setCount())} من ٤${setBonus().p?` · +${pct(setBonus().p)} ضرر`+(setBonus().a?` · جيشك +${pct(setBonus().a)}`:''):' · البس قطعة ثانية لتفعيل المكافأة'}</span>`:''}`;
+    ${setCount()?`<span style="grid-column:1/-1;color:#ff9f1c">طقم الزعماء ${AR(setCount())} من ٤${setBonus().p?` · +${pct(setBonus().p)} ضرر`+(setBonus().a?` · جيشك +${pct(setBonus().a)}`:''):' · ارتدِ قطعة أخرى لتفعيل المكافأة'}</span>`:''}`;
 }
 function renderInv(){
   $('autoMergeIn').checked=!!S.autoMerge;renderEquip();
@@ -2540,12 +2550,12 @@ function renderInv(){
   for(let i=0;i<S.bagMax;i++){
     const it=S.inv[i],b=document.createElement('button');b.type='button';b.className='slot';b.id='slot'+i;
     if(it){b.classList.add('filled');if(it.uniq)b.classList.add('uniq');b.style.color=it.uniq?'#ff9f1c':RAR[it.rar].color;b.innerHTML=ICON[it.type]+(isEquipped(it.uid)?'<span class="eq">مجهّز</span>':'')+(it.grade>1?`<span class="gr">${it.grade}</span>`:'');
-      b.setAttribute('aria-label',`${it.name}، ${RAR[it.rar].name}`);if(it.uid===S.sel)b.classList.add('sel');b.onclick=()=>{S.sel=it.uid;renderInv()}}
+      b.setAttribute('aria-label',`${it.name}، ${RAR[it.rar].name}`);if(it.uid===S.sel)b.classList.add('sel');b.onclick=()=>{if(dblTap(it.uid))return;S.sel=it.uid;renderInv()}}
     else{b.disabled=true;b.setAttribute('aria-label','خانة فارغة')}
     g.appendChild(b);
   }
   const it=S.inv.find(i=>i.uid===S.sel),d=$('detail');
-  if(!it){d.innerHTML='<p class="note">اختر أداة لتشوف تفاصيلها.</p>';return}
+  if(!it){d.innerHTML='<p class="note">اختر أداة لعرض تفاصيلها.</p>';return}
   const R=RAR[it.rar],gear=isGear(it.type),fod=mergeFodder(it),maxed=it.rar===3&&it.grade>=10,worn=isEquipped(it.uid);
   const kindName=(WEAP[it.type]||GEAR[it.type]).name;
   let stats,desc;
@@ -2564,21 +2574,21 @@ function renderInv(){
     <div class="stats"><span>قوة الأداة <b>${it.power}</b></span><span style="color:${R.color};grid-column:1/-1;display:flex;gap:8px;align-items:center">مستوى الأداة <b>${AR(it.grade)}</b> من ١٠ <span class="pips">${Array.from({length:10},(_,i)=>`<i class="${i<it.grade?'on':''}"></i>`).join('')}</span></span>
     ${stats}</div>
     <p class="note">${desc}</p>
-    ${UQ?`<p class="uniq-fx">✦ ${UQ.fx}</p><p class="note">طقم الزعماء (${AR(setCount())} من ٤ ملبوسة): قطعتين = +١٠٪ ضرر لك · ثلاث = +١٥٪ ضرر و+١٠٪ لجيشك · الأربع = +٢٠٪ ضرر و+١٥٪ لجيشك.</p>`:''}
-    <div class="actions"><button type="button" class="primary" id="eqBtn" ${worn&&!gear?'disabled':''}>${worn?(gear?'انزع':'مجهّز'):(gear?'البس':'جهّز')}</button>
+    ${UQ?`<p class="uniq-fx">✦ ${UQ.fx}</p><p class="note">طقم الزعماء (${AR(setCount())} من ٤ ملبوسة): قطعتان = +١٠٪ ضرر لك · ثلاث = +١٥٪ ضرر و+١٠٪ لجيشك · الأربع = +٢٠٪ ضرر و+١٥٪ لجيشك.</p>`:''}
+    <div class="actions"><button type="button" class="primary" id="eqBtn" ${worn&&!gear?'disabled':''}>${worn?(gear?'انزع':'مجهّز'):(gear?'ارتدِ':'جهّز')}</button>
     <button type="button" id="dropBtn" ${worn?'disabled':''}>بيع · ${AR(sellPrice(it))} ذهب</button></div>
-    ${maxed?'<p class="note">وصلت أقصى قوة ممكنة.</p>':`<div class="actions"><button type="button" id="mergeBtn" ${fod?'':'disabled'}>${fod?`ادمج مع ${fod.name} Lv${fod.grade}`:`تحتاج ${kindName} ${R.name} ثاني للدمج`}</button></div>`}`;
+    ${maxed?'<p class="note">بلغت الأداة أقصى قوة ممكنة.</p>':`<div class="actions"><button type="button" id="mergeBtn" ${fod?'':'disabled'}>${fod?`ادمج مع ${fod.name} Lv${fod.grade}`:`تحتاج إلى ${kindName} ${R.name} آخر للدمج`}</button></div>`}`;
   if(!maxed)$('mergeBtn').onclick=()=>{mergeItem(it);S.sel=it.uid;renderInv()};
   $('eqBtn').onclick=()=>{
     if(gear&&worn){const k=EQK.find(k=>S[k]===it.uid);S[k]=0;toast(`نزعت ${it.name}`)}
     else{let k=slotKey(it.type);
       if(it.type==='ring'){if(!S.eqRing1)k='eqRing1';else if(!S.eqRing2)k='eqRing2';else{const r1=S.inv.find(i=>i.uid===S.eqRing1),r2=S.inv.find(i=>i.uid===S.eqRing2);k=gearMain(r1).v<=gearMain(r2).v?'eqRing1':'eqRing2'}}
-      S[k]=it.uid;toast(`${gear?'لبست':'جهّزت'} ${it.name}`,R.color)}
+      S[k]=it.uid;toast(`${gear?'ارتديت':'جهّزت'} ${it.name}`,R.color)}
     S.p.hp=Math.min(S.p.hp,mhp());saveSoon();renderInv()};
   $('dropBtn').onclick=()=>{const g=sellPrice(it);S.inv=S.inv.filter(x=>x.uid!==it.uid);S.gold+=g;S.sel=S.eq;toast(`بعت ${it.name} بـ ${AR(g)} ذهب`,'#ffd36e');saveSoon();renderInv();if(!$('shop').hidden)renderShop()};
   renderSkillList();renderPages();renderCons();
   $('reactList').innerHTML=Object.keys(REACT).map(k=>{const R0=REACT[k],seen=S.reactSeen&&S.reactSeen[k];
-    return`<div class="page-row" style="border-color:${R0.col}55;background:transparent"><b style="color:${seen?R0.col:'var(--muted)'}">${seen?R0.name:'؟؟؟ تفاعل غير مكتشف'}</b><p>${seen?`${R0.recipe}: ${R0.fx}`:'جرّب تجمع عناصر جيشك على نفس الوحش: الماء، والجليد، والسم.'}</p></div>`}).join('');
+    return`<div class="page-row" style="border-color:${R0.col}55;background:transparent"><b style="color:${seen?R0.col:'var(--muted)'}">${seen?R0.name:'؟؟؟ تفاعل غير مكتشف'}</b><p>${seen?`${R0.recipe}: ${R0.fx}`:'جرّب أن تجمع عناصر جيشك على الوحش نفسه: الماء والجليد والسم.'}</p></div>`}).join('');
 }
 function renderCons(){
   const box=$('consList');if(!box)return;
@@ -2670,11 +2680,11 @@ function showContinue(save){
   $('contName').textContent=save.look&&save.look.name||'بطلك';
   $('contMeta').textContent=`المستوى ${AR(save.p.lvl)} · ${AR(save.kills||0)} وحش · ${AR((save.inv||[]).length)} أداة`+` · ${ZONES[save.zone||1].title}`+army.map(x=>` · ${allyName({type:'queen',...x})} Lv${x.lvl}`).join('');
   box.hidden=false;$('startBtn').textContent='ابدأ شخصية جديدة';
-  $('contBtn').onclick=()=>{startGame(save);toast('رجعت! تقدّمك محفوظ','#7ce0c3')};
+  $('contBtn').onclick=()=>{startGame(save);toast('مرحباً بعودتك! تقدّمك محفوظ','#7ce0c3')};
   S.savedGame=save;$('contBtn').focus();
 }
 $('startBtn').onclick=()=>{
-  if(S.savedGame&&!armedNew){armedNew=true;$('startBtn').textContent='متأكد؟ تقدّمك القديم راح ينمسح. اضغط مرة ثانية';return}
+  if(S.savedGame&&!armedNew){armedNew=true;$('startBtn').textContent='هل أنت متأكد؟ سيُمحى تقدّمك القديم. اضغط مرة أخرى';return}
   startGame();
 };
 
@@ -2697,13 +2707,13 @@ $('replayIntro').onclick=()=>showIntro(()=>{});
 $('rotateSkip').onclick=()=>$('rotateHint').classList.add('off');
 {const enc=o=>'COS1:'+btoa(unescape(encodeURIComponent(JSON.stringify(o)))),dec=t=>JSON.parse(decodeURIComponent(escape(atob(t.trim().replace(/^COS1:/,'')))));
  const open=(mode)=>{$('xfer').hidden=false;const ta=$('xferTxt');$('xferGo').hidden=mode!=='in';
-   if(mode==='out'){const d=snapshotState();ta.value=d?enc(d):'';$('xferTitle').textContent='كود الحفظ';$('xferNote').textContent='هذا الكود فيه شخصيتك كاملة. انسخه والصقه في الجهاز الثاني من شاشة البداية ← «عندي كود حفظ».';ta.readOnly=true;ta.focus();ta.select();
-     try{navigator.clipboard.writeText(ta.value).then(()=>$('xferNote').textContent='✓ انسخ الكود تلقائياً. الصقه في الجهاز الثاني من شاشة البداية ← «عندي كود حفظ».',()=>{})}catch(e){}}
-   else{ta.value='';ta.readOnly=false;$('xferTitle').textContent='حمّل حفظ';$('xferNote').textContent='الصق كود الحفظ هنا. انتبه: الكود يستبدل أي حفظ موجود على هذا الجهاز.';ta.focus()}};
+   if(mode==='out'){const d=snapshotState();ta.value=d?enc(d):'';$('xferTitle').textContent='رمز الحفظ';$('xferNote').textContent='يحوي هذا الرمز شخصيتك كاملة. انسخه والصقه في الجهاز الآخر من شاشة البداية ← «لديّ رمز حفظ».';ta.readOnly=true;ta.focus();ta.select();
+     try{navigator.clipboard.writeText(ta.value).then(()=>$('xferNote').textContent='✓ نُسخ الرمز تلقائياً. الصقه في الجهاز الآخر من شاشة البداية ← «لديّ رمز حفظ».',()=>{})}catch(e){}}
+   else{ta.value='';ta.readOnly=false;$('xferTitle').textContent='حمّل حفظ';$('xferNote').textContent='الصق رمز الحفظ هنا. تنبيه: يحل الرمز محل أي حفظ موجود على هذا الجهاز.';ta.focus()}};
  $('exportBtn').onclick=()=>{saveGame();open('out')};
  $('importBtn').onclick=()=>open('in');
  $('xferClose').onclick=()=>{$('xfer').hidden=true;cv.focus()};
- $('xferGo').onclick=()=>{let d;try{d=dec($('xferTxt').value);if(!d||!d.p)throw 0}catch(e){$('xferNote').textContent='الكود غير صحيح. تأكد إنك نسخته كامل.';return}
+ $('xferGo').onclick=()=>{let d;try{d=dec($('xferTxt').value);if(!d||!d.p)throw 0}catch(e){$('xferNote').textContent='الرمز غير صحيح. تأكد من أنك نسخته كاملاً.';return}
    d.savedAt=Date.now();try{localStorage.setItem(SAVE_KEY,JSON.stringify(d))}catch(e){}$('xfer').hidden=true;startGame(d);saveGame();toast('تم نقل حفظك! أهلاً '+(d.look&&d.look.name||''),'#7ce0c3',true)}}
 const boot=data=>{
   store.ready=initStore();
