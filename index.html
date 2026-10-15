@@ -1031,7 +1031,11 @@ function hit(m,{d,crit},dir,by='player',proc=true){
   }
   const kbm=m.kind==='boss'?0:1;
   m.hp-=d;m.flash=.12;m.aggro=true;m.kb.x+=dir.x*180*kbm;m.kb.y+=dir.y*180*kbm;
-  if(by==='player')SND.hit(crit);else SND.allyHit();
+  if(by==='player'){SND.hit(crit);
+    /* impact feel (visual only): short shake + steel sparks flying away from the hero */
+    S.shake=Math.max(S.shake,crit?.16:.07);const n=crit?10:5;
+    for(let i=0;i<n;i++){const an=Math.atan2(dir.y,dir.x)+rand(-.9,.9),sp=rand(140,crit?380:260);S.fx.push({k:'spark',x:m.x,y:m.y-m.r*.8,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp-60,t:0,dur:rand(.18,.35),col:crit?'#ffe08a':'#fff4e0'})}}
+  else SND.allyHit();
   floatTxt(m.x+rand(-6,6),m.y-28,crit?d+'!':String(d),by!=='player'?ALLIES[by.type].ui:crit?'#ffd36e':'#fff',crit?20:15);
   if(m.hp<=0)kill(m);
 }
@@ -1764,25 +1768,48 @@ function drawHeroArt(c,x,y,face,moving,t,weapon,atk){
   const arm=HERO_ARM[dn],R=HERO_RIG.arm[dn],sh=HERO_RIG.sh[dir][col];
   c.save();c.translate(Math.round(x),Math.round(y));c.fillStyle='rgba(0,0,0,.32)';ell(c,0,0,12,4);
   if(dir===2&&face.x<0)c.scale(-1,1);
-  /* arm angle: hang + walk sway, or point at the target while attacking */
+  /* arm angle: hang + walk sway, or a weighted swing while attacking */
   const ph=k/8*Math.PI*2,sway=moving?-Math.sin(ph)*(dir===2?16:5)*Math.PI/180:0;
-  const a=Math.atan2(face.y,dir===2?Math.abs(face.x):face.x);
-  let th=sway,reach=0,fs=1;
-  if(atk&&atk.k<1){
-    /* the swing happens in the ground plane around the attack direction, then is projected by the camera tilt */
-    let phi=a;
-    if(atk.type!=='spear'&&atk.type!=='bow'){const e=1-(1-atk.k)*(1-atk.k),A=atk.type==='dagger'?.28:.55;phi=a+(-A+2*A*e)*(dir===2?1:atk.flip)}
-    if(atk.type==='spear')reach=Math.sin(atk.k*Math.PI)*7;
-    const vx=Math.cos(phi),vy=Math.sin(phi)*TILT;th=Math.atan2(vy,vx)-Math.PI/2;fs=Math.max(.55,Math.hypot(vx,vy));
-  }
-  const cs=Math.cos(th),sn=Math.sin(th),fx=R.fist[0]-R.pv[0],fy=R.fist[1]-R.pv[1];
-  const af=Math.max(.75,fs),hx=sh[0]+cs*fx-sn*fy*af+Math.cos(th+Math.PI/2)*reach,hy=sh[1]+sn*fx+cs*fy*af+Math.sin(th+Math.PI/2)*reach;
+  const a=Math.atan2(face.y,dir===2?Math.abs(face.x):face.x),fl=dir===2?1:(atk?atk.flip:1);
+  const easeOut=x=>1-Math.pow(1-x,3),easeIn=x=>x*x;
+  const melee=atk&&atk.type!=='spear'&&atk.type!=='bow';
+  /* swing profile in the ground plane: wind-up (pull back) -> snap through -> follow-through */
+  const swingPhi=kk=>{const A=atk.type==='dagger'?.35:.75;
+    if(kk<.22)return a-A*1.15*easeIn(kk/.22)*fl;
+    if(kk<.48)return a+(-A*1.15+(A*2.15)*easeOut((kk-.22)/.26))*fl;
+    return a+(A-.35*A*easeOut((kk-.48)/.52))*fl};
+  const pose=kk=>{let th=sway,reach=0,fs=1;
+    if(atk&&kk<1){let phi=a;
+      if(melee)phi=swingPhi(kk);
+      if(atk.type==='spear')reach=kk<.25?-4*easeIn(kk/.25):kk<.45?-4+15*easeOut((kk-.25)/.2):11*(1-easeOut((kk-.45)/.55));
+      if(atk.type==='bow')reach=kk<.15?-3*kk/.15:-3*(1-easeOut((kk-.15)/.85));
+      const vx=Math.cos(phi),vy=Math.sin(phi)*TILT;th=Math.atan2(vy,vx)-Math.PI/2;fs=Math.max(.55,Math.hypot(vx,vy));
+      /* side view: add a little height to the arc (raised wind-up, cut down through the target) so the sweep reads on screen */
+      if(melee&&dir===2){const L=atk.type==='dagger'?.4:1;th+=L*(kk<.22?-.5*easeIn(kk/.22):kk<.48?-.5+.85*easeOut((kk-.22)/.26):.35-.15*easeOut((kk-.48)/.52))}}
+    const cs=Math.cos(th),sn=Math.sin(th),fx=R.fist[0]-R.pv[0],fy=R.fist[1]-R.pv[1],af=Math.max(.75,fs);
+    const ux=Math.cos(th+Math.PI/2),uy=Math.sin(th+Math.PI/2);
+    const hx=sh[0]+cs*fx-sn*fy*af+ux*reach,hy=sh[1]+sn*fx+cs*fy*af+uy*reach;
+    const W=WPN_ART[weapon&&weapon.type]||{h:30,py:5},L=(W.h-W.py)*fs;
+    return{th,fs,af,hx,hy,tx:hx+ux*L,ty:hy+uy*L}};
+  const P=pose(atk?atk.k:1),th=P.th,fs=P.fs,hx=P.hx,hy=P.hy;
+  /* body lunge toward the target during the strike */
+  if(atk&&atk.k<1&&atk.type!=='bow'){const l=atk.k<.2?-1.5*atk.k/.2:atk.k<.45?-1.5+5.5*easeOut((atk.k-.2)/.25):4*(1-easeOut((atk.k-.45)/.55));c.translate(Math.round(Math.cos(a)*l),Math.round(Math.sin(a)*l*TILT))}
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
+  /* blade smear: the area swept by the weapon over the last moments of the snap */
+  const trail=()=>{if(!weapon||!atk||atk.k>=.75||atk.k<.2)return;
+    const pts=[];for(let i=0;i<=8;i++){const kk=Math.max(.2,atk.k-.2*(1-i/8));pts.push(pose(kk))}
+    const strong=atk.k<.55?1:1-(atk.k-.55)/.2;
+    c.save();c.globalCompositeOperation='lighter';
+    for(let i=1;i<pts.length;i++){const p0=pts[i-1],p1=pts[i],al=(i/pts.length)*.55*strong;
+      c.fillStyle=atk.type==='spear'?`rgba(255,230,200,${al})`:`rgba(255,${weapon.col==='#c9cfdc'?235:200},${weapon.col==='#c9cfdc'?220:160},${al})`;
+      c.beginPath();c.moveTo(p0.hx+(p0.tx-p0.hx)*.35,p0.hy+(p0.ty-p0.hy)*.35);c.lineTo(p0.tx,p0.ty);c.lineTo(p1.tx,p1.ty);c.lineTo(p1.hx+(p1.tx-p1.hx)*.35,p1.hy+(p1.ty-p1.hy)*.35);c.closePath();c.fill()}
+    const e=pts[pts.length-1];c.strokeStyle=`rgba(255,255,255,${.8*strong})`;c.lineWidth=1.2;c.beginPath();c.moveTo(pts[0].tx,pts[0].ty);for(const q of pts)c.lineTo(q.tx,q.ty);c.stroke();
+    c.restore()};
   const wpn=()=>{if(!weapon)return;c.save();c.translate(hx,hy);if(!drawWeaponArt(c,weapon.type,weapon.col,th+Math.PI/2,fs)){drawWeapon(c,weapon.type,weapon.col,th+Math.PI/2,0)}c.restore()};
-  const drawArm=()=>{if(!arm.complete)return;c.save();c.translate(sh[0],sh[1]);c.rotate(th);c.scale(1,Math.max(.75,fs));c.drawImage(arm,-R.pv[0],-R.pv[1]);c.restore()};
-  if(dir===1)wpn();
+  const drawArm=()=>{if(!arm.complete)return;c.save();c.translate(sh[0],sh[1]);c.rotate(th);c.scale(1,P.af);c.drawImage(arm,-R.pv[0],-R.pv[1]);c.restore()};
+  if(dir===1){trail();wpn()}
   c.drawImage(HERO_SHEET,col*64,dir*64,64,64,-32,-62,64,64);
-  if(dir!==1)wpn();
+  if(dir!==1){trail();wpn()}
   drawArm();
   c.imageSmoothingEnabled=sm;c.restore();return true;
 }
