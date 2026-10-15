@@ -1769,9 +1769,24 @@ const ATK_SHEET=new Image();ATK_SHEET.src='data:image/png;base64,iVBORw0KGgoAAAA
 const ATK_META={"fr": 96, "ax": 48, "ay": 92, "fist": {"down": [[-15.96, -38.36, -130], [17.78, -11.34, 70], [-13.3, -14.14, 115], [0.56, -54.46, -90]], "up": [[-12.46, -22.96, 140], [11.34, -50.4, -55], [10.64, -17.78, 50], [1.68, -56.28, -90]], "right": [[-15.4, -35.84, -140], [17.08, -36.96, 8], [5.32, -28.14, 60], [-1.12, -62.58, -100]]}};
 let atkArt='new';try{atkArt=localStorage.getItem('cos-atk-art')==='old'?'old':'new'}catch(e){}
 function setAtkArt(v){atkArt=v;try{localStorage.setItem('cos-atk-art',v)}catch(e){}document.querySelectorAll('[data-aart]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.aart===v))}
+/* bow: arm extended holding the bow, string drawn to the face, then released */
+function drawBowPose(c,dir,k,weapon,mirror){const FR=ATK_META.fr,pi=k<.7?1:2,dn=['down','up','right'][dir];
+  c.save();if(mirror)c.scale(-1,1);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
+  const F=ATK_META.fist[dn][1],aim=dir===2?0:dir===0?Math.PI/2:-Math.PI/2,ca=Math.cos(aim),sa=Math.sin(aim),P=[F[0]-ca*14,F[1]-sa*14];
+  /* string pull: full draw for the first instant, then snaps forward and vibrates */
+  const pull=k<.08?1:0,vib=k<.08?0:Math.sin(k*90)*Math.max(0,1-(k-.08)/.3)*1.6;
+  const tip=s=>[F[0]+(-5.5)*ca-(s*20)*sa,F[1]+(-5.5)*sa+(s*20)*ca];
+  const t1=tip(-1),t2=tip(1),nx=pull?P[0]:(t1[0]+t2[0])/2-ca*vib,ny=pull?P[1]:(t1[1]+t2[1])/2-sa*vib;
+  const bowL=()=>{c.save();c.translate(F[0],F[1]);if(!drawWeaponArt(c,'bow',weapon.col,aim))drawWeapon(c,'bow',weapon.col,aim,0);c.restore();
+    c.strokeStyle='rgba(235,225,200,.85)';c.lineWidth=.8;c.beginPath();c.moveTo(t1[0],t1[1]);c.lineTo(nx,ny);c.lineTo(t2[0],t2[1]);c.stroke();
+    if(pull){c.strokeStyle='#d9c7a0';c.lineWidth=1.2;c.beginPath();c.moveTo(P[0],P[1]);c.lineTo(F[0]+ca*8,F[1]+sa*8);c.stroke();c.fillStyle='#e8eef8';c.beginPath();c.moveTo(F[0]+ca*11,F[1]+sa*11);c.lineTo(F[0]+ca*7-sa*2,F[1]+sa*7+ca*2);c.lineTo(F[0]+ca*7+sa*2,F[1]+sa*7-ca*2);c.fill()}};
+  if(pi===1){if(dir===1)bowL();c.drawImage(ATK_SHEET,FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay,FR,FR);if(dir!==1)bowL()}
+  else{const R=ATK_META.fist[dn][2];c.drawImage(ATK_SHEET,2*FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay,FR,FR);c.save();c.translate(R[0],R[1]);if(!drawWeaponArt(c,'bow',weapon.col,Math.PI/2*(dir===1?-1:1)*.6))drawWeapon(c,'bow',weapon.col,0,0);c.restore()}
+  c.imageSmoothingEnabled=sm;c.restore();return true}
 /* full-body attack poses (both arms drawn); weapon attached at the fist of each pose */
 function drawAtkPose(c,dir,atk,weapon,mirror){if(atkArt==='old'||!ATK_SHEET.complete||!ATK_SHEET.naturalWidth)return false;
   const k=atk.k,fin=atk.combo===2,pi=fin?(k<.3?3:k<.58?1:2):(k<.12?0:k<.5?1:2);
+  if(weapon&&weapon.type==='bow')return drawBowPose(c,dir,k,weapon,mirror);
   const dn=['down','up','right'][dir],F=ATK_META.fist[dn][pi],FR=ATK_META.fr;
   let ang=F[2]*Math.PI/180;if(weapon&&weapon.type==='spear'&&pi===1)ang=dir===0?Math.PI/2:dir===1?-Math.PI/2:0;
   c.save();if(mirror)c.scale(-1,1);
@@ -1817,7 +1832,7 @@ function drawHeroArt(c,x,y,face,moving,t,weapon,atk){
   const P=pose(atk?atk.k:1),th=P.th,fs=P.fs,hx=P.hx,hy=P.hy;
   /* body lunge toward the target during the strike */
   if(atk&&atk.k<1&&atk.type!=='bow'){const l=atk.k<.2?-1.5*atk.k/.2:atk.k<.45?-1.5+5.5*easeOut((atk.k-.2)/.25):4*(1-easeOut((atk.k-.45)/.55));c.translate(Math.round(Math.cos(a)*l),Math.round(Math.sin(a)*l*TILT))}
-  if(atk&&atk.k<1&&atk.type!=='bow'&&drawAtkPose(c,dir,atk,weapon,dir!==2&&atk.combo===1)){c.restore();return true}
+  if(atk&&atk.k<1&&drawAtkPose(c,dir,atk,weapon,dir!==2&&atk.combo===1)){c.restore();return true}
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   /* blade smear: the area swept by the weapon over the last moments of the snap */
   const trail=()=>{if(!weapon||!atk||atk.k>=.7||atk.k<.1)return;
