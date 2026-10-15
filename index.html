@@ -3058,11 +3058,14 @@ function startGame(data){
   $('creator').hidden=true;$('hudLayer').hidden=false;
   if(data&&data.p){Object.assign(look,data.look);S.p=data.p;S.inv=data.inv.map(fixItem);S.eq=data.eq;for(const g of GSLOTS)S[g[1]]=data[g[1]]||0;S.skillT={};S.pend=[];S.p.invT=0;S.p.rootT=0;S.p.slowT=0;S.p.mana=S.p.mana??50+S.p.lvl*5;S.kills=data.kills||0;uidc=data.uidc||uidc;S.p.dead=false;S.potions=data.potions??3;S.clears=data.clears||0;
     S.army=(data.army||(data.ally?[{...data.ally,type:'queen'}]:[])).map(a=>({shotT:2,dashT:0,dashCd:2,burstT:2,face:1,...a,type:a.type||'queen'}));
-    S.zone=data.zone||1;S.cleared=data.cleared||{};S.gold=data.gold||0;S.manaPots=data.manaPots||0;S.bagMax=data.bagMax||24;S.stock=[];S.autoMerge=data.autoMerge??true;S.story=data.story||null;S.uniqPity=data.uniqPity||{};S.uniqGot=data.uniqGot||{};S.reactSeen=data.reactSeen||{};S.cons={rage:0,iron:0,luck:0,recall:0,...(data.cons||{recall:2})};S.buffs={};S._buffsLeft=data.buffsLeft||{};if(S.clears>0||S.army.some(a=>a.type==='queen'))S.cleared.queen=true;
+    S.zone=data.zone||1;S.cleared=data.cleared||{};S.gold=data.gold||0;S.manaPots=data.manaPots||0;S.bagMax=data.bagMax||24;S.stock=[];S.autoMerge=data.autoMerge??true;S.story=data.story||null;S.uniqPity=data.uniqPity||{};S.uniqGot=data.uniqGot||{};S.gifts=data.gifts||{};S.reactSeen=data.reactSeen||{};S.cons={rage:0,iron:0,luck:0,recall:0,...(data.cons||{recall:2})};S.buffs={};S._buffsLeft=data.buffsLeft||{};if(S.clears>0||S.army.some(a=>a.type==='queen'))S.cleared.queen=true;
     if(!S.inv.some(i=>i.uid===S.eq&&!isGear(i.type))){const w=S.inv.find(i=>!isGear(i.type));if(w)S.eq=w.uid}
     S.army.forEach((a,i)=>{a.x=S.p.x+(i?50:-50);a.y=S.p.y+20});
     S.t=0;const old=S.t-10;for(const k in (S._buffsLeft||{}))S.buffs[k]=S._buffsLeft[k];S._buffsLeft=null;S.p.lastAtk=S.p.atkT=S.p.lastHit=old;S.p.deadT=0;S.potT=old;S.paused=false;keys.clear();atkHeld=false;
     for(const a of S.army){a.lastHurt=a.atkT=old;a.down=false;a.dashT=0;a.hp=clamp(a.hp,1,allyMaxHp(a))}
+    /* one-time test gift: bow, spear and dagger matching the equipped weapon's rarity and level */
+    if(!S.gifts.wpnTest1){S.gifts.wpnTest1=1;const w=S.inv.find(i=>i.uid===S.eq);const r=w?w.rar:0,l=w?w.ilvl:S.p.lvl;
+      for(const ty of ['bow','spear','dagger'])S.inv.push(makeItem(ty,r,l));setTimeout(()=>toast('🎁 في حقيبتك الآن: قوس ورمح وخنجر للتجربة'),900)}
     $('drawer').hidden=true;$('cavePrompt').hidden=true;$('soulPrompt').hidden=true;$('death').hidden=true}
   else{newPlayer();S.clears=0;S.story=newStory();storyEvent('arrive',700)}
   S.scene='field';S.cam.x=S.p.x-VW/2;S.cam.y=S.p.y*TILT-VH/2;S.mons=[];S.drops=[];S.running=true;
@@ -3078,7 +3081,7 @@ function snapshotState(){
   if(!S.running||!S.p)return null;
   const p=S.p,pos=S.scene==='cave'&&S.field?{x:S.field.x,y:S.field.y}:p.dead?{x:S.W/2,y:S.H/2}:{x:p.x,y:p.y};
   return JSON.parse(JSON.stringify({v:1,p:{...p,...pos,dead:false,hp:p.dead?mhp():p.hp},inv:S.inv,eq:S.eq,...Object.fromEntries(GSLOTS.map(g=>[g[1],S[g[1]]])),kills:S.kills,uidc,look,
-    potions:S.potions,army:S.army,zone:S.zone,cleared:S.cleared,clears:S.clears,gold:S.gold,manaPots:S.manaPots,bagMax:S.bagMax,autoMerge:S.autoMerge,story:S.story,uniqPity:S.uniqPity||{},uniqGot:S.uniqGot||{},cons:S.cons,buffsLeft:Object.fromEntries(Object.keys(S.buffs||{}).filter(buffOn).map(k=>[k,S.buffs[k]-S.t])),reactSeen:S.reactSeen||{},savedAt:Date.now()}));
+    potions:S.potions,army:S.army,zone:S.zone,cleared:S.cleared,clears:S.clears,gold:S.gold,manaPots:S.manaPots,bagMax:S.bagMax,autoMerge:S.autoMerge,story:S.story,uniqPity:S.uniqPity||{},uniqGot:S.uniqGot||{},gifts:S.gifts||{},cons:S.cons,buffsLeft:Object.fromEntries(Object.keys(S.buffs||{}).filter(buffOn).map(k=>[k,S.buffs[k]-S.t])),reactSeen:S.reactSeen||{},savedAt:Date.now()}));
 }
 function setSaveChip(txt,ok){const c=$('saveChip');c.textContent=txt;c.classList.toggle('ok',!!ok)}
 async function initStore(){
@@ -3150,7 +3153,7 @@ function frame(now){
 }
 
 const hot=window.claude&&window.claude.hot;
-if(hot&&hot.snapshot)hot.snapshot(()=>S.running?{p:S.scene==='cave'?{...S.p,x:S.field.x,y:S.field.y}:S.p,inv:S.inv,eq:S.eq,...Object.fromEntries(GSLOTS.map(g=>[g[1],S[g[1]]])),kills:S.kills,uidc,look:{...look},potions:S.potions,army:S.army,zone:S.zone,cleared:S.cleared,clears:S.clears,gold:S.gold,manaPots:S.manaPots,bagMax:S.bagMax,autoMerge:S.autoMerge,story:S.story,uniqPity:S.uniqPity||{},uniqGot:S.uniqGot||{},cons:S.cons,buffsLeft:Object.fromEntries(Object.keys(S.buffs||{}).filter(buffOn).map(k=>[k,S.buffs[k]-S.t])),reactSeen:S.reactSeen||{}}:{});
+if(hot&&hot.snapshot)hot.snapshot(()=>S.running?{p:S.scene==='cave'?{...S.p,x:S.field.x,y:S.field.y}:S.p,inv:S.inv,eq:S.eq,...Object.fromEntries(GSLOTS.map(g=>[g[1],S[g[1]]])),kills:S.kills,uidc,look:{...look},potions:S.potions,army:S.army,zone:S.zone,cleared:S.cleared,clears:S.clears,gold:S.gold,manaPots:S.manaPots,bagMax:S.bagMax,autoMerge:S.autoMerge,story:S.story,uniqPity:S.uniqPity||{},uniqGot:S.uniqGot||{},gifts:S.gifts||{},cons:S.cons,buffsLeft:Object.fromEntries(Object.keys(S.buffs||{}).filter(buffOn).map(k=>[k,S.buffs[k]-S.t])),reactSeen:S.reactSeen||{}}:{});
 $('replayIntro').onclick=()=>showIntro(Object.assign(()=>{},{skip:true,label:'رجوع'}));
 document.querySelectorAll('[data-hart]').forEach(b=>b.onclick=()=>setHeroArt(b.dataset.hart));setHeroArt(heroArt);document.querySelectorAll('[data-aart]').forEach(b=>b.onclick=()=>setAtkArt(b.dataset.aart));setAtkArt(atkArt);
 $('rotateSkip').onclick=()=>$('rotateHint').classList.add('off');
