@@ -2757,6 +2757,16 @@ hot&&hot.ready?hot.ready(boot):boot((hot&&hot.data)||{});
 })();
 </script>
 
-<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+<script>
+if('serviceWorker' in navigator){
+  /* when a new version is published: fetch it, swap the service worker, reload once */
+  let had=!!navigator.serviceWorker.controller,reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!reloaded){reloaded=true;location.reload()}had=true});
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{
+    const chk=()=>r.update().catch(()=>{});chk();
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk()});
+  }).catch(()=>{}));
+}
+</script>
 </body>
 </html>
