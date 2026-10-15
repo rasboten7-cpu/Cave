@@ -14,24 +14,27 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>مغارات الأرواح</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap">
 <style>
 /* Layout: full-bleed dusk meadow canvas; frosted HUD cards pinned to the corners; inventory as a side drawer. Single dark world by design. */
 :root{
-  --night:#141629;
-  --panel:rgba(22,24,48,.84);
-  --panel-solid:#1b1e3a;
-  --line:rgba(170,178,240,.2);
-  --ink:#f1f2ff;
-  --muted:#a2a7cf;
-  --accent:#ffd36e;
+  --night:#0a090b;
+  --panel:rgba(12,10,12,.88);
+  --panel-solid:#110f11;
+  --line:rgba(214,202,187,.2);
+  --ink:#ece4d9;
+  --muted:#9d9188;
+  --accent:#d8c4a0;
+  --blood:#9e1b24;
+  --blood-hi:#d23a43;
+  --bone:#d6cabb;
   --hp:#ff5d7a;
   --xp:#7ce0c3;
   --r-common:#c9cfdc;
   --r-unique:#5fb8ff;
   --r-legend:#ffb340;
   --r-imperial:#ff4f7a;
-  --display:'Reem Kufi','Tajawal',system-ui,sans-serif;
+  --display:'Amiri','Reem Kufi','Tajawal',serif;
   --body:'Tajawal',system-ui,'Segoe UI',sans-serif;
   color-scheme:dark;
 }
@@ -369,6 +372,107 @@ th{color:var(--muted);font-weight:500}
 .weapon-ico .ico-img{width:100%;height:100%}
 .ware .wico{overflow:hidden;padding:0}
 .ware .wico .ico-img{width:100%;height:100%}
+
+/* =========================================================
+   Gothic theme: black stone panels, bone hairlines, thorned corners, blood-red light
+   ========================================================= */
+.card{border-radius:4px;border-color:rgba(214,202,187,.16);box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 6px 18px rgba(0,0,0,.45);background:linear-gradient(180deg,rgba(24,20,22,.9),rgba(10,9,10,.9))}
+.hero-card,.ally-card{background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%280%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") top left/18px no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%2890%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") top right/18px no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%28180%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") bottom right/18px no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%28270%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") bottom left/18px no-repeat,linear-gradient(180deg,rgba(24,20,22,.92),rgba(10,9,10,.92))}
+.icon-btn,.gold-chip,.save-chip,.buff,.toast{border-radius:4px;background:linear-gradient(180deg,rgba(26,22,24,.92),rgba(10,9,10,.92));border-color:rgba(214,202,187,.18)}
+.icon-btn:hover{border-color:rgba(214,202,187,.45)}
+.icon-btn .count{background:var(--blood);color:#f6e9e0;border-radius:3px}
+.bar{border-radius:2px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(0,0,0,.6)}
+.bar>i{border-radius:2px}
+.bar.hp>i{background:linear-gradient(90deg,#6e0f16,#c52a34)}
+.bar.xp>i{background:linear-gradient(90deg,#6d5a3a,#cdb488)}
+.bar.mp>i{background:linear-gradient(90deg,#1d2f5c,#5a7fc4)}
+.hero-name,.ally-name,.lvl{font-family:var(--display)}
+.lvl{color:var(--accent)}
+.weapon-ico{border-radius:3px}
+.skill{border-radius:4px;background:linear-gradient(180deg,#1a1618,#0b0a0b)}
+.skill.ready{border-color:var(--bone);box-shadow:0 0 12px -4px var(--blood-hi)}
+.atk-btn{border-color:var(--bone);background:radial-gradient(circle,rgba(158,27,36,.5),rgba(20,8,10,.75));color:var(--ink);font-family:var(--display)}
+.atk-btn.on{background:radial-gradient(circle,rgba(210,58,67,.7),rgba(40,8,12,.8))}
+.pot-btn{background:rgba(15,10,12,.8)}
+.eyebrow{color:var(--blood-hi);letter-spacing:.14em}
+
+/* panels with thorned corners */
+.drawer,.creator,.prompt-card,.story-card{border-radius:3px!important;border:1px solid rgba(214,202,187,.28)!important;
+  background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%280%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") top left/26px no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%2890%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") top right/26px no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%28180%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") bottom right/26px no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%28270%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") bottom left/26px no-repeat,radial-gradient(ellipse at 50% -10%,rgba(158,27,36,.16),transparent 60%),linear-gradient(180deg,#141113,#0a090a)!important;
+  box-shadow:inset 0 0 0 4px rgba(10,9,10,.9),inset 0 0 0 5px rgba(214,202,187,.08),0 24px 60px rgba(0,0,0,.7)!important}
+.drawer{border-width:0 0 0 1px!important}
+.drawer-head h2,.drawer-sub,.shop-sec h3,.prompt-card h2,.creator h1{font-family:var(--display);font-weight:700;color:var(--ink);letter-spacing:.01em}
+.drawer-sub{display:flex;align-items:center;gap:10px}
+.drawer-sub::after{content:"";flex:1;height:1px;background:linear-gradient(to left,rgba(214,202,187,.35),transparent)}
+.close{border-radius:3px}
+.slot,.eq-slot{border-radius:3px}
+.slot .ico-img,.eq-slot .ico-img{border-radius:2px}
+.detail,.eq-panel,.toggle,.skrow,.ware,.shop-gold,.page-row{border-radius:3px;background:rgba(255,255,255,.015)}
+.prompt-card h2{color:var(--ink)}
+.story-who{font-family:var(--display);color:var(--blood-hi)}
+
+/* buttons: dark plate with bone edge; primary glows blood-red */
+.start,.actions .primary,.buy,.story-next,.ghost-btn,.actions button{border-radius:3px}
+.start,.actions .primary{background:linear-gradient(180deg,#2a1214,#140a0b);color:var(--ink);border:1px solid rgba(214,202,187,.55);font-family:var(--display);font-weight:700;letter-spacing:.02em;box-shadow:inset 0 0 0 3px #0e0809,inset 0 0 0 4px rgba(214,202,187,.12),0 0 18px -6px var(--blood-hi)}
+.start:hover,.actions .primary:hover{filter:none;background:linear-gradient(180deg,#3a1418,#1a0b0d);box-shadow:inset 0 0 0 3px #0e0809,inset 0 0 0 4px rgba(214,202,187,.2),0 0 26px -4px var(--blood-hi)}
+.ghost-btn{border-style:solid;border-color:rgba(214,202,187,.16);color:var(--muted)}
+.ghost-btn:hover{color:var(--ink);border-color:rgba(214,202,187,.4)}
+.buy{border-color:rgba(216,196,160,.4);background:rgba(216,196,160,.06);color:var(--accent)}
+.seg button{border-radius:3px}
+.seg button[aria-pressed=true]{border-color:var(--bone);background:rgba(158,27,36,.25);color:var(--ink)}
+.text-in{border-radius:3px;background:rgba(0,0,0,.35)}
+button:focus-visible,input:focus-visible{outline-color:var(--bone)}
+.preview{border-radius:3px;background:radial-gradient(circle at 50% 75%,rgba(158,27,36,.35),#0d0b0c 70%);border-color:rgba(214,202,187,.2)}
+.intro-dots i.on{background:var(--blood-hi)}
+.intro .eyebrow{color:var(--blood-hi)}
+
+/* ---------- title screen ---------- */
+.overlay.title{background:#050405;place-items:center start;padding:0;overflow:hidden}
+.ts-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ts-sky{position:absolute;inset:0;background:
+  radial-gradient(ellipse 60% 45% at 26% 30%,rgba(196,30,40,.55),rgba(120,12,20,.25) 45%,transparent 75%),
+  radial-gradient(ellipse 90% 60% at 30% 40%,rgba(80,6,12,.5),transparent 70%),
+  linear-gradient(180deg,#120709 0%,#0a0607 55%,#050405 100%)}
+.ts-sky::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(100deg,transparent 0 40px,rgba(0,0,0,.18) 40px 90px);mix-blend-mode:multiply;opacity:.5}
+.ts-castle{position:absolute;left:3%;bottom:12%;width:min(52vw,680px);height:auto;filter:drop-shadow(0 0 30px rgba(0,0,0,.8))}
+.ts-cliff{position:absolute;inset:auto 0 0 0;height:30%;background:
+  radial-gradient(ellipse 40% 60% at 80% 100%,#0b0909,transparent 70%),
+  radial-gradient(ellipse 60% 50% at 20% 100%,#0d0a0a,transparent 70%),
+  linear-gradient(180deg,transparent,#060505 60%)}
+.ts-fog{position:absolute;inset:auto 0 0 0;height:45%;background:linear-gradient(180deg,transparent,rgba(30,20,22,.35) 60%,rgba(5,4,5,.9));animation:fog 14s ease-in-out infinite alternate}
+@keyframes fog{to{transform:translateX(-3%);opacity:.8}}
+.ts-shade{position:absolute;inset:0;background:linear-gradient(to left,rgba(5,4,5,.92) 0%,rgba(5,4,5,.75) 32%,transparent 62%)}
+.ts-ash{position:absolute;inset:0}
+.ts-ash i{position:absolute;top:-4%;width:2px;height:2px;border-radius:50%;background:#cfc4b8;opacity:.0;animation:ash linear infinite}
+@keyframes ash{0%{transform:translate(0,0);opacity:0}10%{opacity:.7}90%{opacity:.5}100%{transform:translate(-60px,110vh);opacity:0}}
+.ts-menu{position:relative;z-index:1;display:grid;gap:clamp(18px,4vh,34px);width:min(440px,100%);margin-inline-start:clamp(16px,7vw,110px);
+  padding:24px max(16px,env(safe-area-inset-right,0px)) 24px 16px}
+.ts-head{display:grid;gap:4px}
+.ts-sub{font-family:var(--display);color:var(--blood-hi);letter-spacing:.2em;font-size:14px}
+.ts-title{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(38px,7vw,64px);line-height:1.1;color:var(--ink);text-shadow:0 0 30px rgba(196,30,40,.45),0 2px 0 #000}
+.ts-ver{font-size:11px;color:var(--muted);letter-spacing:.08em}
+.ts-list{position:relative;display:grid;gap:4px;padding-inline-start:26px}
+.ts-list::before{content:"";position:absolute;inset-inline-start:8px;top:6px;bottom:6px;width:2px;
+  background:linear-gradient(180deg,transparent,rgba(214,202,187,.7) 12%,rgba(214,202,187,.7) 88%,transparent);
+  -webkit-mask:repeating-linear-gradient(180deg,#000 0 14px,transparent 14px 16px);mask:repeating-linear-gradient(180deg,#000 0 14px,transparent 14px 16px)}
+.ts-list::after{content:"";position:absolute;inset-inline-start:2px;top:0;bottom:0;width:14px;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='60'%3E%3Cg fill='none' stroke='%23d6cabb' stroke-width='1' stroke-linecap='round' opacity='.75'%3E%3Cpath d='M7 6q6 4 5 10M7 30q-6 4-5 10M12 16l2-1M2 40l-2 1'/%3E%3C/g%3E%3C/svg%3E") center top/14px 60px repeat-y}
+.ts-item{position:relative;display:grid;gap:2px;text-align:start;padding:12px 18px;background:transparent;border:1px solid transparent;border-radius:3px;
+  font-family:var(--display);font-size:clamp(18px,2.6vw,23px);color:rgba(236,228,217,.55);transition:color .2s,background .2s,border-color .2s}
+.ts-item::after{content:"";position:absolute;inset-inline:18px 30%;bottom:2px;height:1px;background:linear-gradient(to left,rgba(214,202,187,.3),transparent)}
+.ts-item small{font-family:var(--body);font-size:12px;color:var(--muted)}
+.ts-item small b{color:var(--accent);font-weight:700}
+.ts-item.on,.ts-item:hover,.ts-item:focus-visible{color:var(--ink);outline:none;border-color:rgba(214,202,187,.55);
+  background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%280%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") top left/18px no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%2890%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") top right/18px no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%28180%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") bottom right/18px no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%3E%3Cg%20transform%3D%22rotate%28270%2020%2020%29%22%20fill%3D%22none%22%20stroke%3D%22%23d6cabb%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20stroke-width%3D%221.2%22%20d%3D%22M2%2038V10Q2%202%2010%202H38%22/%3E%3Cpath%20stroke-width%3D%22.8%22%20opacity%3D%22.55%22%20d%3D%22M7%2034V13Q7%207%2013%207H34%22/%3E%3Cpath%20stroke-width%3D%221%22%20d%3D%22M2%2018l-1.6-2.4M18%202l-2.4-1.6M2%2027l2.2-1.6M27%202l-1.6%202.2M11%2011q5-1%206%204t-4%205q-3%200-3-3t3-2%22/%3E%3Ccircle%20cx%3D%223%22%20cy%3D%223%22%20r%3D%221.8%22%20fill%3D%22%23d6cabb%22%20stroke%3D%22none%22/%3E%3C/g%3E%3C/svg%3E") bottom left/18px no-repeat,linear-gradient(90deg,rgba(20,14,16,.95),rgba(36,18,22,.9));box-shadow:inset 0 0 0 3px rgba(8,6,7,.9),inset 0 0 0 4px rgba(214,202,187,.14),0 0 24px -8px rgba(210,58,67,.6)}
+.ts-item.on::after,.ts-item:hover::after{opacity:0}
+.ts-item.warn{color:var(--blood-hi)}
+.ts-list:hover .ts-item.on:not(:hover){color:rgba(236,228,217,.55);border-color:transparent;background:transparent;box-shadow:none}
+.overlay.title .creator{position:relative;z-index:2;margin:auto;max-height:calc(100% - 32px);overflow-y:auto}
+.overlay.title:has(#creatorPanel:not([hidden])) .ts-menu{display:none}
+.overlay.title:has(#creatorPanel:not([hidden])){place-items:center}
+@media (max-width:640px){.overlay.title{place-items:end center}.ts-shade{background:linear-gradient(0deg,rgba(5,4,5,.95) 0%,rgba(5,4,5,.7) 45%,transparent 75%)}.ts-castle{width:100vw;left:0;bottom:30%}.ts-menu{margin:0 auto}}
+@media (max-height:480px){.ts-menu{gap:10px;padding-block:12px}.ts-title{font-size:34px}.ts-item{padding:7px 14px;font-size:17px}.ts-castle{width:52vw;bottom:8%}}
+@media (prefers-reduced-motion:reduce){.ts-ash,.ts-fog{animation:none;display:none}}
 </style>
 </head>
 <body>
@@ -503,17 +607,43 @@ th{color:var(--muted);font-weight:500}
   </div>
   <div class="rotate" id="rotateHint"><div><b>أدِر الجوال أفقياً</b><small>صُممت اللعبة للشاشة الأفقية</small><button class="ghost-btn" type="button" id="rotateSkip">العب هكذا</button></div></div>
 
-  <div class="overlay" id="creator">
-    <div class="creator">
+  <div class="overlay title" id="creator">
+    <div class="ts-bg" aria-hidden="true"><div class="ts-sky"></div><svg class="ts-castle" viewBox="0 0 600 520" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="cs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e0809"/><stop offset="1" stop-color="#070506"/></linearGradient></defs>
+<g fill="url(#cs)">
+<path d="M0 520V330h20v-20h12v20h16v-24h12v24h18V300l14-14 14 14v220z"/>
+<path d="M95 520V250h-8l22-60 22 60h-8v270z"/>
+<path d="M120 520V360h30v-16h10v16h14v-16h10v16h14v-16h10v16h22V520z"/>
+<path d="M230 520V210h-10l30-90 30 90h-10v310z"/>
+<path d="M248 120l2-55 2 55z"/>
+<path d="M270 520V300h26v-18h10v18h12v-18h10v18h12v-18h10v18h24V520z"/>
+<path d="M360 520V170h-12l40-120 40 120h-12v350z"/>
+<path d="M386 52l2-48 2 48z"/>
+<path d="M440 520V280h-8l26-70 26 70h-8v240z"/>
+<path d="M490 520V340h22v-14h10v14h12v-14h10v14h14v-14h10v14h20V520z"/>
+<path d="M560 520V240h-6l22-64 22 64h-6v280z"/>
+</g>
+<g fill="#c4232d" opacity=".85">
+<rect x="244" y="230" width="8" height="16" rx="4"/><rect x="244" y="290" width="8" height="16" rx="4"/>
+<rect x="382" y="190" width="9" height="20" rx="4.5"/><rect x="382" y="250" width="9" height="20" rx="4.5"/><rect x="382" y="320" width="9" height="20" rx="4.5"/>
+<rect x="105" y="280" width="7" height="14" rx="3.5"/><rect x="454" y="300" width="7" height="14" rx="3.5"/><rect x="573" y="270" width="6" height="12" rx="3"/>
+</g>
+</svg><div class="ts-cliff"></div><div class="ts-fog"></div><div class="ts-ash" id="tsAsh"></div><div class="ts-shade"></div></div>
+    <div class="ts-menu" id="tsMenu">
+      <div class="ts-head"><span class="ts-sub">ورثة هاشيرال</span><h1 class="ts-title">مغارات الأرواح</h1><span class="ts-ver">تحديث المنطقة الرابعة · نسخة تجريبية</span></div>
+      <nav class="ts-list" aria-label="القائمة الرئيسية">
+        <div id="contBox" hidden><button class="ts-item" id="contBtn" type="button"><span>تابع المغامرة</span><small><b id="contName">—</b> · <span id="contMeta"></span></small></button></div>
+        <button class="ts-item" id="newBtn" type="button"><span>مغامرة جديدة</span></button>
+        <button class="ts-item" id="replayIntro" type="button"><span>المقدمة</span></button>
+        <button class="ts-item" id="importBtn" type="button"><span>نقل حفظ من جهاز آخر</span></button>
+      </nav>
+    </div>
+    <div class="creator" id="creatorPanel" hidden>
       <header>
-        <span class="eyebrow">تحديث المنطقة الرابعة · نسخة تجريبية</span>
-        <h1>مغارات الأرواح</h1>
-        <p>صمّم شخصيتك وانطلق إلى المروج. اصطد الوحوش، وارفع مستوى أسلحتك بالدمج، واهزم زعماء المغارات وجنّد أرواحهم. كل زعيم يفتح لك بوابة منطقة جديدة: المروج ثم الصحراء القرمزية ثم الأراضي المتجمدة ثم الغابة المسحورة.</p>
+        <span class="eyebrow">مغامرة جديدة</span>
+        <h1>صمّم وريثك</h1>
+        <p>اختر اسمك وهيئتك، ثم انطلق إلى قارة الموت. اصطد الوحوش، وارفع مستوى أسلحتك بالدمج، واهزم زعماء المغارات وجنّد أرواحهم.</p>
       </header>
-      <div class="continue" id="contBox" hidden>
-        <div class="cont-info"><span class="eyebrow">حفظ موجود</span><b id="contName">—</b><small id="contMeta"></small></div>
-        <button class="start" id="contBtn" type="button">تابع المغامرة</button>
-      </div>
       <div class="creator-body">
         <canvas class="preview" id="preview" width="400" height="500" aria-label="معاينة الشخصية"></canvas>
         <div class="fields">
@@ -525,8 +655,7 @@ th{color:var(--muted);font-weight:500}
           <div class="field"><span>لون العيون</span><div class="swatches" id="eyeSw"></div></div>
           <div class="field"><span>لون الزي</span><div class="swatches" id="outfitSw"></div></div>
           <button class="start" id="startBtn" type="button">ابدأ المغامرة</button>
-          <button class="ghost-btn" id="replayIntro" type="button">شاهد المقدمة</button>
-          <button class="ghost-btn" id="importBtn" type="button">لديّ رمز حفظ من جهاز آخر</button>
+          <button class="ghost-btn" id="backBtn" type="button">رجوع</button>
         </div>
       </div>
     </div>
@@ -2709,12 +2838,21 @@ function showContinue(save){
   const army=save.army||(save.ally?[{...save.ally,type:'queen'}]:[]),box=$('contBox');
   $('contName').textContent=save.look&&save.look.name||'بطلك';
   $('contMeta').textContent=`المستوى ${AR(save.p.lvl)} · ${AR(save.kills||0)} وحش · ${AR((save.inv||[]).length)} أداة`+` · ${ZONES[save.zone||1].title}`+army.map(x=>` · ${allyName({type:'queen',...x})} Lv${x.lvl}`).join('');
-  box.hidden=false;$('startBtn').textContent='ابدأ شخصية جديدة';
+  box.hidden=false;tsMark();
   $('contBtn').onclick=()=>{startGame(save);toast('مرحباً بعودتك! تقدّمك محفوظ','#7ce0c3')};
   S.savedGame=save;$('contBtn').focus();
 }
+/* title menu */
+function tsMark(){const items=[...document.querySelectorAll('.ts-item')].filter(b=>b.offsetParent);items.forEach(b=>b.classList.remove('on'));if(items[0])items[0].classList.add('on')}
+document.querySelectorAll('.ts-item').forEach(b=>{b.addEventListener('mouseenter',()=>{document.querySelectorAll('.ts-item').forEach(x=>x.classList.toggle('on',x===b))});b.addEventListener('focus',()=>{document.querySelectorAll('.ts-item').forEach(x=>x.classList.toggle('on',x===b))})});
+{const ash=$('tsAsh');if(ash)ash.innerHTML=Array.from({length:36},()=>`<i style="left:${(Math.random()*110).toFixed(1)}%;animation-duration:${(7+Math.random()*9).toFixed(1)}s;animation-delay:-${(Math.random()*16).toFixed(1)}s;transform:scale(${(.6+Math.random()*1.2).toFixed(2)})"></i>`).join('')}
+requestAnimationFrame(tsMark);
+$('newBtn').onclick=()=>{
+  if(S.savedGame&&!armedNew){armedNew=true;const b=$('newBtn');b.classList.add('warn');b.querySelector('span').textContent='سيُمحى تقدّمك القديم. اضغط مرة أخرى للتأكيد';return}
+  $('creatorPanel').hidden=false;$('nameIn').focus();
+};
+$('backBtn').onclick=()=>{$('creatorPanel').hidden=true;armedNew=false;const b=$('newBtn');b.classList.remove('warn');b.querySelector('span').textContent='مغامرة جديدة';tsMark();b.focus()};
 $('startBtn').onclick=()=>{
-  if(S.savedGame&&!armedNew){armedNew=true;$('startBtn').textContent='هل أنت متأكد؟ سيُمحى تقدّمك القديم. اضغط مرة أخرى';return}
   /* the intro always plays before a new character's story begins */
   $('creator').hidden=true;
   showIntro(Object.assign(()=>startGame(),{label:'ابدأ المغامرة'}));
