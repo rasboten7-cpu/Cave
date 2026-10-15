@@ -2500,7 +2500,7 @@ function showIntro(done){
     $('introNext').textContent=i<INTRO.length-1?'التالي':(done.label||'اختر اسمك')};
   const end=()=>{ov.hidden=true;try{localStorage.setItem('cos-intro','1')}catch(e){}done()};
   $('introNext').onclick=()=>{if(++i>=INTRO.length)end();else draw()};
-  $('introSkip').onclick=end;
+  $('introSkip').hidden=!done.skip;$('introSkip').onclick=end;
   ov.hidden=false;draw();$('introNext').focus();
 }
 function renderPages(){
@@ -2715,7 +2715,9 @@ function showContinue(save){
 }
 $('startBtn').onclick=()=>{
   if(S.savedGame&&!armedNew){armedNew=true;$('startBtn').textContent='هل أنت متأكد؟ سيُمحى تقدّمك القديم. اضغط مرة أخرى';return}
-  startGame();
+  /* the intro always plays before a new character's story begins */
+  $('creator').hidden=true;
+  showIntro(Object.assign(()=>startGame(),{label:'ابدأ المغامرة'}));
 };
 
 /* ---------- loop ---------- */
@@ -2733,7 +2735,7 @@ function frame(now){
 
 const hot=window.claude&&window.claude.hot;
 if(hot&&hot.snapshot)hot.snapshot(()=>S.running?{p:S.scene==='cave'?{...S.p,x:S.field.x,y:S.field.y}:S.p,inv:S.inv,eq:S.eq,...Object.fromEntries(GSLOTS.map(g=>[g[1],S[g[1]]])),kills:S.kills,uidc,look:{...look},potions:S.potions,army:S.army,zone:S.zone,cleared:S.cleared,clears:S.clears,gold:S.gold,manaPots:S.manaPots,bagMax:S.bagMax,autoMerge:S.autoMerge,story:S.story,uniqPity:S.uniqPity||{},uniqGot:S.uniqGot||{},cons:S.cons,buffsLeft:Object.fromEntries(Object.keys(S.buffs||{}).filter(buffOn).map(k=>[k,S.buffs[k]-S.t])),reactSeen:S.reactSeen||{}}:{});
-$('replayIntro').onclick=()=>showIntro(()=>{});
+$('replayIntro').onclick=()=>showIntro(Object.assign(()=>{},{skip:true,label:'رجوع'}));
 $('rotateSkip').onclick=()=>$('rotateHint').classList.add('off');
 {const enc=o=>'COS1:'+btoa(unescape(encodeURIComponent(JSON.stringify(o)))),dec=t=>JSON.parse(decodeURIComponent(escape(atob(t.trim().replace(/^COS1:/,'')))));
  const open=(mode)=>{$('xfer').hidden=false;const ta=$('xferTxt');$('xferGo').hidden=mode!=='in';
@@ -2748,7 +2750,6 @@ $('rotateSkip').onclick=()=>$('rotateHint').classList.add('off');
 const boot=data=>{
   store.ready=initStore();
   let seenIntro=false;try{seenIntro=localStorage.getItem('cos-intro')==='1'}catch(e){}
-  if(!(data&&data.p)&&!seenIntro)showIntro(()=>{});
   if(data&&data.p){startGame(data);store.ready.then(()=>saveGame())}
   else store.ready.then(loadSave).then(showContinue);
   requestAnimationFrame(frame);
