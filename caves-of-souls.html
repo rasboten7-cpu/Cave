@@ -690,6 +690,11 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
 [data-pane=army]{padding:10px!important}[data-pane=army] select,[data-pane=army] button,.internal-lore-actions button{font:inherit;color:#e9d7bb;background:#17171b;border:1px solid #756147;min-height:40px;border-radius:3px;padding:8px;max-width:100%}
 [data-pane=army] label{display:grid;gap:5px;font-size:12px;color:#bcad99;min-width:0}[data-pane=army] select{width:100%;min-width:0}[data-pane=army] .plan-name{font-size:13px;line-height:1.8}[data-pane=army] .extra-hint{font-size:12px;line-height:1.7;color:#b3ad9b}
 @media(pointer:coarse){#armyBox{width:min(190px,40vw)!important}#armyBox .soul-mini{font-size:9px;min-height:26px;padding:4px}#questLine{max-width:170px;opacity:.8}}
+/* .9 notifications occupy one quiet line below the touch controls. */
+#toasts.toasts{top:auto!important;bottom:calc(3px + env(safe-area-inset-bottom,0px))!important;left:50%!important;right:auto!important;transform:translateX(-50%);width:min(500px,calc(100% - 28px));height:23px;max-height:23px;display:flex!important;flex-direction:column;gap:0;overflow:hidden;pointer-events:none;align-items:stretch;justify-content:flex-start;z-index:18}
+#toasts .toast,#toasts .toast.big{flex:0 0 23px;box-sizing:border-box;min-height:23px;max-height:23px;margin:0;padding:2px 12px;border-width:1px;box-shadow:none;border-radius:3px;font-family:var(--body);font-size:11px;line-height:17px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:100%;text-align:center;background:rgba(9,12,15,.9)}
+@media(pointer:coarse){#toasts.toasts{width:min(440px,46vw);height:20px;max-height:20px;bottom:calc(2px + env(safe-area-inset-bottom,0px))!important}#toasts .toast,#toasts .toast.big{flex-basis:20px;min-height:20px;max-height:20px;font-size:10px;line-height:16px;padding:1px 8px}.skillbar{bottom:calc(32px + env(safe-area-inset-bottom,0px))!important}.stick{bottom:calc(32px + env(safe-area-inset-bottom,0px))!important}.pot-btn{bottom:calc(32px + env(safe-area-inset-bottom,0px))!important}.atk-btn{bottom:calc(32px + env(safe-area-inset-bottom,0px))!important}}
+@media(pointer:coarse) and (orientation:portrait){#toasts.toasts{width:calc(100% - 28px)}}
 
 </style>
 </head>
@@ -834,7 +839,7 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
     <p class="note"><b style="color:var(--ink)">الدمج:</b> ادمج أداتين من النوع والتقييم نفسيهما (سيف عادي مع سيف عادي) ليرتفع مستوى الأداة؛ إذ تُجمع مستويات الأداتين، وكل مستوى يزيد قوتها ٧٪. وإذا تجاوزت المستوى ١٠ ارتقت إلى التقييم الأعلى واحتُسبت لها الزيادة.</p>
     <p class="note"><b style="color:var(--ink)">جرعات الصحة:</b> لكل وحش فرصة ١٠٪ لإسقاط جرعة، والجرعة تعيد ٤٥٪ من صحتك، ويمكنك حمل ٩ جرعات على الأكثر. وتتعافى صحتك تلقائياً إن لم تُصَب مدة ٣ ثوانٍ.</p>
     <p class="note"><b style="color:var(--ink)">زعيم المغارة:</b> يُسقط أداة مضمونة ترتفع مع كل زعيم: الزعيم الأول يُسقط أداة عادية من المستوى ١٠، وكل زعيم بعده يرفعها ٣ مستويات (الثاني فريدة من المستوى ٣، والثالث فريدة من المستوى ٦، وهكذا).</p>
-    <p class="build-tag">نسخة 2026.10.16.7 · إعصار السيوف من المستوى ٥</p>
+    <p class="build-tag">نسخة 2026.10.16.9 · إعصار السيوف من المستوى ٥</p>
 <h3 class="drawer-sub">نقل الحفظ</h3>
     <p class="note">أتريد مواصلة اللعب بشخصيتك نفسها على جهاز آخر أو في نسخة الويب؟ انسخ رمز الحفظ والصقه هناك من شاشة البداية.</p>
     <button class="ghost-btn" id="exportBtn" type="button">انسخ رمز الحفظ</button>
@@ -878,7 +883,7 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
 </g>
 </svg><div class="ts-cliff"></div><div class="ts-fog"></div><div class="ts-ash" id="tsAsh"></div><div class="ts-shade"></div></div>
     <div class="ts-menu" id="tsMenu">
-      <div class="ts-head"><span class="ts-sub">ورثة هاشيرال</span><h1 class="ts-title">مغارات الأرواح</h1><span class="ts-ver">حركة الوحوش وقيادة الأرواح · 2026.10.16.7</span></div>
+      <div class="ts-head"><span class="ts-sub">ورثة هاشيرال</span><h1 class="ts-title">مغارات الأرواح</h1><span class="ts-ver">حركة الوحوش وقيادة الأرواح · 2026.10.16.9</span></div>
       <nav class="ts-list" aria-label="القائمة الرئيسية">
         <div id="contBox" hidden><button class="ts-item" id="contBtn" type="button"><span>تابع المغامرة</span><small><b id="contName">—</b> · <span id="contMeta"></span></small></button></div>
         <button class="ts-item" id="newBtn" type="button"><span>مغامرة جديدة</span></button>
