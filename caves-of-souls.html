@@ -682,6 +682,14 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
 @media(max-height:500px){.story{padding:7px}.story-card{grid-template-columns:76px 1fr;padding:10px;gap:4px 12px}#stPortrait{width:76px;height:100px}.story-text{font-size:14px;min-height:30px;line-height:1.6}.story-who{font-size:16px}.story-next{min-height:36px;padding:6px 10px}#commandDock{bottom:10px}#questLine{top:90px}.extra-panel{max-height:94svh;padding:12px}}
 @media(pointer:coarse){#commandDock{bottom:calc(70px + env(safe-area-inset-bottom,0px));max-width:96vw}#commandDock button{font-size:11px;padding:7px 9px}#questLine{top:auto;bottom:125px;max-width:200px;font-size:10px}#trialExit{top:55px;padding:6px;font-size:10px}#armyBox{display:grid;grid-template-columns:1fr 1fr;gap:3px}#armyBox .ally-card{min-width:0;padding:4px}#armyBox .hero-top{gap:3px;display:grid;grid-template-columns:1fr}#armyBox .ally-name{font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#armyBox .lvl{display:none}#armyBox .bar-row{display:block}#armyBox .bar-row>span{display:none}#armyBox .ally-card:nth-child(n){display:grid}}
 @media(pointer:coarse) and (orientation:portrait){#commandDock{bottom:calc(152px + env(safe-area-inset-bottom,0px))}#questLine{bottom:205px}}
+/* .7 keeps the field clear: all commands and detail live inside inventory. */
+#commandDock,#armyBtn{display:none!important}
+#armyBox{display:grid!important;grid-template-columns:1fr 1fr!important;gap:3px!important;width:min(210px,42vw)!important;align-self:start}
+#armyBox .soul-mini{display:grid;gap:4px;min-width:0;min-height:29px;padding:5px 6px;border:1px solid #5c625755;border-radius:3px;background:#0a1115c9;pointer-events:auto;cursor:pointer;color:var(--soul-col);font:10px var(--body);text-align:start}
+.soul-mini-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}.soul-mini-track{display:block;height:3px;background:#9992;border-radius:2px;overflow:hidden}.soul-mini-track>i{display:block;height:100%;background:var(--soul-col);border-radius:2px}.soul-mini.down{opacity:.45}
+[data-pane=army]{padding:10px!important}[data-pane=army] select,[data-pane=army] button,.internal-lore-actions button{font:inherit;color:#e9d7bb;background:#17171b;border:1px solid #756147;min-height:40px;border-radius:3px;padding:8px;max-width:100%}
+[data-pane=army] label{display:grid;gap:5px;font-size:12px;color:#bcad99;min-width:0}[data-pane=army] select{width:100%;min-width:0}[data-pane=army] .plan-name{font-size:13px;line-height:1.8}[data-pane=army] .extra-hint{font-size:12px;line-height:1.7;color:#b3ad9b}
+@media(pointer:coarse){#armyBox{width:min(190px,40vw)!important}#armyBox .soul-mini{font-size:9px;min-height:26px;padding:4px}#questLine{max-width:170px;opacity:.8}}
 
 </style>
 </head>
@@ -826,7 +834,7 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
     <p class="note"><b style="color:var(--ink)">الدمج:</b> ادمج أداتين من النوع والتقييم نفسيهما (سيف عادي مع سيف عادي) ليرتفع مستوى الأداة؛ إذ تُجمع مستويات الأداتين، وكل مستوى يزيد قوتها ٧٪. وإذا تجاوزت المستوى ١٠ ارتقت إلى التقييم الأعلى واحتُسبت لها الزيادة.</p>
     <p class="note"><b style="color:var(--ink)">جرعات الصحة:</b> لكل وحش فرصة ١٠٪ لإسقاط جرعة، والجرعة تعيد ٤٥٪ من صحتك، ويمكنك حمل ٩ جرعات على الأكثر. وتتعافى صحتك تلقائياً إن لم تُصَب مدة ٣ ثوانٍ.</p>
     <p class="note"><b style="color:var(--ink)">زعيم المغارة:</b> يُسقط أداة مضمونة ترتفع مع كل زعيم: الزعيم الأول يُسقط أداة عادية من المستوى ١٠، وكل زعيم بعده يرفعها ٣ مستويات (الثاني فريدة من المستوى ٣، والثالث فريدة من المستوى ٦، وهكذا).</p>
-    <p class="build-tag">نسخة 2026.10.16.6 · إعصار السيوف من المستوى ٥</p>
+    <p class="build-tag">نسخة 2026.10.16.7 · إعصار السيوف من المستوى ٥</p>
 <h3 class="drawer-sub">نقل الحفظ</h3>
     <p class="note">أتريد مواصلة اللعب بشخصيتك نفسها على جهاز آخر أو في نسخة الويب؟ انسخ رمز الحفظ والصقه هناك من شاشة البداية.</p>
     <button class="ghost-btn" id="exportBtn" type="button">انسخ رمز الحفظ</button>
@@ -870,7 +878,7 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
 </g>
 </svg><div class="ts-cliff"></div><div class="ts-fog"></div><div class="ts-ash" id="tsAsh"></div><div class="ts-shade"></div></div>
     <div class="ts-menu" id="tsMenu">
-      <div class="ts-head"><span class="ts-sub">ورثة هاشيرال</span><h1 class="ts-title">مغارات الأرواح</h1><span class="ts-ver">مستنقع المنسيّين · 2026.10.16.6</span></div>
+      <div class="ts-head"><span class="ts-sub">ورثة هاشيرال</span><h1 class="ts-title">مغارات الأرواح</h1><span class="ts-ver">حركة الوحوش وقيادة الأرواح · 2026.10.16.7</span></div>
       <nav class="ts-list" aria-label="القائمة الرئيسية">
         <div id="contBox" hidden><button class="ts-item" id="contBtn" type="button"><span>تابع المغامرة</span><small><b id="contName">—</b> · <span id="contMeta"></span></small></button></div>
         <button class="ts-item" id="newBtn" type="button"><span>مغامرة جديدة</span></button>

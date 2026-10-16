@@ -171,11 +171,11 @@ const ALLIES={
   thorn:{tier:4,fem:true,name:'سيدة الأشواك',evoName:'ملكة الغابة الأبدية',start:31,max:50,evo:40,hpMul:3.2,dmgMul:3.8,ui:'#9be36a',col:'#d98ac0',evoCol:'#7cff9a'},
   frost:{tier:3,name:'تنين الصقيع',evoName:'تنين الشتاء الأبدي',start:21,max:40,evo:30,hpMul:2.4,dmgMul:2.8,ui:'#9fe3ff',col:'#7fc8ff',evoCol:'#e6f7ff'},
 };
-const ALLY_DMG=.55,ALLY_HP=.75;
+const ALLY_DMG=.32,ALLY_HP=.58;
 const allyEL=a=>{const A=ALLIES[a.type];return a.lvl+Math.max(0,A.max-a.lvl)*.35};
 const allyMaxHp=a=>Math.round((60+allyEL(a)*25)*ALLIES[a.type].hpMul*ALLY_HP),allyDmg=a=>(4+allyEL(a)*3.5)*ALLIES[a.type].dmgMul*ALLY_DMG*((a.buffT||0)>S.t?1.5:1)*(1+setBonus().a),allyNeed=l=>Math.floor(30*Math.pow(l,1.35));
 const allyEvo=a=>a.lvl>=ALLIES[a.type].evo;
-const allyR=a=>18+(a.lvl-ALLIES[a.type].start)*.6+(ALLIES[a.type].tier-1)*5+(allyEvo(a)?6:0);
+const allyR=a=>({queen:14,scorp:17,frost:20,thorn:16}[a.type]||16)+(allyEvo(a)?2:0);
 const tierStars=a=>'★'.repeat(ALLIES[a.type].tier);
 const allyUp=a=>a&&!a.down;
 const caveHere=()=>CAVES.find(c=>c.zone===S.zone);
@@ -349,6 +349,7 @@ function spreadPoison(src){
   S.fx.push({k:'ring',x:src.x,y:src.y,t:0,dur:.6,col:'#8be36a',big:true});if(n)react('spread',src);
 }
 function hit(m,{d,crit},dir,by='player',proc=true){
+  if(by==='player'&&m.bossType==='astefan'){m.exposedUntil=S.t+4;}else if(by!=='player')d*=m.kind==='boss'?soulBossFactor(m):.85;
   if(!S.mons.includes(m)||m.under)return;
   m.lastBy=by;
   if((m.frozenT||0)>S.t&&S.t-(m.frozeAt||0)>.15){d=Math.round(d*1.6);m.frozenT=0;react('shatter',m);
@@ -958,10 +959,11 @@ function update(dt){
     p.hp=Math.min(p.hp,mhp());p.mana=Math.min(maxMana(),(p.mana??maxMana())+maxMana()*.035*dt);
   }
   for(const m of S.mons){
-    if(m.poison&&S.t<m.poison.until){m.hp-=m.poison.dps*dt;m.poison.tick+=dt;
+    if(m.poison&&S.t<m.poison.until){m.hp-=m.poison.dps*(m.kind==='boss'&&m.poison.by!=='player'?soulBossFactor(m):1)*dt;m.poison.tick+=dt;
       if(m.poison.tick>.5){m.poison.tick=0;floatTxt(m.x+rand(-8,8),m.y-34,String(Math.round(m.poison.dps*.5)),'#8be36a',12)}
       if(m.hp<=0){m.lastBy=m.poison.by||'player';kill(m);continue}}
     if(m.kind==='boss'){updateBoss(m,dt);continue}
+    if(m.kind==='drowned'){updateDrowned(m,dt);continue}
     if(m.kind==='pod'){m.fuse-=dt;m.flash=Math.max(0,m.flash-dt);if(m.fuse<=0){S.mons.splice(S.mons.indexOf(m),1);aoeHit(m.x,m.y,115,m.dmg);SND.boom();
         S.fx.push({k:'ring',x:m.x,y:m.y,t:0,dur:.6,col:'#c86aa8',big:true});for(let j=0;j<16;j++)S.fx.push({k:'spark',x:m.x,y:m.y-10,vx:rand(-240,240),vy:rand(-260,40),t:0,dur:rand(.4,.8),col:pick(['#c86aa8','#8be36a','#ffd0f0'])})}continue}
     if((m.frozenT||0)>S.t){m.flash=Math.max(0,m.flash-dt);m.charge=0;m.lungeT=0;m.kb.x*=.5;m.kb.y*=.5;continue}
@@ -976,7 +978,7 @@ function update(dt){
         if(d<170){tx=-dx/d;ty=-dy/d}else if(d<260){tx=-dy/d*.6*m.side;ty=dx/d*.6*m.side}
         m.shotT-=dt;
         if(m.charge>0){m.charge-=dt;tx*=.15;ty*=.15;
-          if(m.charge<=0){const n=1,base=Math.atan2(dy,dx);
+          if(m.charge<=0){m.attackAt=S.t;const n=1,base=Math.atan2(dy,dx);
             for(let i=0;i<n;i++){const an=base+(i-(n-1)/2)*.25;S.eproj.push({x:m.x,y:m.y-24,vx:Math.cos(an)*240,vy:Math.sin(an)*240,life:2.4,dmg:Math.round(m.atk*(n>1?.7:.9)),r:6,col:m.kind==='ember'?'#ff8a3d':m.kind==='frost'?'#7fd8ff':m.kind==='pixie'?'#ff8ad8':'#c77dff',slow:m.kind==='frost',drain:m.kind==='pixie'})}}}
         else if(m.shotT<=0&&d<340){m.charge=.45;m.shotT=rand(2,2.8)}
       }else if(m.kind==='scorp'){
@@ -1011,7 +1013,7 @@ function update(dt){
     m.x+=tx*m.spd*wet*dt+m.kb.x*dt;m.y+=ty*m.spd*wet*dt*VY+m.kb.y*dt;
     m.kb.x*=Math.pow(.002,dt);m.kb.y*=Math.pow(.002,dt);
     m.x=clamp(m.x,b.x0,b.x1);m.y=clamp(m.y,b.y0,b.y1);m.flash=Math.max(0,m.flash-dt);if(m.strikeT)m.strikeT=Math.max(0,m.strikeT-dt);
-    if(!p.dead&&!isCaster(m)&&d<m.r+(onAlly?allyR(onAlly):12)&&S.t-m.lastHit>.9){m.lastHit=S.t;onAlly?hurtAlly(onAlly,m.atk):hurtPlayer(m.atk)}
+    if(!p.dead&&!isCaster(m)&&d<m.r+(onAlly?allyR(onAlly):12)&&S.t-m.lastHit>.9){m.lastHit=S.t;m.attackAt=S.t;onAlly?hurtAlly(onAlly,m.atk):hurtPlayer(m.atk)}
   }
   for(let i=0;i<S.mons.length;i++)for(let j=i+1;j<S.mons.length;j++){
     const a=S.mons[i],c=S.mons[j],dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy)||1,min=a.r+c.r;
@@ -1326,7 +1328,7 @@ function drawExpandedBossArt(c,key,t,body,alpha,angry,move){const im=monImg(key,
   const w=im.naturalWidth,h=im.naturalHeight,flash=body==='#fff',bob=key==='boss_frost'?Math.sin(t*(move?9:2.5))*(move?5:2):Math.sin(t*2.4)*1.2,sq=key==='boss_scorp'&&move?Math.sin(t*30)*.03:0;
   c.save();c.globalAlpha*=alpha;c.translate(0,bob);c.scale(1+sq,1-sq);
   if(angry&&!flash)c.filter='brightness(1.15) saturate(1.35)';
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.drawImage(flash?(monWhite(key,'front')||im):im,-Math.round(w/2),-h+14);c.imageSmoothingEnabled=sm;c.restore();return true}
+  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;drawCreatureFrame(c,flash?(monWhite(key,'front')||im):im,key,t,-Math.round(w/2),-h+14,w,h,angry||move);c.imageSmoothingEnabled=sm;c.restore();return true}
 /* gate art by destination; open = swirling light + motes, sealed = darkened with chains and lock */
 function drawExpandedGateArt(c,t,g){const im=gateImg(g.to);if(!im)return false;const open=!g.need||S.cleared[g.need],to=ZONES[g.to],W=150,H=W*im.naturalHeight/im.naturalWidth;
   const PC={1:'124,224,195',2:'255,120,60',3:'120,200,255',4:'170,110,255'}[g.to];
@@ -1355,7 +1357,7 @@ function drawMonArt(c,m,t,col){if(['leech','drowned','lantern'].includes(m.kind)
   c.translate(ox,y0);if(rot)c.rotate(rot);c.scale(s*sx*(v==='side'&&m._fx<0?-1:1),s*sy);
   if(k==='wisp'||k==='ember'||k==='frost'||k==='pixie'){const gc=k==='frost'?'140,210,255':k==='pixie'?'200,120,255':'255,120,40';c.save();c.globalCompositeOperation='lighter';const g=c.createRadialGradient(0,-h*.45,2,0,-h*.45,w*.9);g.addColorStop(0,`rgba(${gc},.42)`);g.addColorStop(1,`rgba(${gc},0)`);c.fillStyle=g;c.beginPath();c.arc(0,-h*.45,w*.9,0,Math.PI*2);c.fill();c.restore()}
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
-  c.drawImage(m.flash>0?(monWhite(k,v)||im):im,-Math.round(w/2),-h);c.imageSmoothingEnabled=sm;c.restore();
+  drawCreatureFrame(c,m.flash>0?(monWhite(k,v)||im):im,k,t,-Math.round(w/2),-h,w,h,m.charge>0||m.lungeT>0||S.t-(m.attackAt??-9)<.35);c.imageSmoothingEnabled=sm;c.restore();
   m._sprTop=y0-h*s*sy-4;return true}
 /* slime queen (boss / recruited soul / ally): painted sprite tinted by phase or evolution colour */
 function drawQueenArt(c,r,t,body,angry,alpha){const im=monImg('queen','front');if(!im)return false;
@@ -1363,7 +1365,7 @@ function drawQueenArt(c,r,t,body,angry,alpha){const im=monImg('queen','front');i
   c.save();c.globalAlpha*=alpha;c.scale(sc*(1+q),sc*(1-q));
   const flash=body==='#fff',hue=body==='#d94f8f'||body==='#ff9fdc'?35:body==='#4fb8ff'?-70:0;
   if(hue)c.filter=`hue-rotate(${hue}deg) saturate(1.2)`;if(angry&&!flash){c.filter=(hue?c.filter+' ':'')+'brightness(1.12)'}
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.drawImage(flash?(monWhite('queen','front')||im):im,-im.naturalWidth/2,-h+6);c.imageSmoothingEnabled=sm;c.restore();return true}
+  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;drawCreatureFrame(c,flash?(monWhite('queen','front')||im):im,'queen',t,-im.naturalWidth/2,-h+6,im.naturalWidth,h,angry);c.imageSmoothingEnabled=sm;c.restore();return true}
 /* SCORPION_TAIL_FIX_BEGIN — visual repair; existing combat remains authoritative. */
 function drawScorpionTailAttack(c,m,t,col){
   if(m.kind!=='scorp'||!m.sdir)return;
@@ -3141,12 +3143,12 @@ function renderPlans(){const level=planLevel();$('planUnlock').textContent=`قي
   for(const[key,label,options]of [['role','الدور',Object.fromEntries(Object.entries(ROLES).map(([k,v])=>[k,v[0]+(v[1]>level?` · تفتح في المرحلة ${AR(v[1])}`:'')]))],['priority','أولوية الهدف',PRIORITIES],['ability',specialName[a.type],ABILITIES]]){
    const l=document.createElement('label');l.textContent=label;const s=document.createElement('select');s.dataset.plan=key;s.dataset.soul=a.type;for(const[v,t]of Object.entries(options)){const o=document.createElement('option');o.value=v;o.textContent=t;o.disabled=key==='role'&&ROLES[v][1]>level;s.append(o)}s.value=plan[key];s.onchange=()=>{plan[key]=s.value;saveSoon();renderPlans()};l.append(s);card.append(l)}const note=document.createElement('span');note.className='plan-note';note.textContent=ROLES[roleOf(a)][2]+(plan.role==='rear'?' القذف الأساسي متاح لكل روح؛ الذيل يبقى قريب المدى.':'')+' · الاحتفاظ بالقدرة لا يوقف الهجوم الأساسي.';card.append(note);box.append(card)}
 }
-function issueOrder(kind){if(!S.running||S.p.dead||!S.army.length)return;if(S.paused&&$('planModal').hidden)return;
+function issueOrder(kind){if(!S.running||S.p.dead||!S.army.length)return;if(S.paused&&$('planModal').hidden&&($('drawer').hidden||invTab!=='army'))return;
  if(kind==='resume'){quickOrder=null;focusTarget=null;toast('الأرواح تنفّذ خطتك المحفوظة','#add9b3')}
  else if(kind==='focus'){
   const p=S.p;let score=1e9,best=null;for(const m of S.mons){if(m.under)continue;const dx=m.x-p.x,dy=m.y-p.y,d=Math.hypot(dx,dy)||1;if(d>750)continue;const s=d-100*(dx*p.face.x+dy*p.face.y)/d;if(s<score){score=s;best=m}}if(!best){toast('اقترب من عدو لتحديده','#d6bf88');return}focusTarget=best;quickOrder={kind,until:S.t+12};toast('الأرواح تركّز على الهدف المعلّم لمدة ١٢ ثانية','#ffd680')
  }else{focusTarget=null;quickOrder={kind,until:S.t+(kind==='retreat'?8:5)};toast(kind==='retreat'?'تراجعوا! تتوقف الهجمات ٨ ثوانٍ.':'تجمّعوا! العودة إلى القائد ٥ ثوانٍ.','#a9d8bc')}
- if(!$('planModal').hidden)closeExtra('planModal');atkHeld=false;keys.clear();
+ if(!$('planModal').hidden)closeExtra('planModal');if(!$('drawer').hidden&&invTab==='army')toggleInv(false);atkHeld=false;keys.clear();
 }
 function renderJournal(mode='log'){const box=$('journalBody'),st=storyState();box.replaceChildren();if(mode==='pages'){
  for(const k of st.pages){const p=PAGES[k];if(!p)continue;const row=document.createElement('div');row.className='journal-row';const b=document.createElement('b');b.textContent=p.title;const t=document.createElement('p');t.textContent=p.txt;const s=document.createElement('small');s.textContent=p.from;row.append(b,t,s);box.append(row)}
@@ -3202,6 +3204,96 @@ hud=function(){baseHud();$('armyBtnTxt').textContent='خطة الأرواح';$('
  if(S.army.length)S.army.forEach((a,i)=>{const card=$('armyBox')?.children[i];if(!card)return;const status=card.querySelector('[data-f="st"]');if(status)status.textContent+=` · ${ROLES[roleOf(a)][0]}`});
 };
 EXPANSION_READY.then(()=>{if(activeScene&&!$('story').hidden){const E=STORY[activeScene.id],l=E.lines[Math.max(0,activeScene.index-1)];if(l)drawPortrait(l[0])}});
+
+/* Release .7: compact UI, independent sprite articulation, readable attack windows. */
+function soulBossFactor(m){return m.bossType==='astefan'?(S.t<(m.exposedUntil||0)?.65:.06):.5}
+// The menu is part of inventory; there are no persistent command buttons over the battlefield.
+const armyTab=document.createElement('button');armyTab.type='button';armyTab.role='tab';armyTab.dataset.tab='army';armyTab.setAttribute('aria-selected','false');armyTab.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 3 4 7v6l8 8 8-8V7zM8 10l4 3 4-3"/></svg><span>الأرواح</span>';document.querySelector('#drawer .inv-tabs').insertBefore(armyTab,document.querySelector('#drawer [data-tab="more"]'));
+const armyPane=document.createElement('section');armyPane.className='inv-pane';armyPane.dataset.pane='army';armyPane.role='tabpanel';armyPane.hidden=true;
+const planPanel=document.querySelector('#planModal .extra-panel');for(const el of [...planPanel.children]){if(el.classList.contains('extra-head')){const h=document.createElement('h3');h.className='sec-title';h.textContent='خطة الأرواح';armyPane.append(h);const p=document.createElement('p');p.className='extra-hint';p.textContent='تفاصيل الجيش وأدواره وأوامره هنا. القتال متوقف حتى تغلق الحقيبة.';armyPane.append(p)}else armyPane.append(el)}document.querySelector('#drawer .inv-main').append(armyPane);
+const journalActions=document.createElement('div');journalActions.className='extra-row internal-lore-actions';const journalBtn=document.createElement('button');journalBtn.type='button';journalBtn.textContent='سجل الحوارات';journalBtn.onclick=()=>{renderJournal();openExtra('journalModal')};journalActions.append(journalBtn);document.querySelector('[data-pane="lore"]').prepend(journalActions);
+openPlans=function(){if(!S.running||!$('story').hidden||birdFlight>0)return;toggleInv(true);setInvTab('army');renderPlans();if(!S.army.length)$('planUnlock').textContent='اهزم زعيمًا وجنّد روحه لتبدأ بناء جيشك.'};
+const polishSetTab=setInvTab;
+setInvTab=function(tab){polishSetTab(tab);if(tab==='army')renderPlans()};
+const nativeRenderPlans=renderPlans;
+renderPlans=function(){nativeRenderPlans();[...$('planList').children].forEach((card,i)=>{const a=S.army[i],n=card.querySelector('.plan-name');if(n)n.textContent=`${allyName(a)} · المستوى ${AR(a.lvl)} / ${AR(ALLIES[a.type].max)} · صحة ${AR(Math.ceil(a.hp))} / ${AR(allyMaxHp(a))} · ضرر ${AR(Math.round(allyDmg(a)))}`})};
+renderArmy=function(){const box=$('armyBox');if(box.dataset.compact!=='1'||box.children.length!==S.army.length){box.dataset.compact='1';box.replaceChildren();for(const a of S.army){const b=document.createElement('button');b.type='button';b.className='soul-mini';b.onclick=openPlans;const n=document.createElement('span'),hp=document.createElement('i');n.className='soul-mini-name';hp.className='soul-mini-track';hp.append(document.createElement('i'));b.append(n,hp);box.append(b)}}S.army.forEach((a,i)=>{const b=box.children[i],A=ALLIES[a.type];b.style.setProperty('--soul-col',allyEvo(a)?A.evoCol:A.ui);b.querySelector('span').textContent=a.down?`${A.name} · ${AR(Math.ceil(a.downT))}ث`:A.name;b.querySelector('i i').style.width=(a.hp/allyMaxHp(a)*100)+'%';b.classList.toggle('down',!!a.down);b.title=allyName(a)+' · افتح التفاصيل والخطة';b.setAttribute('aria-label',`${allyName(a)}، صحة ${Math.round(a.hp/allyMaxHp(a)*100)} بالمئة، افتح خطة الأرواح`)})};
+const polishHud=hud;
+hud=function(){polishHud();$('armyBtn').hidden=true;$('commandDock').hidden=true;if(S.scene==='cave'){const b=S.mons.find(m=>m.bossType==='astefan');if(b)$('bossInfo').textContent=S.t<(b.exposedUntil||0)?'درع الدم مكسور · اضربوا الآن':'درع الدم نشط · اضربه ببطلك'}};
+BOSSES.astefan.desc+=' درع الدم يمتص معظم ضرر الأرواح ويعيد صحته ببطء. ضربات بطلك تكسره لأربع ثوانٍ.';
+const polishPrince=updateAstefan;
+updateAstefan=function(m,dt){polishPrince(m,dt);if(S.t>=(m.exposedUntil||0))m.hp=Math.min(m.max,m.hp+m.max*.0025*dt)};
+
+/* A cached deformable mesh changes wings, claws, head, roots and torso independently.
+   Native image geometry stays intact; individual frames are shared by equal creatures. */
+const creatureFrameCache=new WeakMap();
+function creatureWarp(kind,u,v,t,active){const breath=Math.sin(t*2.7),walk=Math.sin(t*10),side=u-.5,edge=Math.pow(Math.abs(side)*2,1.8);let x=u,y=v;
+ const torso=Math.exp(-Math.pow((v-.5)/.27,2))*(1-edge*.65);x+=side*breath*.022*torso;y-=breath*.009*torso;
+ if(kind==='boss_frost'||kind==='frostDragon'){
+  const wing=Math.max(0,1-Math.abs(v-.36)/.38)*edge;
+  y+=Math.sin(t*(active?7:3.8)+Math.abs(side)*2)*wing*(active?.09:.055);x+=side*Math.cos(t*3.8)*wing*.035;
+  x+=Math.sin(t*2.5+v*4)*Math.max(0,(v-.72)/.28)*.045;y-=Math.sin(t*3)*Math.exp(-Math.pow(side/.18,2))*Math.max(0,.4-v)*.055;
+ }else if(kind==='boss_scorp'||kind==='scorp'){
+  x+=Math.sin(t*(active?9:3.6)+v*4)*(1-v)*.045;y+=Math.sin(t*6+side*5)*edge*Math.max(0,v-.35)*.035;
+  x+=Math.sin(t*(active?12:4))*side*edge*Math.max(0,v-.28)*.045;
+ }else if(kind==='boss_thorn'||kind==='treant'){
+  x+=Math.sin(t*2.4+v*5)*Math.pow(1-v,1.5)*.025;y+=Math.sin(t*(active?7:3)+side*6)*edge*Math.max(0,1-Math.abs(v-.45)/.4)*.035;
+  x+=Math.sin(t*3+u*8)*Math.max(0,(v-.73)/.27)*.022;
+ }else if(kind==='queen'||kind==='slime'){
+  x+=side*Math.sin(t*(active?7:3.3)+v*4)*.07*(1-v*.6);y+=Math.sin(t*3.3+u*4)*Math.sin(v*Math.PI)*.025;
+ }else if(['wisp','ember','frost','pixie','lantern'].includes(kind)){
+  x+=Math.sin(t*(active?10:5)+v*8)*Math.pow(1-v,1.6)*.028;y+=Math.sin(t*5+u*5)*edge*.025;if(kind==='pixie')x+=side*Math.sin(t*13)*edge*.06;
+ }else if(['wolf','spider','beetle','leech'].includes(kind)){
+  const feet=Math.max(0,(v-.6)/.4);x+=Math.sin(t*12+u*15)*feet*.035;y+=Math.cos(t*12+u*15)*feet*.026;
+  if(active){x+=side*Math.sin(t*9)*Math.max(0,.65-v)*.06;y+=Math.sin(t*9)*Math.max(0,.6-v)*.035}
+  if(kind==='leech'){x+=side*Math.sin(t*4+v*5)*.06;y+=Math.cos(t*4+u*7)*Math.sin(v*Math.PI)*.018}
+ }else if(['golem','rockling','cactus','shroom'].includes(kind)){
+  x+=Math.sin(t*2.8+v*3)*(1-v)*.015;y+=Math.sin(t*(active?9:3)+u*7)*edge*Math.sin(v*Math.PI)*.022;
+  if(active)x+=side*Math.sin(t*8)*edge*.065;
+ }else if(kind==='astefan'||kind==='drowned'){
+  x+=Math.sin(t*3+v*5)*edge*Math.max(0,v-.4)*.018;y-=breath*Math.exp(-Math.pow(side/.25,2))*Math.max(0,.65-v)*.018;
+ }
+ return [x,y]}
+function triangleImage(c,im,s,d){const [s0,s1,s2]=s,[d0,d1,d2]=d,den=(s1[0]-s0[0])*(s2[1]-s0[1])-(s2[0]-s0[0])*(s1[1]-s0[1]);if(Math.abs(den)<.001)return;
+ const a=((d1[0]-d0[0])*(s2[1]-s0[1])-(d2[0]-d0[0])*(s1[1]-s0[1]))/den,b=((d1[1]-d0[1])*(s2[1]-s0[1])-(d2[1]-d0[1])*(s1[1]-s0[1]))/den,cc=((d2[0]-d0[0])*(s1[0]-s0[0])-(d1[0]-d0[0])*(s2[0]-s0[0]))/den,dd=((d2[1]-d0[1])*(s1[0]-s0[0])-(d1[1]-d0[1])*(s2[0]-s0[0]))/den;
+ c.save();c.beginPath();c.moveTo(...d0);c.lineTo(...d1);c.lineTo(...d2);c.closePath();c.clip();c.transform(a,b,cc,dd,d0[0]-a*s0[0]-cc*s0[1],d0[1]-b*s0[0]-dd*s0[1]);c.drawImage(im,0,0);c.restore()}
+function creatureFrame(im,kind,t,active){if(RM)return im;let cache=creatureFrameCache.get(im);if(!cache){cache=new Map();creatureFrameCache.set(im,cache)}const frame=Math.floor((t%4)*12),key=kind+':'+!!active+':'+frame;if(cache.has(key))return cache.get(key);
+ const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.imageSmoothingEnabled=true;const NX=6,NY=8,tt=frame/12;
+ const pt=(i,j)=>{const p=creatureWarp(kind,i/NX,j/NY,tt,active);return[p[0]*w,p[1]*h]};
+ for(let j=0;j<NY;j++)for(let i=0;i<NX;i++){const s=[[i*w/NX,j*h/NY],[(i+1)*w/NX,j*h/NY],[(i+1)*w/NX,(j+1)*h/NY],[i*w/NX,(j+1)*h/NY]],d=[pt(i,j),pt(i+1,j),pt(i+1,j+1),pt(i,j+1)];triangleImage(c,im,[s[0],s[1],s[2]],[d[0],d[1],d[2]]);triangleImage(c,im,[s[0],s[2],s[3]],[d[0],d[2],d[3]])}
+ if(cache.size>=64)cache.delete(cache.keys().next().value);cache.set(key,cv);return cv}
+function drawCreatureFrame(c,im,kind,t,x,y,w,h,active=false){c.drawImage(creatureFrame(im,kind,t,active),x,y,w,h)}
+const nativeExpandedBoss=drawExpandedBossArt;
+drawExpandedBossArt=function(c,key,t,body,alpha,angry,move){const im=monImg(key,'front');if(!im)return false;const maxH={boss_scorp:145,boss_frost:180,boss_thorn:156}[key]||160,k=Math.min(1,maxH/im.naturalHeight);c.save();c.scale(k,k);const ok=nativeExpandedBoss(c,key,t,body,alpha,angry,move);c.restore();return ok};
+// Allies have fixed compact silhouettes, independent of level growth.
+drawAlly=function(c,a,t){const A=ALLIES[a.type],evo=allyEvo(a),H={queen:51,scorp:59,frost:88,thorn:81}[a.type]+(evo?5:0);c.save();c.translate(a.x,a.y);if(a.down){c.fillStyle=A.ui;c.font='10px Tajawal';c.textAlign='center';c.fillText(AR(Math.ceil(a.downT))+'ث',0,-8);c.restore();return}
+ c.strokeStyle=A.ui+'88';c.lineWidth=1;c.beginPath();c.ellipse(0,2,allyR(a)+3,(allyR(a)+3)*TILT,0,0,Math.PI*2);c.stroke();const key=a.type==='queen'?'queen':'boss_'+a.type,im=monImg(key,'front');if(im){const w=H*im.naturalWidth/im.naturalHeight;c.save();if(a.face<0)c.scale(-1,1);if(a.flash>0)c.filter='brightness(1.9)';drawCreatureFrame(c,im,key,t+(a.type==='scorp'?1:0),-w/2,-H,w,H,S.t-(a.atkT||-9)<.4);c.restore()}
+ c.fillStyle=A.ui;c.font='9px Tajawal';c.textAlign='center';c.fillText(A.name,0,-H-5);c.restore()};
+const atlasCutCache={};
+function cutSprite(key){if(atlasCutCache[key])return atlasCutCache[key];const b=EXPANSION_ART.boxes[key],im=expansionImages.sprites;if(!b||!okImg(im))return null;const cv=document.createElement('canvas');cv.width=b[2];cv.height=b[3];cv.getContext('2d').drawImage(im,...b,0,0,b[2],b[3]);return atlasCutCache[key]=cv}
+const nativeAtlas=drawAtlasSprite;
+drawAtlasSprite=function(c,key,x,y,h,flip=false,alpha=1){if(!['leech','lantern','astefan','drowned'].includes(key))return nativeAtlas(c,key,x,y,h,flip,alpha);const im=cutSprite(key);if(!im)return false;const w=h*im.width/im.height;c.save();c.globalAlpha*=alpha;c.translate(x,y);if(flip)c.scale(-1,1);drawCreatureFrame(c,im,key,S.t,-w/2,-h,w,h,false);c.restore();return true};
+
+// The drowned warrior lifts the axe, swings through a visible cone, then recovers.
+function updateDrowned(m,dt){m.flash=Math.max(0,m.flash-dt);const b=bounds();if((m.frozenT||0)>S.t)return;const T=nearestTarget(m),d=Math.max(1,T.d),dir={x:T.dx/d,y:T.dy/d};if(d<300)m.aggro=true;if(!m.aggro)return;m.fl=dir.x<0?-1:1;
+ if(!m.axeState)m.axeState='walk';m.axeTimer=(m.axeTimer||0)-dt;
+ if(m.axeState==='walk'){
+  if(d>102){m.x+=dir.x*m.spd*dt;m.y+=dir.y*m.spd*dt*VY}
+  if(d<148&&m.axeTimer<=0){m.axeState='windup';m.axeTimer=.8;m.axeDir=dir;SND.warn()}
+ }else if(m.axeState==='windup'&&m.axeTimer<=0){m.axeState='swing';m.axeTimer=.28;m.attackAt=S.t;const D=m.axeDir;for(const a of [S.p,...S.army.filter(allyUp)]){const dx=a.x-m.x,dy=a.y-m.y,dd=Math.hypot(dx,dy)||1;if(dd<142+(a===S.p?0:allyR(a))&&(dx*D.x+dy*D.y)/dd>.25){if(a===S.p)hurtPlayer(m.atk*1.25);else hurtAlly(a,m.atk*1.25)}}SND.snap();S.fx.push({k:'crescent',x:m.x,y:m.y-10,dir:D,range:125,arc:2.4,fl:m.fl,t:0,dur:.3,col:'#b4d2a3',heavy:true})
+ }else if(m.axeState==='swing'&&m.axeTimer<=0){m.axeState='recover';m.axeTimer=.85}else if(m.axeState==='recover'&&m.axeTimer<=0){m.axeState='walk';m.axeTimer=.7}
+ m.x=clamp(m.x+m.kb.x*dt,b.x0,b.x1);m.y=clamp(m.y+m.kb.y*dt,b.y0,b.y1);m.kb.x*=Math.pow(.002,dt);m.kb.y*=Math.pow(.002,dt);
+}
+function drawAxeWarrior(c,m,t){const im=cutSprite('drowned');if(!im)return false;const H=84,W=H*im.width/im.height,flip=m.fl<0?-1:1;let angle=0;
+ if(m.axeState==='windup')angle=-.9*(1-m.axeTimer/.8);else if(m.axeState==='swing')angle=-.9+2.1*(1-m.axeTimer/.28);else if(m.axeState==='recover')angle=1.2*Math.max(0,m.axeTimer/.85);
+ c.save();c.scale(flip,1);c.translate(-W/2,-H);if(m.flash>0)c.filter='brightness(1.9)';const poly=[[0,.23],[.34,.24],[.38,.51],[.27,.85],[0,.9]],px=.35*W,py=.32*H;
+ c.save();c.beginPath();c.rect(-10,-10,W+20,H+20);c.moveTo(poly[0][0]*W,poly[0][1]*H);for(const p of poly.slice(1))c.lineTo(p[0]*W,p[1]*H);c.closePath();c.clip('evenodd');drawCreatureFrame(c,im,'drowned',t,0,0,W,H,false);c.restore();
+ c.save();c.translate(px,py);c.rotate(angle);c.translate(-px,-py);c.beginPath();poly.forEach((p,i)=>i?c.lineTo(p[0]*W,p[1]*H):c.moveTo(p[0]*W,p[1]*H));c.closePath();c.clip();c.drawImage(im,0,0,W,H);c.restore();c.restore();m._sprTop=-H-4;return true;
+}
+const previousSwampMon=drawSwampMon;
+drawSwampMon=function(c,m,t,col){return m.kind==='drowned'?drawAxeWarrior(c,m,t):previousSwampMon(c,m,t,col)};
+const previousGround=drawExpansionGround;
+drawExpansionGround=function(c){previousGround(c);for(const m of S.mons)if(m.kind==='drowned'&&m.axeState==='windup'){const d=m.axeDir,a=Math.atan2(d.y,d.x),k=1-m.axeTimer/.8;c.save();c.translate(m.x,m.y);c.fillStyle=`rgba(180,210,140,${.1+k*.2})`;c.strokeStyle='#c2d69b';c.lineWidth=2;c.beginPath();c.moveTo(0,0);c.arc(0,0,142,a-1.3,a+1.3);c.closePath();c.fill();c.stroke();c.restore()}};
 
 /* ---------- loop ---------- */
 let last=performance.now();
