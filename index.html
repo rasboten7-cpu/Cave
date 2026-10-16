@@ -1734,6 +1734,8 @@ function update(dt){
   for(let i=S.texts.length-1;i>=0;i--){const t=S.texts[i];t.t+=dt;t.y-=32*dt;if(t.t>.9)S.texts.splice(i,1)}
   if(S.scene==='field'){const n=S.mons.filter(m=>m.kind!=='boss').length;if(n<18){let g=0;while(S.mons.length<18&&g++<60)spawnMonster()}else if(n<MON_CAP){S.spawnT=(S.spawnT||0)-dt;if(S.spawnT<=0){S.spawnT=1.6;spawnMonster()}}}
   for(const m of S.mons)if(m.elite&&!m.announced&&Math.hypot(m.x-p.x,m.y-p.y)<700){m.announced=true;toast(`⭐ ظهر وحش نخبة: ${m.eName} Lv${m.lvl}`,'#ffd36e',true);SND.rare(1)}
+  if(S.scene==='cave'){caveFix(p,p._cx,p._cy);for(const m of S.mons)caveFix(m);for(const a of S.army)caveFix(a);for(const d of S.drops)caveFix(d)}
+  p._cx=p.x;p._cy=p.y;
   const camOff=S.scene==='cave'?-90:0;
   S.cam.x+=(p.x-VW/2-S.cam.x)*Math.min(1,dt*8);S.cam.y+=(p.y*TILT-VH/2+camOff-S.cam.y)*Math.min(1,dt*8);
 }
@@ -2352,21 +2354,72 @@ function drawCaveEntrance(c,t,cave){
   c.restore();
 }
 const MERCH_LOOK={gender:'m',hair:'#f3f3f8',eye:'#f0a92e',outfit:'#6c4fd1'};
-function drawMerchant(c,t,m){
+const DIRT_TILE=new Image();DIRT_TILE.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEb0lEQVR4nOVbsY7kIAxlV4lEwRZpppv6PuD+4P7/S7ZJQ4E0s7orTkSMY+xnIMlK+6SVdibBmIdtbGDe/vz+9df9YLxfrcDVOJSAGOOhMp7Pp9o+pSS2qxIQQlAFaaAyWuC9Z/93zrlpmpxzzs3zDLWn7ZwTCKDMc4LOQKlsOQkluY/Ho1n+CwEpJfd8PkVGz4b3nrWkPEEtVlZ1Ae+9m6ZpY3SED1NYyU0piXq06Ai5QEqp24dLprP51swVcTEk6Fnb7iygplCNaWkGSqa1AX59fYnPqTyKmmVpFrKLASEEtlHNGkZEeufsgYzqWGuf9auRt3OBGGPzoGpso/IsSy0nU2vPtREToew367puf5YO8mc0UFE3mefZFOQ4Nyt14mS9WWuBkoRlWV6EhxBEF7IMpscSLTATcBa8903Zp3P/LVcKmCV2QfBISCuBJfXWLAkdvHPCMngE8qC4AVjco8c16HIJ1wKaMC1AlugdQK0mQPqjy6UYA2qBqBYI8/fld98FtbGIzlJjlxt0+QwhAg1yNbKtCCG4eZ5tFtCDUYrXZI6Si4dLACmlLZAe4QZHyIS3xJCg+PHx0aUM2s9IsARIxZC0VFpWghpGZ39aVcsSkJUol7kcsFJK3TtGI4hCQQMtJVh0gTJilkxqpaeGvFJkIqxmr/Vj2ThhCUBmOCvRarLLsmxEhBBMWai2H9idCiObE1mJ3qCVI3tLHRJjNLXjJvbUYugIWCyHm9iuk6GWYIYobA2yVA9LsfWuvSCBBjMEiJU9Hg+TPmX6nT9ThBDYvoelwjT/L7PC2v80N+dy9R4dEGwE9Hb+nbCuK0zC5gLI4MuZk573oleOxQLETJBCO93RjqJRIHFi1PklXAu0YJ5nU1LiHL6yjHJXdRnsIaNFSRrRj4ZKAHq40UNUNvkQglvX1d1uN5UE7uDV0lcGnAhpOT/3HA1m+b0Yo1uWxX1+fqqWME3TFgckN9Muehx6RwidGRoo8+Dv97vYLruYRIA2cd+iFuAGsCyL6FZU11bdd9UgIqhn18a6LNbOFKkpe++372p9cHJ2LqD5rffedGWFrtfopYncDjkkzbEiT17NJczH4xyk463cSTkDreu1pR0NmJYVqTkISrOiJT/l/uIolJWpZUW65KrsUYewuQbgSvQa2exUoefrZWlbovdyQ8/dAO3YjoIdpZZYaGcErZcXc7+jXAOpCl9cAAke1ns/6GDQoqnnriCHFwIsM4e+W7OS1nLWWl1q2AVBynDvLS0OMUZ1mTvrjHBHAGUY3V2hgctyH6j1HRSSLPX3AnSmaj49Kjc/4moctaayD/MdoXJmLX6MDsxq+tZYEmN86aMrEbKkq0f5tDXVNp0On4mrfqRxOQHaTnOJHpJqbS8noPdw09KWC8zQbfHeJQ3BiPRXk8GNQyQAyc1jjJBpIhstFFaTpzKQtFl1AUQIYpopJfMst5h8SRqSNqsEtObe3OyV299HwUra0CCIboWd8UMIFEMJGF2pnYHLl8Gr8Q+yga62t/WpUAAAAABJRU5ErkJggg==';let DIRT_PAT=null;
+/* trodden dirt under the merchant camp (ground layer) */
+function drawCampGround(c,m){if(!DIRT_PAT&&okImg(DIRT_TILE))DIRT_PAT=c.createPattern(DIRT_TILE,'repeat');
+  c.save();c.translate(m.x+10,m.y+30);const R=230;c.beginPath();for(let i=0;i<=28;i++){const a=i/28*Math.PI*2,r=R*(.86+.14*Math.sin(i*2.7)+.06*Math.cos(i*5.1));c.lineTo(Math.cos(a)*r,Math.sin(a)*r*.9)}c.closePath();
+  c.fillStyle=DIRT_PAT||'#3a2c20';c.fill();const g=c.createRadialGradient(0,0,40,0,0,R);g.addColorStop(0,'rgba(60,40,24,.15)');g.addColorStop(.75,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.35)');c.fillStyle=g;c.fill();c.restore()}
+/* hooded merchant stall: posts, two-tone canopy, lanterns, banner, counter with wares, weapon rack */
+function drawMerchant(c,t,m){const L=c;
   c.save();c.translate(m.x,m.y);
-  c.fillStyle='rgba(0,0,0,.28)';ell(c,0,22,70,16);
-  c.fillStyle='#5a3b26';rr(c,-58,-70,6,92,2);rr(c,52,-70,6,92,2);
-  for(let i=0;i<6;i++){c.fillStyle=i%2?'#a89676':'#5e1418';c.beginPath();c.moveTo(-62+i*21,-74);c.lineTo(-62+(i+1)*21,-74);c.lineTo(-62+(i+1)*21,-60);c.quadraticCurveTo(-62+i*21+10.5,-52,-62+i*21,-60);c.closePath();c.fill()}
-  c.fillStyle='#2e1a12';rr(c,-64,-80,128,8,3);
-  c.restore();
-  drawHero(c,m.x,m.y-4,1,MERCH_LOOK,t*.5,false,{x:0,y:.5},null,0,false,null);
-  c.save();c.translate(m.x,m.y);
-  c.fillStyle='#7a5234';rr(c,-50,-8,100,28,4);c.fillStyle='#94683f';rr(c,-50,-8,100,6,3);
-  for(let i=0;i<4;i++){c.fillStyle='#b8860b';ell(c,-30+i*4,-10-i*1.6,5,2.4);c.fillStyle='#ffd36e';ell(c,-30+i*4,-11.5-i*1.6,5,2.4)}
-  c.fillStyle='#ff4f6d';ell(c,18,-13,5,5);c.fillStyle='#3b6fff';ell(c,30,-13,5,5);c.fillStyle='#e8e4f0';rr(c,16,-21,4,4,1);rr(c,28,-21,4,4,1);
-  c.textAlign='center';label2(c,-90,'التاجر','#ffd36e','700 15px "Reem Kufi",Tajawal,system-ui,sans-serif');
-  c.restore();
-}
+  c.fillStyle='rgba(0,0,0,.32)';ell(c,0,20,150,26);
+  const wood=['#2a1a10','#3e2818','#5a3a24','#74502f'];
+  const post=(x,y0,h)=>{c.fillStyle=wood[1];rr(c,x-4,y0-h,8,h,2);c.fillStyle=wood[3];c.fillRect(x-3,y0-h,2,h);c.fillStyle=wood[0];c.fillRect(x+2,y0-h,2,h)};
+  // back wall drape + back posts
+  post(-112,-30,108);post(112,-30,108);
+  c.fillStyle='#2b1a14';c.beginPath();c.moveTo(-108,-132);c.lineTo(108,-132);c.lineTo(108,-34);c.lineTo(-108,-34);c.fill();
+  for(let i=0;i<8;i++){c.fillStyle=i%2?'rgba(0,0,0,.18)':'rgba(255,220,180,.04)';c.fillRect(-108+i*27,-132,27,98)}
+  // shelves of goods on the back wall
+  c.fillStyle=wood[2];c.fillRect(-96,-92,80,4);c.fillRect(20,-92,76,4);
+  const bottle=(x,y,col)=>{c.fillStyle='#d8d0c0';c.fillRect(x-1,y-11,3,3);c.fillStyle=col;rr(c,x-3,y-8,7,8,2);c.fillStyle='rgba(255,255,255,.45)';c.fillRect(x-2,y-7,1,4)};
+  [['#c0283a',-88],['#2f9a4a',-76],['#6a3fd0',-64],['#d08a20',-50],['#c0283a',-36]].forEach(([col,x])=>bottle(x,-92,col));
+  c.fillStyle='#8a6a3a';rr(c,28,-104,14,12,2);rr(c,46,-102,10,10,2);c.fillStyle='#6a2a2a';rr(c,62,-106,22,14,2);c.fillStyle='#c9a24a';c.fillRect(66,-101,14,2);
+  // hooded merchant
+  const br=Math.sin(t*1.6)*1;
+  c.fillStyle='#1a1214';c.beginPath();c.moveTo(-22,-6);c.lineTo(-17,-44+br);c.lineTo(17,-44+br);c.lineTo(22,-6);c.fill();
+  c.fillStyle='#2a1c1c';c.beginPath();c.moveTo(-16,-8);c.lineTo(-12,-42+br);c.lineTo(-2,-42+br);c.lineTo(-4,-8);c.fill();
+  c.fillStyle='#231718';c.beginPath();c.ellipse(0,-56+br,15,16,0,0,Math.PI*2);c.fill();c.beginPath();c.moveTo(-15,-56+br);c.lineTo(0,-78+br);c.lineTo(15,-56+br);c.fill();
+  c.fillStyle='#070405';c.beginPath();c.ellipse(0,-52+br,9,10,0,0,Math.PI*2);c.fill();
+  const eg=.6+Math.sin(t*2.3)*.25;c.fillStyle=`rgba(255,190,90,${eg})`;c.fillRect(-5,-54+br,3,2);c.fillRect(2,-54+br,3,2);
+  c.fillStyle='#3a2622';c.fillRect(-14,-46+br,28,3);
+  // counter
+  c.fillStyle=wood[1];rr(c,-82,-12,164,32,3);for(let i=0;i<6;i++){c.fillStyle=i%2?wood[2]:wood[1];c.fillRect(-80+i*27,-6,26,25)}
+  c.fillStyle=wood[3];rr(c,-86,-16,172,7,2);c.fillStyle='rgba(0,0,0,.35)';c.fillRect(-82,16,164,4);
+  c.fillStyle='#6e1a1e';c.beginPath();c.moveTo(-34,-14);c.lineTo(34,-14);c.lineTo(30,14);c.lineTo(18,8);c.lineTo(6,14);c.lineTo(-6,8);c.lineTo(-18,14);c.lineTo(-30,8);c.closePath();c.fill();
+  c.fillStyle='#c9a24a';c.fillRect(-34,-12,68,2);
+  // hands + wares on the counter
+  c.fillStyle='#c8a080';ell(c,-10,-17,3,2);ell(c,10,-17,3,2);
+  [['#c0283a',-66],['#2f9a4a',-56],['#3b6fff',-46]].forEach(([col,x])=>bottle(x,-16,col));
+  c.fillStyle='#efe2c0';rr(c,40,-22,18,6,2);c.fillStyle='#c9a24a';ell(c,40,-19,2,3);ell(c,58,-19,2,3);
+  for(let i=0;i<4;i++){c.fillStyle='#b8860b';ell(c,68+i*1.5,-17-i*1.6,4,1.8);c.fillStyle='#ffd36e';ell(c,68+i*1.5,-18-i*1.6,4,1.8)}
+  c.fillStyle='#e8dcc8';rr(c,24,-28,4,10,1);const cf=Math.sin(t*10)*1;c.fillStyle='#ffb347';ell(c,26,-31,2,3.5+cf);
+  // front posts + canopy (cream / crimson panels, scalloped hem)
+  post(-126,22,128);post(126,22,128);
+  const cy0=-140,cy1=-104,n=8,w=264/n;
+  for(let i=0;i<n;i++){const x0=-132+i*w;c.fillStyle=i%2?'#6e1a1e':'#b9a684';c.beginPath();c.moveTo(x0+6,cy0);c.lineTo(x0+w-6+12,cy0);c.lineTo(x0+w,cy1);c.lineTo(x0,cy1);c.fill();
+    c.fillStyle=i%2?'rgba(0,0,0,.18)':'rgba(255,255,255,.08)';c.beginPath();c.moveTo(x0+6,cy0);c.lineTo(x0+12,cy0);c.lineTo(x0+4,cy1);c.lineTo(x0,cy1);c.fill();
+    c.fillStyle=i%2?'#5a1418':'#9c8a6a';c.beginPath();c.moveTo(x0,cy1);c.lineTo(x0+w,cy1);c.lineTo(x0+w,cy1+6);c.quadraticCurveTo(x0+w/2,cy1+16,x0,cy1+6);c.closePath();c.fill()}
+  c.fillStyle=wood[0];rr(c,-136,cy1-3,272,5,2);rr(c,-128,cy0-3,268,4,2);
+  // lanterns hanging from the front beam
+  for(const lx of[-118,118]){const sw=Math.sin(t*1.8+lx)*1.5;c.strokeStyle='#1a1210';c.lineWidth=1.5;c.beginPath();c.moveTo(lx,cy1);c.lineTo(lx+sw,cy1+12);c.stroke();
+    c.fillStyle='#2a1c12';rr(c,lx+sw-6,cy1+12,12,4,1);c.fillStyle='#ffb347';rr(c,lx+sw-5,cy1+16,10,12,2);c.fillStyle='#fff1c4';rr(c,lx+sw-2,cy1+18,4,7,1);c.fillStyle='#2a1c12';rr(c,lx+sw-6,cy1+28,12,3,1);
+    const g=c.createRadialGradient(lx+sw,cy1+22,1,lx+sw,cy1+22,34);g.addColorStop(0,'rgba(255,180,90,.45)');g.addColorStop(1,'rgba(255,140,60,0)');c.fillStyle=g;c.fillRect(lx+sw-34,cy1-12,68,68);
+    addLight(m.x+lx,m.y-30,190,'255,160,70',true)}
+  // banner on a pole (right)
+  post(158,24,150);c.fillStyle=wood[0];c.fillRect(140,-126,40,4);
+  const bw=Math.sin(t*1.3)*2;c.fillStyle='#6e1a1e';c.beginPath();c.moveTo(144,-122);c.lineTo(176,-122);c.lineTo(176+bw,-56);c.lineTo(160+bw,-66);c.lineTo(144+bw,-56);c.closePath();c.fill();
+  c.fillStyle='rgba(0,0,0,.2)';c.fillRect(144,-122,4,62);c.strokeStyle='#c9a24a';c.lineWidth=1.6;c.beginPath();c.moveTo(160+bw*.5,-112);c.lineTo(160+bw*.7,-74);
+  c.moveTo(152,-104);c.quadraticCurveTo(160,-94,168,-104);c.moveTo(154,-88);c.lineTo(166,-88);c.stroke();
+  // weapon rack + shield (right of the counter)
+  c.fillStyle=wood[1];c.fillRect(92,-30,4,50);c.fillRect(118,-30,4,50);c.fillRect(90,-28,34,3);
+  c.strokeStyle='#c9cfdc';c.lineWidth=2.5;c.beginPath();c.moveTo(100,18);c.lineTo(104,-38);c.stroke();c.fillStyle='#8a6a3a';c.fillRect(98,-8,10,3);
+  c.fillStyle='#4a3a2a';c.beginPath();c.moveTo(108,-14);c.lineTo(128,-14);c.lineTo(128,6);c.quadraticCurveTo(118,20,108,6);c.closePath();c.fill();c.strokeStyle='#9aa3b8';c.lineWidth=2;c.stroke();
+  c.fillStyle='#9aa3b8';c.fillRect(117,-12,2,22);c.fillRect(110,-6,16,2);
+  // barrels, crates, a chest
+  pBarrel(c,-150,14,.7);pBarrel(c,-128,22,.5);pCrate(c,-166,30);pCrate(c,140,34);
+  c.fillStyle='#4a2e1a';rr(c,-40,30,34,18,3);c.fillStyle='#5e3a22';rr(c,-40,24,34,10,4);c.fillStyle='#c9a24a';c.fillRect(-25,30,4,6);c.fillRect(-40,33,34,2);
+  c.textAlign='center';label2(c,-162,'التاجر','#ffd36e','700 15px "Reem Kufi",Tajawal,system-ui,sans-serif');
+  c.restore()}
 function drawGate(c,t,g){
   const open=!g.need||S.cleared[g.need],to=ZONES[g.to];
   const ST={1:['#5d5a6e','#6f6c82','#4a475a'],2:['#7a5a3e','#94704c','#6a4a30'],3:['#6f8aa6','#8aa6c2','#566e88'],4:['#4a3826','#5e4630','#3a2a1c']}[g.zone];
@@ -2398,6 +2451,16 @@ const ARENA={
   thorn:{floor:'#1c2e1e',tiles:['#223a24','#1f3521','#28442a'],crack:'#3f7a2a',glow:'rgba(130,210,90,.16)',pud:'rgba(200,106,168,.22)',wall:'#3e5a2e',pillar:'#4a3624',gate:'#142016',bar:'#6f8a4a'},
   scorp:{floor:'#3a2618',tiles:['#4a3020','#432b1c','#523624'],crack:'#2a1a10',glow:'rgba(255,140,60,.14)',pud:'rgba(217,160,102,.28)',wall:'#7a5236',pillar:'#5e3e28',gate:'#2a1a10',bar:'#8a6a4a'},
 };
+/* chasms inside the boss arena (not walkable) + a walkable plank bridge over the bottom-left one */
+const CAVE_HOLES=[
+  [[60,585],[230,572],[318,620],[336,700],[322,790],[268,860],[60,860]],
+  [[60,120],[200,112],[300,138],[322,196],[286,250],[196,262],[110,240],[60,214]],
+  [[1040,372],[972,384],[946,430],[958,500],[1000,524],[1040,520]]];
+const CAVE_BRIDGE={x0:60,x1:350,y0:688,y1:736};
+function inPoly(x,y,P){let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const[xi,yi]=P[i],[xj,yj]=P[j];if(((yi>y)!==(yj>y))&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c}return c}
+function caveHole(x,y){if(x>=CAVE_BRIDGE.x0&&x<=CAVE_BRIDGE.x1&&y>=CAVE_BRIDGE.y0&&y<=CAVE_BRIDGE.y1)return false;for(const P of CAVE_HOLES)if(inPoly(x,y,P))return true;return false}
+function caveFix(o,px,py){if(!o||!caveHole(o.x,o.y))return;if(px!=null&&!caveHole(px,o.y)){o.x=px;return}if(py!=null&&!caveHole(o.x,py)){o.y=py;return}
+  const cx=ARW/2,cy=ARH/2+60;for(let i=0;i<80&&caveHole(o.x,o.y);i++){const d=Math.hypot(cx-o.x,cy-o.y)||1;o.x+=(cx-o.x)/d*5;o.y+=(cy-o.y)/d*5}}
 /* ---------- boss cave v2: cobbled platform over an abyss, raised dais with goo, crystal-lit back wall ---------- */
 const CAVE_STYLE={
   queen:{acc:'190,80,255',accHex:'#c060ff',goo:['#4a1a6a','#7a2fb0','#a056e0','#d9a6ff'],stone:['#2c2522','#332b26','#272020','#3a302a'],wall:['#1e1a1f','#2a2329','#352c33'],flame:'#ff5ad8'},
@@ -2440,6 +2503,18 @@ function buildCaveFloor(key){const C=CAVE_STYLE[key]||CAVE_STYLE.queen,cv=docume
   // scattered goo puddles
   for(const[px,py,r]of[[230,560,46],[860,640,38],[420,720,30],[930,360,26],[160,330,24]]){x.fillStyle=C.goo[0]+'cc';x.beginPath();x.ellipse(px,py,r,r*.55,0,0,Math.PI*2);x.fill();x.fillStyle=C.goo[1]+'aa';x.beginPath();x.ellipse(px-3,py-2,r*.7,r*.38,0,0,Math.PI*2);x.fill();x.fillStyle=C.goo[3]+'66';x.fillRect(px-r*.3,py-r*.2,r*.25,2)}
   x.restore();
+  // chasms: rock face on the far (north) side, abyss below, faint water far down
+  for(const H of CAVE_HOLES){x.save();pathPts(x,H);x.clip();x.fillStyle=C.wall[1];x.fillRect(0,0,ARW,ARH+100);
+    for(let d=0;d<60;d+=6){x.fillStyle=d%12?C.wall[0]:C.wall[2];x.fillRect(0,0,0,0)}
+    pathPts(x,H,46);x.fillStyle='#030208';x.fill();
+    const wg=x.createLinearGradient(0,0,0,ARH);wg.addColorStop(0,'rgba(30,70,140,.0)');wg.addColorStop(1,'rgba(40,90,170,.25)');pathPts(x,H,46);x.fillStyle=wg;x.fill();
+    for(let i=0;i<40;i++){const hx=H[0][0]+rnd()*300-40,hy=H[0][1]+60+rnd()*200;if(inPoly(hx,hy-46,H)){x.fillStyle=`rgba(${100+rnd()*60|0},${170+rnd()*50|0},255,${.15+rnd()*.3})`;x.fillRect(hx,hy,5+rnd()*16,1.5)}}
+    for(let i=0;i<60;i++){const hx=H[0][0]-20+rnd()*320,hy=H[0][1]-10+rnd()*260;x.fillStyle='rgba(0,0,0,.35)';x.fillRect(hx,hy,2,6+rnd()*14)}
+    x.restore();x.strokeStyle='rgba(0,0,0,.6)';x.lineWidth=4;pathPts(x,H);x.stroke();x.strokeStyle='rgba(255,235,210,.08)';x.lineWidth=1.5;pathPts(x,H,-2);x.stroke()}
+  // plank bridge over the bottom-left chasm
+  {const B=CAVE_BRIDGE;for(let bx=B.x0;bx<B.x1;bx+=14){x.fillStyle=(bx/14|0)%2?'#4a3020':'#5a3a26';x.fillRect(bx,B.y0+2,12,B.y1-B.y0-4);x.fillStyle='rgba(0,0,0,.35)';x.fillRect(bx+10,B.y0+2,2,B.y1-B.y0-4)}
+    x.fillStyle='#2a1a10';x.fillRect(B.x0,B.y0-2,B.x1-B.x0,4);x.fillRect(B.x0,B.y1-2,B.x1-B.x0,4);
+    for(let bx=B.x0+10;bx<B.x1;bx+=48){x.fillStyle='#1e130b';x.fillRect(bx,B.y0-6,5,6);x.fillRect(bx,B.y1,5,6)}}
   // dais: stepped stone rings + goo pool
   for(const[r,col,dy]of[[DAIS.r+26,'#120e0d',10],[DAIS.r+20,C.stone[2],6],[DAIS.r+8,C.stone[3],0],[DAIS.r,'#1a1513',0]]){x.fillStyle=col;x.beginPath();x.ellipse(DAIS.x,DAIS.y+dy,r,r*.78,0,0,Math.PI*2);x.fill()}
   for(let i=0;i<36;i++){const a=i/36*Math.PI*2;x.save();x.translate(DAIS.x+Math.cos(a)*(DAIS.r+14),DAIS.y+Math.sin(a)*(DAIS.r+14)*.78);x.rotate(a+Math.PI/2);x.fillStyle=C.stone[i%4];x.fillRect(-13,-6,26,12);x.fillStyle='rgba(255,240,220,.08)';x.fillRect(-12,-6,24,2);x.restore()}
@@ -2449,9 +2524,6 @@ function buildCaveFloor(key){const C=CAVE_STYLE[key]||CAVE_STYLE.queen,cv=docume
   const gp=[];for(let i=0;i<22;i++){const a=i/22*Math.PI*2,r=(DAIS.r-22)*(.82+rnd()*.18);gp.push([DAIS.x+Math.cos(a)*r,DAIS.y+Math.sin(a)*r*.74])}
   pathPts(x,gp);x.fillStyle=C.goo[0];x.fill();const gg=x.createRadialGradient(DAIS.x,DAIS.y,10,DAIS.x,DAIS.y,DAIS.r);gg.addColorStop(0,C.goo[2]+'cc');gg.addColorStop(1,C.goo[1]+'33');pathPts(x,gp);x.fillStyle=gg;x.fill();
   for(let i=0;i<40;i++){const a=rnd()*Math.PI*2,r=rnd()*(DAIS.r-40);x.fillStyle=C.goo[3]+(rnd()<.5?'55':'99');x.fillRect(DAIS.x+Math.cos(a)*r,DAIS.y+Math.sin(a)*r*.72,2+rnd()*5,1.5)}
-  // wooden bridge leaving the bottom-left rim over the abyss
-  x.save();x.translate(170,ARH-40);for(let i=0;i<9;i++){x.fillStyle=i%2?'#4a3020':'#5a3a26';x.fillRect(-36,i*16,72,13);x.fillStyle='rgba(0,0,0,.35)';x.fillRect(-36,i*16+11,72,2)}
-  x.fillStyle='#2a1a10';x.fillRect(-40,0,5,150);x.fillRect(35,0,5,150);x.restore();
   return cv}
 /* back wall: rock columns, stalactites, a barred arch, crystal clusters (drawn upright, cached) */
 function buildCaveWall(key){const C=CAVE_STYLE[key]||CAVE_STYLE.queen,H=300,cv=document.createElement('canvas');cv.width=ARW+200;cv.height=H;const x=cv.getContext('2d'),rnd=caveRng(key.length*331+7);
@@ -2501,8 +2573,8 @@ function arenaEnts(ents,c){const key=caveKey(),C=CAVE_STYLE[key]||CAVE_STYLE.que
   for(let i=0;i<7;i++){const a=Math.PI*(1.05+i*.15),px=DAIS.x+Math.cos(a)*(DAIS.r+30),py=DAIS.y+Math.sin(a)*(DAIS.r+30)*.78;ents.push({y:py,d:()=>caveCandle(c,px,py,t,C)})}
   for(const[px,py]of[[DAIS.x-DAIS.r-34,DAIS.y+40],[DAIS.x+DAIS.r+34,DAIS.y+40]])ents.push({y:py,d:()=>caveCandle(c,px,py,t,C)});
   for(const[px,py]of[[120,150],[ARW-120,150],[120,ARH-120],[ARW-120,ARH-120]])ents.push({y:py,d:()=>caveBrazier(c,px,py,t)});
-  for(const[px,py,k]of[[92,250,'b'],[118,270,'b'],[100,300,'c'],[ARW-96,520,'b'],[ARW-110,548,'c'],[260,140,'c']])ents.push({y:py,d:()=>k==='b'?pBarrel(c,px,py,1):pCrate(c,px,py)});
-  for(const[px,py,s]of[[70,700,.9],[ARW-70,240,.8],[ARW-80,760,1]])ents.push({y:py,d:()=>{const X=c;X.save();caveCrystal(X,px,py,s,C);X.restore();addLight(px,py-20,140,C.acc,false)}})}
+  for(const[px,py,k]of[[350,140,'b'],[378,156,'b'],[330,170,'c'],[ARW-96,620,'b'],[ARW-110,648,'c'],[700,140,'c'],[380,560,'c'],[404,580,'b']])ents.push({y:py,d:()=>k==='b'?pBarrel(c,px,py,1):pCrate(c,px,py)});
+  for(const[px,py,s]of[[120,560,.9],[ARW-70,240,.8],[ARW-80,760,1],[340,300,.7]])ents.push({y:py,d:()=>{const X=c;X.save();caveCrystal(X,px,py,s,C);X.restore();addLight(px,py-20,140,C.acc,false)}})}
 /* foreground stalagmites framing the bottom of the view */
 function drawCaveFG(c){const key=caveKey(),C=CAVE_STYLE[key]||CAVE_STYLE.queen,rnd=caveRng(99);
   for(let i=0;i<9;i++){const px=-80+i*150+rnd()*50;if(Math.abs(px-ARW/2)<230){rnd();rnd();continue}const h=40+rnd()*60,w=30+rnd()*24,py=ARH+70;
@@ -2693,8 +2765,8 @@ function drawGround(c){
   }
   /* merchant camp + lit gates + torches at the cave mouth */
   const mer=MERCHANTS[S.zone];
-  drawProp(c,'fire',mer.x+150,mer.y+70,t,.3);drawProp(c,'torch',mer.x-92,mer.y-30,t,.1);drawProp(c,'torch',mer.x+92,mer.y-30,t,.7);
-  drawProp(c,'barrels',mer.x-150,mer.y+10,t,.6);drawProp(c,'cart',mer.x+40,mer.y-150,t,.5);
+  drawCampGround(c,mer);drawProp(c,'fire',mer.x+170,mer.y+110,t,.3);
+  drawProp(c,'cart',mer.x-230,mer.y+170,t,.5);
   const cv=caveHere();drawProp(c,'torch',cv.x-120,cv.y+20,t,.2);drawProp(c,'torch',cv.x+120,cv.y+20,t,.8);
   for(const g of GATES)if(g.zone===S.zone){drawProp(c,'torch',g.x-110,g.y+16,t,.4);drawProp(c,'torch',g.x+110,g.y+16,t,.9)}
   c.fillStyle='rgba(6,5,6,.92)';
