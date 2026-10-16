@@ -656,6 +656,33 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
 @media(max-width:560px){#creatorPanel{padding:16px;max-height:calc(100svh - 24px)}#creatorPanel .creator-body{grid-template-columns:1fr;gap:14px}.hero-studio{grid-template-columns:1fr 1fr;align-items:center;gap:8px}#creatorPanel .preview{grid-row:1/3;width:auto;height:210px;justify-self:center}.hero-studio .hero-turn{align-self:end}.hero-studio small{align-self:start}#creatorPanel .fields{gap:12px 10px}#creatorPanel .swatches button{width:34px;height:34px;min-width:34px;min-height:34px}}
 @media(max-height:520px) and (min-width:561px){#creatorPanel{max-height:calc(100svh - 20px);padding:14px 20px}#creatorPanel .creator-body{grid-template-columns:170px minmax(0,1fr);gap:20px}#creatorPanel .preview{height:212px;width:170px}#creatorPanel .fields{gap:10px 14px}#creatorPanel header p{font-size:12px}#creatorPanel .seg button{min-height:38px}#creatorPanel .swatches button{min-height:32px;min-width:32px;width:32px;height:32px}}
 
+/* Narrative, command table and isolated trial portal. */
+.story{z-index:80;background:rgba(3,5,7,.65);display:grid;place-items:end center;padding:18px;pointer-events:auto}
+.story-card{width:min(680px,100%);max-height:94svh;overflow:auto;display:grid;grid-template-columns:132px 1fr;gap:8px 18px;padding:20px;border-radius:4px;background:linear-gradient(125deg,#211a20,#0c1014);box-shadow:0 0 0 3px #08080b,0 16px 80px #000b;border:1px solid #73604a}
+#stPortrait{grid-row:1 / 5;width:132px;height:160px;object-fit:cover;border:1px solid #7b6449;background:#14131a;image-rendering:auto}
+.story-who{align-self:end;font-size:20px}.story-text{margin:0;line-height:1.95;font-size:18px;min-height:62px}
+#stCount{font-size:11px;color:#a89a8d}.story-next{justify-self:end;min-width:100px;min-height:42px}
+.extra-overlay{position:absolute;inset:0;z-index:85;display:grid;place-items:center;padding:16px;background:#030407c9;pointer-events:auto}
+.extra-overlay[hidden],.story[hidden]{display:none!important}
+.extra-panel{width:min(760px,100%);max-height:94svh;overflow:auto;overscroll-behavior:contain;border:1px solid #786144;background:linear-gradient(145deg,#221b1c,#0d1115);padding:22px;color:#e6d7c6;box-shadow:0 24px 80px #000b;border-radius:4px;direction:rtl}
+.extra-panel h2{margin:0 0 8px;color:#e6bf7b;font-family:var(--display)}
+.extra-panel p{color:#b8afa4;line-height:1.8}.extra-panel button,.extra-panel select,.extra-panel input{font:inherit;border:1px solid #6c5943;background:#17171b;color:#f4e2cc;padding:10px;border-radius:3px;min-height:44px}
+.extra-panel button{cursor:pointer}.extra-panel button:hover{border-color:#e6bf7b;background:#30241e}.extra-panel label{display:grid;gap:5px;font-size:13px;color:#c5b496}
+.extra-panel select{width:100%;min-width:0}.extra-panel .extra-head{display:flex;justify-content:space-between;gap:12px;align-items:start}
+.extra-close{width:44px;flex-shrink:0}.extra-row{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.extra-row>*{flex:1 1 100px}.extra-primary{background:#5e232a!important;border-color:#c09352!important}
+.plan-card{border:1px solid #514436;background:#0b1014aa;margin-top:10px;padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.plan-name{grid-column:1/-1;display:flex;justify-content:space-between;gap:10px;color:#e6bf7b}.plan-note{grid-column:1/-1;font-size:12px;color:#b6b9ad;line-height:1.6}
+.extra-hint{font-size:12px;color:#b9aa94}.extra-error{color:#ff9e9e;min-height:24px}.journal-row{border-bottom:1px solid #413b36;padding:12px 0}.journal-row b{color:#d8b780}.journal-row p{margin:5px 0}
+#commandDock{position:absolute;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));z-index:15;display:flex;gap:5px;pointer-events:auto}
+#commandDock[hidden]{display:none}#commandDock button,#trialExit{color:#e5d6be;background:#17151be8;border:1px solid #736047;padding:9px 12px;font:700 12px var(--body);border-radius:3px;min-height:40px;cursor:pointer}
+#commandDock button.active{border-color:#e2bb73;color:#ffe0a0;background:#44352c}#trialExit{position:absolute;top:90px;left:12px;z-index:22;border-color:#af8a50;color:#ffd680}
+#questLine{position:absolute;top:100px;right:16px;max-width:min(300px,60vw);font:12px var(--body);color:#d5c5a7;text-shadow:0 2px 3px #000;pointer-events:none}
+#trialLaunch{font-size:14px;color:#c6a577;margin-top:8px}#stReplay{font-size:12px}
+@media(max-width:640px){.extra-panel{padding:14px}.plan-card{grid-template-columns:1fr 1fr}.plan-card label:last-of-type{grid-column:1/-1}.story{padding:10px}.story-card{grid-template-columns:86px 1fr;gap:6px 12px;padding:14px}#stPortrait{width:86px;height:115px}.story-text{font-size:15px;min-height:65px;line-height:1.8}.story-who{font-size:17px}.story-next{padding:7px 12px}#commandDock{bottom:158px;gap:3px;max-width:96vw}#commandDock button{font-size:10px;padding:6px 9px;white-space:nowrap}#questLine{top:112px;font-size:10px;max-width:55vw}#trialExit{top:80px;font-size:10px;padding:7px}}
+@media(max-height:500px){.story{padding:7px}.story-card{grid-template-columns:76px 1fr;padding:10px;gap:4px 12px}#stPortrait{width:76px;height:100px}.story-text{font-size:14px;min-height:30px;line-height:1.6}.story-who{font-size:16px}.story-next{min-height:36px;padding:6px 10px}#commandDock{bottom:10px}#questLine{top:90px}.extra-panel{max-height:94svh;padding:12px}}
+@media(pointer:coarse){#commandDock{bottom:calc(70px + env(safe-area-inset-bottom,0px));max-width:96vw}#commandDock button{font-size:11px;padding:7px 9px}#questLine{top:auto;bottom:125px;max-width:200px;font-size:10px}#trialExit{top:55px;padding:6px;font-size:10px}#armyBox{display:grid;grid-template-columns:1fr 1fr;gap:3px}#armyBox .ally-card{min-width:0;padding:4px}#armyBox .hero-top{gap:3px;display:grid;grid-template-columns:1fr}#armyBox .ally-name{font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#armyBox .lvl{display:none}#armyBox .bar-row{display:block}#armyBox .bar-row>span{display:none}#armyBox .ally-card:nth-child(n){display:grid}}
+@media(pointer:coarse) and (orientation:portrait){#commandDock{bottom:calc(152px + env(safe-area-inset-bottom,0px))}#questLine{bottom:205px}}
+
 </style>
 </head>
 <body>
@@ -737,7 +764,7 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
 
   <div class="story" id="story" hidden>
     <div class="story-card" id="storyCard" role="dialog" aria-live="polite">
-      <span class="story-who" id="stWho"></span>
+      <canvas id="stPortrait" width="264" height="320" aria-label="صورة المتحدث"></canvas><span id="stCount"></span><span class="story-who" id="stWho"></span>
       <p class="story-text" id="stText"></p>
       <button type="button" class="story-next" id="stNext">متابعة</button>
     </div>
@@ -799,7 +826,7 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
     <p class="note"><b style="color:var(--ink)">الدمج:</b> ادمج أداتين من النوع والتقييم نفسيهما (سيف عادي مع سيف عادي) ليرتفع مستوى الأداة؛ إذ تُجمع مستويات الأداتين، وكل مستوى يزيد قوتها ٧٪. وإذا تجاوزت المستوى ١٠ ارتقت إلى التقييم الأعلى واحتُسبت لها الزيادة.</p>
     <p class="note"><b style="color:var(--ink)">جرعات الصحة:</b> لكل وحش فرصة ١٠٪ لإسقاط جرعة، والجرعة تعيد ٤٥٪ من صحتك، ويمكنك حمل ٩ جرعات على الأكثر. وتتعافى صحتك تلقائياً إن لم تُصَب مدة ٣ ثوانٍ.</p>
     <p class="note"><b style="color:var(--ink)">زعيم المغارة:</b> يُسقط أداة مضمونة ترتفع مع كل زعيم: الزعيم الأول يُسقط أداة عادية من المستوى ١٠، وكل زعيم بعده يرفعها ٣ مستويات (الثاني فريدة من المستوى ٣، والثالث فريدة من المستوى ٦، وهكذا).</p>
-    <p class="build-tag">نسخة 2026.10.16.5 · إعصار السيوف من المستوى ٥</p>
+    <p class="build-tag">نسخة 2026.10.16.6 · إعصار السيوف من المستوى ٥</p>
 <h3 class="drawer-sub">نقل الحفظ</h3>
     <p class="note">أتريد مواصلة اللعب بشخصيتك نفسها على جهاز آخر أو في نسخة الويب؟ انسخ رمز الحفظ والصقه هناك من شاشة البداية.</p>
     <button class="ghost-btn" id="exportBtn" type="button">انسخ رمز الحفظ</button>
@@ -843,7 +870,7 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
 </g>
 </svg><div class="ts-cliff"></div><div class="ts-fog"></div><div class="ts-ash" id="tsAsh"></div><div class="ts-shade"></div></div>
     <div class="ts-menu" id="tsMenu">
-      <div class="ts-head"><span class="ts-sub">ورثة هاشيرال</span><h1 class="ts-title">مغارات الأرواح</h1><span class="ts-ver">استعادة الحركة الأصلية · 2026.10.16.5</span></div>
+      <div class="ts-head"><span class="ts-sub">ورثة هاشيرال</span><h1 class="ts-title">مغارات الأرواح</h1><span class="ts-ver">مستنقع المنسيّين · 2026.10.16.6</span></div>
       <nav class="ts-list" aria-label="القائمة الرئيسية">
         <div id="contBox" hidden><button class="ts-item" id="contBtn" type="button"><span>تابع المغامرة</span><small><b id="contName">—</b> · <span id="contMeta"></span></small></button></div>
         <button class="ts-item" id="newBtn" type="button"><span>مغامرة جديدة</span></button>
@@ -886,6 +913,41 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
       <div class="intro-actions"><button type="button" class="start" id="introNext">التالي</button><button type="button" class="ghost-btn" id="introSkip">تخطَّ</button></div>
     </div>
   </div>
+</div>
+
+<div id="questLine" hidden></div>
+<div id="commandDock" hidden aria-label="أوامر الأرواح">
+ <button type="button" id="planOpen">خطة الأرواح</button>
+ <button type="button" data-order="focus">هدفي</button>
+ <button type="button" data-order="regroup">تجمّع</button>
+ <button type="button" data-order="retreat">تراجع</button>
+ <button type="button" id="journalOpen">السجل</button>
+</div>
+<button type="button" id="trialExit" hidden>تجربة منفصلة · رجوع</button>
+<div id="planModal" class="extra-overlay" hidden>
+ <section class="extra-panel" role="dialog" aria-modal="true" aria-labelledby="planTitle">
+  <div class="extra-head"><div><h2 id="planTitle">مجلس الأرواح</h2><p>اختر دور كل روح. يتوقف القتال أثناء التخطيط؛ أوامرك السريعة مؤقتة، وخطتك محفوظة.</p></div><button type="button" class="extra-close" data-close-extra="planModal" aria-label="إغلاق">×</button></div>
+  <p id="planUnlock" class="extra-hint"></p><div id="planList"></div>
+  <div class="extra-row"><button type="button" data-order="focus">ركّزوا على هدفي</button><button type="button" data-order="regroup">تجمّعوا عندي</button><button type="button" data-order="retreat">تراجعوا</button><button type="button" data-order="resume">نفّذوا الخطة</button></div>
+ </section>
+</div>
+<div id="journalModal" class="extra-overlay" hidden>
+ <section class="extra-panel" role="dialog" aria-modal="true" aria-labelledby="journalTitle">
+  <div class="extra-head"><h2 id="journalTitle">سجل الرحلة</h2><button type="button" class="extra-close" data-close-extra="journalModal" aria-label="إغلاق">×</button></div>
+  <div class="extra-row"><button type="button" id="journalLogBtn">الحوارات</button><button type="button" id="journalPagesBtn">الوثائق</button><button type="button" id="journalReplayBtn">إعادة آخر مشهد</button></div>
+  <div id="journalBody"></div>
+ </section>
+</div>
+<div id="trialModal" class="extra-overlay" hidden>
+ <section class="extra-panel" role="dialog" aria-modal="true" aria-labelledby="trialTitle">
+  <div class="extra-head"><h2 id="trialTitle">بوابة التجربة</h2><button type="button" class="extra-close" data-close-extra="trialModal" aria-label="إغلاق">×</button></div>
+  <p>جرّب أي منطقة من المناطق الخمس بشخصية مجهزة وأرواح المناطق السابقة. هذه جلسة مستقلة لا تغيّر حفظ مغامرتك.</p>
+  <label>كلمة المرور<input id="trialPassword" type="password" autocomplete="off" placeholder="أدخل كلمة المرور" dir="ltr"></label>
+  <div class="extra-row"><label>المنطقة<select id="trialZone"><option value="1">١ · المروج</option><option value="2">٢ · الصحراء القرمزية</option><option value="3">٣ · الأراضي المتجمدة</option><option value="4">٤ · الغابة المسحورة</option><option value="5" selected>٥ · مستنقع المنسيّين</option></select></label><label>سلاح البداية<select id="trialWeapon"><option value="sword">السيف</option><option value="bow">القوس</option><option value="spear">الرمح</option><option value="dagger">الخنجر</option></select></label></div>
+  <label><span><input id="trialImmortal" type="checkbox"> حماية من الموت أثناء التجربة</span></label>
+  <p class="extra-hint">تبدأ عند وصولك للمنطقة لتشاهد خبر الغراب. داخل التجربة تقدر تنتقل مباشرة إلى مدخل الزعيم، أو تفتح التجربة مجددًا لتبديل المنطقة.</p>
+  <p id="trialError" class="extra-error" role="status"></p><div class="extra-row"><button type="button" id="trialStart" class="extra-primary">ابدأ التجربة</button></div>
+ </section>
 </div>
 
 <script src="game.js"></script>
