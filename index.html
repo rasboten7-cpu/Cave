@@ -631,7 +631,6 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
         <div class="card hero-card" id="heroCard">
           <div class="hero-top"><span class="hero-name" id="hName">—</span><span class="lvl" id="hLvl">المستوى ١</span></div>
           <div class="bar-row"><span id="hpLbl">الصحة</span><div class="bar hp"><i id="hpBar"></i><span id="hpTxt"></span></div></div>
-          <div class="bar-row"><span>مانا</span><div class="bar mp"><i id="mpBar"></i><span id="mpTxt"></span></div></div>
           <div class="bar-row"><span>EXP</span><div class="bar xp"><i id="xpBar"></i><span id="xpTxt"></span></div></div>
           <small class="zone" id="zoneTxt"></small>
           <small class="zone heirs" id="heirTxt"></small>
@@ -645,7 +644,7 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
           <div class="weapon-meta"><b id="wName">—</b><small id="wStat">—</small></div>
         </div>
         <span class="gold-chip" id="goldChip" aria-label="الذهب"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></svg><b id="goldTxt">٠</b></span>
-        <button class="icon-btn mana" id="manaBtn" type="button" aria-label="اشرب جرعة مانا"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5L5.5 16a4 4 0 0 0 3.5 6h6a4 4 0 0 0 3.5-6L14 8V3M7.5 14h9"/></svg><span id="manaCount">٠</span> <kbd>E</kbd></button>
+        
         <button class="icon-btn pot" id="potBtn" type="button" aria-label="اشرب جرعة صحة"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v5L5.5 16a4 4 0 0 0 3.5 6h6a4 4 0 0 0 3.5-6L14 8V3M7.5 14h9"/></svg><span id="potCount">٣</span> <kbd>Q</kbd></button>
         <button class="icon-btn audio-btn" id="audioBtn" type="button"></button>
         <button class="icon-btn audio-btn" id="fsBtn" type="button" aria-label="ملء الشاشة" hidden><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -660,11 +659,11 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
     </div>
     <div class="toasts" id="toasts" aria-live="polite"></div>
     <div class="skillbar" id="skillBar" aria-label="المهارات"></div>
-    <div class="hint"><kbd>WASD</kbd> / الأسهم للحركة · <kbd>مسافة</kbd> للهجوم · <kbd>Q</kbd> جرعة · <kbd>E</kbd> مانا · <kbd>T</kbd> عودة · <kbd>M</kbd> الصوت · <kbd>R</kbd> الجيش · <kbd>I</kbd> الحقيبة</div>
+    <div class="hint"><kbd>WASD</kbd> / الأسهم للحركة · <kbd>مسافة</kbd> للهجوم · <kbd>Q</kbd> جرعة · <kbd>T</kbd> عودة · <kbd>M</kbd> الصوت · <kbd>R</kbd> الجيش · <kbd>I</kbd> الحقيبة</div>
     <div class="touch">
       <div class="stick" id="stick"><i id="knob"></i></div>
       <button class="pot-btn" id="potBtnM" type="button" aria-label="اشرب جرعة صحة"><svg class="pot-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 2.5h5M10.5 2.5v4.2a7 7 0 1 0 3 0V2.5"/><path class="liq" d="M5.6 14.2H18.4A6.4 6.4 0 0 1 5.6 14.2z"/></svg><span class="pc" id="potCountM">٣</span></button>
-      <button class="pot-btn mana-m" id="manaBtnM" type="button" aria-label="اشرب جرعة مانا">مانا<br><span id="manaCountM">٠</span></button>
+      
       <button class="atk-btn" id="atkBtn" type="button" aria-label="هجوم"><svg class="atk-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M14.5 6.5 18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></svg></button>
     </div>
   </div>
@@ -875,7 +874,7 @@ const GEAR={
   gloves:{name:'قفازات',adj:'F',desc:'تسرّع هجومك.'},
   boots:{name:'حذاء',adj:'A',desc:'يسرّع حركتك، وهو مفيد ضد الذئاب والزعماء السريعين.'},
   ring:{name:'خاتم',adj:'M',desc:'يزيد فرصة الضربة الحرجة وضررها، ويمكنك ارتداء خاتمين معاً.'},
-  amulet:{name:'قلادة',adj:'F',desc:'تزيد المانا وتقلل وقت انتظار المهارات.'},
+  amulet:{name:'قلادة',adj:'F',desc:'تزيد الصحة وتقلل وقت انتظار المهارات.'},
 };
 const isGear=t=>!!GEAR[t];
 const itemName=(t,rid)=>`${(WEAP[t]||GEAR[t]).name} ${pick(({F:ADJ_F,A:ADJ_A}[(GEAR[t]||{}).adj]||ADJ)[rid])}`;
@@ -889,14 +888,14 @@ const sat=(p,cap,K)=>cap*p/(p+K);
 function gearContrib(it){const p=it.power;switch(it.type){
   case'helm':return{def:p*.6,hp:p*.8};case'armor':return{def:p,hp:p*1.6};
   case'gloves':return{aspd:sat(p,.45,60)};case'boots':return{mspd:sat(p,.4,70)};
-  case'ring':return{crit:sat(p,.25,80),critDmg:sat(p,.9,100)};case'amulet':return{mana:Math.round(p*3),cdr:sat(p,.35,90)};}return{}}
+  case'ring':return{crit:sat(p,.25,80),critDmg:sat(p,.9,100)};case'amulet':return{hp:p*.8,cdr:sat(p,.35,90)};}return{}}
 const pct=v=>AR(Math.round(v*100))+'٪';
 function gearMain(it){const c=gearContrib(it);switch(it.type){
   case'helm':case'armor':return{v:Math.round(c.def),txt:`الدفاع ${AR(Math.round(c.def))} · الصحة +${AR(Math.round(c.hp))}`,fmt:v=>AR(v)};
   case'gloves':return{v:c.aspd,txt:`سرعة الهجوم +${pct(c.aspd)}`,fmt:pct};
   case'boots':return{v:c.mspd,txt:`سرعة الحركة +${pct(c.mspd)}`,fmt:pct};
   case'ring':return{v:c.crit,txt:`فرصة الحرجة +${pct(c.crit)} · ضرر الحرجة +${pct(c.critDmg)}`,fmt:pct};
-  case'amulet':return{v:c.cdr,txt:`مانا +${AR(c.mana)} · انتظار المهارات −${pct(c.cdr)}`,fmt:pct};}return{v:0,txt:'',fmt:String}}
+  case'amulet':return{v:c.cdr,txt:`الصحة +${AR(Math.round(c.hp))} · انتظار المهارات −${pct(c.cdr)}`,fmt:pct};}return{v:0,txt:'',fmt:String}}
 /* boss unique items */
 const UNIQ={
   crown:{boss:'queen',type:'helm',ilvl:10,name:'تاج ملكة الوحل',fx:'لكل ضربة منك فرصة ١٥٪ لإطلاق موجة مدّ من حولك تدفع الأعداء.'},
@@ -1046,13 +1045,13 @@ const mhp=()=>maxHp(S.p.lvl)+gearStats().hp;
 const dmgReduce=()=>{const d=gearStats().def;return Math.min(.75,Math.min(.6,d/(d+80))+(buffOn('iron')?.25:0))};
 const dmgMul=()=>(1+setBonus().p)*(buffOn('rage')?1.3:1);
 const SKILLS=[
-  {id:'whirl',lvl:20,name:'إعصار السيوف',mana:20,step:6,cd:4,desc:'تدور بسلاحك فتضرب كل الوحوش من حولك.',ico:'<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 1-8.5 6M12 8a4 4 0 1 1-3.8 2.7M3 4v5h5"/></svg>'},
-  {id:'stars',lvl:40,name:'مطر النجوم',mana:35,step:8,cd:7,desc:'نجوم تسقط على أقرب ١٠ وحوش وتنفجر.',ico:'<svg viewBox="0 0 24 24"><path d="m12 3 2.2 4.6 5 .7-3.6 3.5.9 5L12 14.5 7.5 16.8l.9-5L4.8 8.3l5-.7zM5 21l3-3M12 22v-3M19 21l-3-3"/></svg>'},
-  {id:'blink',lvl:60,name:'خطوة البرق',mana:30,step:7,cd:5,desc:'تندفع إلى الأمام وتضرب كل ما في طريقك، ولا تُصاب أثناء الاندفاع.',ico:'<svg viewBox="0 0 24 24"><path d="M13 2 5 13h6l-1 9 8-11h-6z"/></svg>'},
-  {id:'rally',lvl:80,name:'صرخة الجيش',mana:60,step:10,cd:25,desc:'يُشفى جيشك بنسبة ٥٠٪ ويزيد ضرره ٥٠٪ لمدة ١٠ ثوانٍ، وتُشفى أنت بنسبة ٢٥٪.',ico:'<svg viewBox="0 0 24 24"><path d="M4 10v4h3l5 4V6L7 10zM16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14"/></svg>'},
-  {id:'judge',lvl:100,name:'حكم الإمبراطور',mana:120,step:15,cd:30,desc:'انفجار هائل يضرب كل شيء حولك بقوة ضخمة.',ico:'<svg viewBox="0 0 24 24"><path d="M4 18h16l-2-9-4 4-2-7-2 7-4-4zM4 21h16"/></svg>'},
+  {id:'whirl',lvl:20,name:'إعصار السيوف',mana:0,step:0,cd:6,desc:'تدور بسلاحك فتضرب كل الوحوش من حولك.',ico:'<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 1-8.5 6M12 8a4 4 0 1 1-3.8 2.7M3 4v5h5"/></svg>'},
+  {id:'stars',lvl:40,name:'مطر النجوم',mana:0,step:0,cd:10,desc:'نجوم تسقط على أقرب ١٠ وحوش وتنفجر.',ico:'<svg viewBox="0 0 24 24"><path d="m12 3 2.2 4.6 5 .7-3.6 3.5.9 5L12 14.5 7.5 16.8l.9-5L4.8 8.3l5-.7zM5 21l3-3M12 22v-3M19 21l-3-3"/></svg>'},
+  {id:'blink',lvl:60,name:'خطوة البرق',mana:0,step:0,cd:7,desc:'تندفع إلى الأمام وتضرب كل ما في طريقك، ولا تُصاب أثناء الاندفاع.',ico:'<svg viewBox="0 0 24 24"><path d="M13 2 5 13h6l-1 9 8-11h-6z"/></svg>'},
+  {id:'rally',lvl:80,name:'صرخة الجيش',mana:0,step:0,cd:30,desc:'يُشفى جيشك بنسبة ٥٠٪ ويزيد ضرره ٥٠٪ لمدة ١٠ ثوانٍ، وتُشفى أنت بنسبة ٢٥٪.',ico:'<svg viewBox="0 0 24 24"><path d="M4 10v4h3l5 4V6L7 10zM16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14"/></svg>'},
+  {id:'judge',lvl:100,name:'حكم الإمبراطور',mana:0,step:0,cd:40,desc:'انفجار هائل يضرب كل شيء حولك بقوة ضخمة.',ico:'<svg viewBox="0 0 24 24"><path d="M4 18h16l-2-9-4 4-2-7-2 7-4-4zM4 21h16"/></svg>'},
 ];
-const maxMana=()=>50+S.p.lvl*5+gearStats().mana;
+const maxMana=()=>100;
 const skillRank=sk=>S.p.lvl<sk.lvl?0:Math.min(10,1+Math.floor((S.p.lvl-sk.lvl)/5));
 const skillCost=sk=>sk.mana+sk.step*(Math.max(1,skillRank(sk))-1);
 const skillMult=sk=>1+.15*(Math.max(1,skillRank(sk))-1);
@@ -1081,7 +1080,6 @@ addEventListener('keydown',e=>{
   else if(k==='i'||k==='ه'){if(S.running)toggleInv()}
   else if(k==='q'||k==='ض'){if(S.running&&!S.paused)drinkPotion()}
   else if(e.code==='KeyR'){if(S.running&&!S.paused)toggleArmy()}
-  else if(e.code==='KeyE'){if(S.running&&!S.paused)drinkMana()}
   else if(e.code==='KeyT'){if(S.running&&!S.paused)useCons('recall')}
   else if(e.code==='KeyM'){cycleAudio()}
   else if(/^Digit[1-5]$/.test(e.code)){if(S.running&&!S.paused&&$('drawer').hidden)useSkill(+e.code.slice(5)-1)}
@@ -1261,8 +1259,7 @@ function useSkill(i){
   const rank=skillRank(sk);
   if(!rank){toast(`${sk.name} تنفتح عند المستوى ${AR(sk.lvl)}`,'#5fa8ff');return}
   if(S.t-(S.skillT[sk.id]??-99)<skCd(sk))return;
-  const cost=skillCost(sk);if(p.mana<cost){toast('المانا لا تكفي','#5fa8ff');return}
-  p.mana-=cost;S.skillT[sk.id]=S.t;SND.skill(sk.id);p.auraT=S.t;
+  S.skillT[sk.id]=S.t;SND.skill(sk.id);p.auraT=S.t;
   const it=eqItem(),base=playerAtk(it)*WEAP[it.type].pow*skillMult(sk)*dmgMul();
   const dmg=k=>({d:Math.round(base*k*rand(.9,1.1)),crit:false});
   const dirTo=m=>{const d=Math.hypot(m.x-p.x,m.y-p.y)||1;return{x:(m.x-p.x)/d,y:(m.y-p.y)/d}};
@@ -1326,11 +1323,11 @@ function drinkPotion(){
   floatTxt(p.x,p.y-60,'+'+h,'#7ce0c3',18);
   for(let i=0;i<8;i++)S.fx.push({k:'spark',x:p.x+rand(-12,12),y:p.y-10,vx:rand(-30,30),vy:rand(-140,-60),t:0,dur:rand(.4,.7),col:'#7ce0c3'});
 }
-$('potBtn').onclick=drinkPotion;$('manaBtn').onclick=drinkMana;$('manaBtnM').addEventListener('pointerdown',e=>{e.preventDefault();drinkMana()});$('armyBtn').onclick=()=>toggleArmy();
+$('potBtn').onclick=drinkPotion;$('armyBtn').onclick=()=>toggleArmy();
 $('potBtnM').addEventListener('pointerdown',e=>{e.preventDefault();drinkPotion()});
 
 function canTake(it){
-  if(it.gold)return true;if(it.manaPot)return S.manaPots<POT_MAX;if(it.cons)return (S.cons[it.cons]||0)<POT_MAX;
+  if(it.gold)return true;if(it.manaPot)return S.potions<POT_MAX;if(it.cons)return (S.cons[it.cons]||0)<POT_MAX;
   if(it.potion)return S.potions<POT_MAX;
   return S.inv.length<S.bagMax||it.rar===0||(S.autoMerge&&!!mergeTarget(it))||S.inv.some(x=>x.rar===0&&!isEquipped(x.uid));
 }
@@ -1338,7 +1335,7 @@ function pickup(dr){
   const it=dr.it;
   if(it.cons){if((S.cons[it.cons]||0)>=POT_MAX)return false;SND.pick();S.cons[it.cons]=(S.cons[it.cons]||0)+1;toast(`+١ ${CONS[it.cons].name}`,CONS[it.cons].col);return true}
   if(it.gold){SND.coin();S.gold+=it.gold;floatTxt(S.p.x+rand(-10,10),S.p.y-48,`+${it.gold} ذهب`,'#ffd36e',13);if(it.gold>=100)toast(`+${AR(it.gold)} ذهب`,'#ffd36e');return true}
-  if(it.manaPot){if(S.manaPots>=POT_MAX)return false;S.manaPots++;toast('+١ جرعة مانا','#7fb8ff');return true}
+  if(it.manaPot){it.potion=true}
   if(it.potion){if(S.potions>=POT_MAX)return false;S.potions++;toast('+١ جرعة صحة','#ff8fa3');return true}
   const R=RAR[it.rar];
   if(S.autoMerge&&mergeTarget(it)){S.inv.push(it);toast(`حصلت على ${it.name} · ${R.name}`,R.color);autoMerge(it);saveSoon();return true}
@@ -1375,7 +1372,7 @@ function bossDown(m){
   const main=makeItem(dropType(),rar,D.lvl+2);main.grade=bt.grade;main.power=itemPower(main);
   S.drops.push({x:m.x-20,y:m.y+10,it:main,t:0});
   S.drops.push({x:m.x+30,y:m.y+20,it:makeItem(dropType(),0,D.lvl+1),t:0});
-  S.drops.push({x:m.x-50,y:m.y+30,it:{potion:true},t:0},{x:m.x+60,y:m.y-10,it:{potion:true},t:0},{x:m.x,y:m.y+40,it:{gold:D.lvl*50},t:0},{x:m.x-30,y:m.y-40,it:{cons:pick(['rage','iron','luck'])},t:0},{x:m.x+20,y:m.y-30,it:{manaPot:true},t:0});
+  S.drops.push({x:m.x-50,y:m.y+30,it:{potion:true},t:0},{x:m.x+60,y:m.y-10,it:{potion:true},t:0},{x:m.x,y:m.y+40,it:{gold:D.lvl*50},t:0},{x:m.x-30,y:m.y-40,it:{cons:pick(['rage','iron','luck'])},t:0},{x:m.x+20,y:m.y-30,it:{potion:true},t:0});
   S.uniqPity=S.uniqPity||{};const uid=Object.keys(UNIQ).find(k=>UNIQ[k].boss===m.bossType);
   if(uid){S.uniqGot=S.uniqGot||{};const owned=S.uniqGot[uid]||S.inv.some(i=>i.uniq===uid),ch=owned?.2+(S.uniqPity[uid]||0):1;
     if(Math.random()<ch){S.uniqPity[uid]=0;S.uniqGot[uid]=1;S.drops.push({x:m.x,y:m.y-20,it:makeUnique(uid,bt),t:-.4});setTimeout(()=>toast(`سقط غرض زعيم: ${UNIQ[uid].name}!`,'#ff9f1c',true),900)}
@@ -1865,7 +1862,7 @@ function update(dt){
   }
   for(let i=S.eproj.length-1;i>=0;i--){
     const e=S.eproj[i];e.x+=e.vx*dt;e.y+=e.vy*dt;e.life-=dt;
-    if(!p.dead&&Math.hypot(e.x-p.x,e.y-(p.y-18))<e.r+9){hurtPlayer(e.dmg);if(e.drain&&S.t>=(p.invT||0)){const dm=Math.round(maxMana()*.15);p.mana=Math.max(0,p.mana-dm);floatTxt(p.x,p.y-80,'-'+dm+' مانا','#ff8ad8',13)}if(e.slow&&S.t>=(p.invT||0)){if(S.t>=(p.slowT||0))floatTxt(p.x,p.y-74,'تجمّد!','#9fe3ff',14);p.slowT=S.t+1.6}S.eproj.splice(i,1);continue}
+    if(!p.dead&&Math.hypot(e.x-p.x,e.y-(p.y-18))<e.r+9){hurtPlayer(e.dmg);if(e.slow&&S.t>=(p.invT||0)){if(S.t>=(p.slowT||0))floatTxt(p.x,p.y-74,'تجمّد!','#9fe3ff',14);p.slowT=S.t+1.6}S.eproj.splice(i,1);continue}
     const ha=S.army.find(a=>allyUp(a)&&Math.hypot(e.x-a.x,e.y-(a.y-allyR(a)*.8))<e.r+allyR(a)*.8);
     if(ha){hurtAlly(ha,e.dmg);S.eproj.splice(i,1);continue}
     if(e.life<=0||e.x<b.x0-80||e.x>b.x1+80||e.y<b.y0-100||e.y>b.y1+80)S.eproj.splice(i,1);
@@ -3217,7 +3214,7 @@ function hud(){
   $('hName').textContent=look.name;$('hLvl').textContent='المستوى '+AR(p.lvl);
   $('hpBar').style.width=(p.hp/mh*100)+'%';$('hpTxt').textContent=`${Math.ceil(p.hp)} / ${mh}`;
   $('xpBar').style.width=(p.exp/nd*100)+'%';$('xpTxt').textContent=`${p.exp} / ${nd}`;
-  const mm=maxMana();$('mpBar').style.width=((p.mana||0)/mm*100)+'%';$('mpTxt').textContent=`${Math.floor(p.mana||0)} / ${mm}`;
+
   renderSkillBar();
   const ico=$('wIco');if(ico.dataset.k!==it.type+it.rar){ico.innerHTML=icoOf(it);ico.dataset.k=it.type+it.rar}
   ico.style.color=R.color;$('wName').textContent=it.name;$('wName').style.color=R.color;
@@ -3228,8 +3225,7 @@ function hud(){
   else{const hi=zoneHi(p.x,p.y),Z=ZONES[S.zone];$('zoneTxt').textContent=`${Z.name} · ${Z.title} · وحوش هنا Lv${Math.max(Z.lo,hi-1)}–${hi}`}
   const potReady=S.potions>0&&S.t-S.potT>=POT_CD&&!p.dead;
   $('potCount').textContent=AR(S.potions);$('potCountM').textContent=AR(S.potions);
-  $('goldTxt').textContent=AR(S.gold);$('manaCount').textContent=AR(S.manaPots);$('manaCountM').textContent=AR(S.manaPots);
-  const mpReady=S.manaPots>0&&S.t-(S.manaT??-9)>=POT_CD&&!p.dead;$('manaBtn').disabled=!mpReady;$('manaBtnM').disabled=!mpReady;
+  $('goldTxt').textContent=AR(S.gold);
   $('potBtn').disabled=!potReady;$('potBtnM').disabled=!potReady;
   $('heroCard').classList.toggle('regen',!p.dead&&S.t-p.lastHit>3&&p.hp<mh);
   $('hpLbl').textContent=!p.dead&&S.t-p.lastHit>3&&p.hp<mh?'يتعافى':'الصحة';
@@ -3251,10 +3247,10 @@ function renderSkillBar(){
   const p=S.p;
   SKILLS.forEach((sk,i)=>{
     const cdv=skCd(sk),b=$('sk'+i),r=skillRank(sk),cost=skillCost(sk),left=cdv-(S.t-(S.skillT[sk.id]??-99));
-    b.classList.toggle('locked',!r);b.classList.toggle('nomana',!!r&&p.mana<cost);b.classList.toggle('ready',!!r&&p.mana>=cost&&left<=0);
-    b.querySelector('.sk-cost').textContent=r?AR(cost):'Lv'+sk.lvl;
+    b.classList.toggle('locked',!r);b.classList.toggle('nomana',false);b.classList.toggle('ready',!!r&&left<=0);
+    b.querySelector('.sk-cost').textContent=r?'':'Lv'+sk.lvl;
     b.querySelector('.sk-cd').style.height=(r&&left>0?left/cdv*100:0)+'%';
-    b.title=r?`${sk.name} · المستوى ${r} · مانا ${cost}\n${sk.desc}`:`${sk.name} · تنفتح عند المستوى ${sk.lvl}`;
+    b.title=r?`${sk.name} · المستوى ${r} · انتظار ${AR(Math.round(skCd(sk)))} ث\n${sk.desc}`:`${sk.name} · تنفتح عند المستوى ${sk.lvl}`;
   });
 }
 function renderArmy(){
@@ -3489,7 +3485,7 @@ function renderShop(){
     ${Object.keys(CONS).map(k=>{const C=CONS[k];return wareRow(C.scroll?CICON.scroll:CICON.flask,C.col,C.name,`${C.desc} · لديك ${AR(S.cons[k]||0)} من ٩`,priceBtn('bC_'+k,C.price,(S.cons[k]||0)>=POT_MAX))}).join('')}</section>
     <section class="shop-sec"><h3>جرعات</h3>
     ${wareRow(flask,'#ff8fa3','جرعة صحة',`تعيد ٤٥٪ من صحتك · لديك ${AR(S.potions)} من ٩`,priceBtn('bHp',25,S.potions>=POT_MAX))}
-    ${wareRow(flask,'#7fb8ff','جرعة مانا',`تعيد ٥٠٪ من المانا (زر E) · لديك ${AR(S.manaPots)} من ٩`,priceBtn('bMp',40,S.manaPots>=POT_MAX))}</section>
+    </section>
 
     <section class="shop-sec"><h3>بضاعة ${ZONES[S.zone].title}</h3>`;
   S.stock.forEach((it,i)=>{const R=RAR[it.rar],g=isGear(it.type);
@@ -3503,7 +3499,7 @@ function renderShop(){
   const on=(id,f)=>{const b=$(id);if(b)b.onclick=()=>{f();renderShop()}};
   on('bHp',()=>{if(spend(25)){S.potions++;toast('+١ جرعة صحة','#ff8fa3')}});
   for(const k of Object.keys(CONS))on('bC_'+k,()=>{if(spend(CONS[k].price)){S.cons[k]=(S.cons[k]||0)+1;toast(`+١ ${CONS[k].name}`,CONS[k].col)}});
-  on('bMp',()=>{if(spend(40)){S.manaPots++;toast('+١ جرعة مانا','#7fb8ff')}});
+
   if(up)on('bBag',()=>{if(spend(up.price)){S.bagMax=up.to;toast(`أصبحت حقيبتك ${AR(up.to)} خانة`,'#ffd36e',true)}});
   S.stock.forEach((it,i)=>on('bS'+i,()=>{if(S.inv.length>=S.bagMax&&!(S.autoMerge&&mergeTarget(it)))return;if(spend(buyPrice(it))){S.inv.push(it);S.stock.splice(i,1);toast(`اشتريت ${it.name}`,RAR[it.rar].color,true);autoMerge(it)}}));
   on('bRestock',()=>{if(spend(60))genStock()});
@@ -3534,7 +3530,7 @@ function renderEquip(){
   const gs=gearStats(),it=eqItem(),w=WEAP[it.type],row=(ic,l,v)=>`<div class="stat-row">${STAT_ICO[ic]}<span>${l}</span><b>${v}</b></div>`;
   $('eqStats').innerHTML=`<div class="stat-grp"><h4>الهجوم</h4>${row('atk','الهجوم',AR(Math.round(playerAtk(it)*w.pow)))}${row('aspd','سرعة الهجوم','+'+pct(gs.aspd))}${row('crit','الضربة الحرجة',pct(.1+gs.crit)+' ×'+(1.8+gs.critDmg).toFixed(2))}</div>
     <div class="stat-grp"><h4>الدفاع</h4>${row('hp','الصحة القصوى',AR(mhp()))}${row('def','الحماية',pct(dmgReduce()))}</div>
-    <div class="stat-grp"><h4>المنفعة</h4>${row('mana','المانا',AR(maxMana()))}${row('mspd','سرعة الحركة','+'+pct(gs.mspd))}${row('cdr','تقليل انتظار المهارات','−'+pct(gs.cdr))}</div>
+    <div class="stat-grp"><h4>المنفعة</h4>${row('mspd','سرعة الحركة','+'+pct(gs.mspd))}${row('cdr','تقليل انتظار المهارات','−'+pct(gs.cdr))}</div>
     ${setCount()?`<div class="set-line">طقم الزعماء ${AR(setCount())} من ٤${setBonus().p?` · +${pct(setBonus().p)} ضرر`+(setBonus().a?` · جيشك +${pct(setBonus().a)}`:''):' · ارتدِ قطعة أخرى لتفعيل المكافأة'}</div>`:''}`;
 }
 /* hero preview on the equipment tab (only animates while that tab is visible) */
@@ -3614,7 +3610,7 @@ function renderCons(){
 function renderSkillList(){
   const box=$('skillList');if(!box)return;
   box.innerHTML=SKILLS.map(sk=>{const r=skillRank(sk);return`<div class="skrow ${r?'':'locked'}"><span class="skico">${sk.ico}</span><div><b>${sk.name}</b>
-    <small>${r?`المستوى ${AR(r)} من ١٠ · مانا ${AR(skillCost(sk))} · تقوى كل ٥ مستويات`:`تنفتح عند المستوى ${AR(sk.lvl)}`}</small><small>${sk.desc}</small></div></div>`}).join('');
+    <small>${r?`المستوى ${AR(r)} من ١٠ · انتظار ${AR(Math.round(skCd(sk)))} ث · تقوى كل ٥ مستويات`:`تنفتح عند المستوى ${AR(sk.lvl)}`}</small><small>${sk.desc}</small></div></div>`}).join('');
 }
 
 /* ---------- character creator ---------- */
@@ -3642,7 +3638,7 @@ function startGame(data){
   $('creator').hidden=true;$('hudLayer').hidden=false;
   if(data&&data.p){Object.assign(look,data.look);S.p=data.p;S.inv=data.inv.map(fixItem);S.eq=data.eq;for(const g of GSLOTS)S[g[1]]=data[g[1]]||0;S.skillT={};S.pend=[];S.p.invT=0;S.p.rootT=0;S.p.slowT=0;S.p.mana=S.p.mana??50+S.p.lvl*5;S.kills=data.kills||0;uidc=data.uidc||uidc;S.p.dead=false;S.potions=data.potions??3;S.clears=data.clears||0;
     S.army=(data.army||(data.ally?[{...data.ally,type:'queen'}]:[])).map(a=>({shotT:2,dashT:0,dashCd:2,burstT:2,face:1,...a,type:a.type||'queen'}));
-    S.zone=data.zone||1;S.cleared=data.cleared||{};S.gold=data.gold||0;S.manaPots=data.manaPots||0;S.bagMax=data.bagMax||24;S.stock=[];S.autoMerge=data.autoMerge??true;S.story=data.story||null;S.uniqPity=data.uniqPity||{};S.uniqGot=data.uniqGot||{};S.gifts=data.gifts||{};S.reactSeen=data.reactSeen||{};S.cons={rage:0,iron:0,luck:0,recall:0,...(data.cons||{recall:2})};S.buffs={};S._buffsLeft=data.buffsLeft||{};if(S.clears>0||S.army.some(a=>a.type==='queen'))S.cleared.queen=true;
+    S.zone=data.zone||1;S.cleared=data.cleared||{};S.gold=data.gold||0;S.manaPots=0;S.potions=Math.min(POT_MAX,(S.potions||0)+(data.manaPots||0));S.bagMax=data.bagMax||24;S.stock=[];S.autoMerge=data.autoMerge??true;S.story=data.story||null;S.uniqPity=data.uniqPity||{};S.uniqGot=data.uniqGot||{};S.gifts=data.gifts||{};S.reactSeen=data.reactSeen||{};S.cons={rage:0,iron:0,luck:0,recall:0,...(data.cons||{recall:2})};S.buffs={};S._buffsLeft=data.buffsLeft||{};if(S.clears>0||S.army.some(a=>a.type==='queen'))S.cleared.queen=true;
     if(!S.inv.some(i=>i.uid===S.eq&&!isGear(i.type))){const w=S.inv.find(i=>!isGear(i.type));if(w)S.eq=w.uid}
     S.army.forEach((a,i)=>{a.x=S.p.x+(i?50:-50);a.y=S.p.y+20});
     S.t=0;const old=S.t-10;for(const k in (S._buffsLeft||{}))S.buffs[k]=S._buffsLeft[k];S._buffsLeft=null;S.p.lastAtk=S.p.atkT=S.p.lastHit=old;S.p.deadT=0;S.potT=old;S.paused=false;keys.clear();atkHeld=false;
