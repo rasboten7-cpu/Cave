@@ -325,7 +325,7 @@ function attack(){
     if(ang<=w.arc/2||d<m.r+8)hit(m,calcDmg(it),dir);
   }
   if(it.type==='spear')S.fx.push({k:'pierce',x:p.x,y:p.y-26/TILT,dir,range:w.range,t:0,dur:.24,col});
-  else{const heavy=p.combo===2,fl0=(heroArt!=='old'&&Math.abs(dir.x)>.35)?1:(dir.x<0?-1:1);
+  else{const heavy=p.combo===2,vw=Math.abs(dir.x)>.5?'side':dir.y<0?'back':'front',fl0=(vw==='back'||(vw==='side'&&dir.x>0))?-1:1;/* forehand starts on the weapon-hand side: right, left, then overhead */
     /* visual combo: 1st and 2nd swings sweep opposite ways, the 3rd is a heavy finisher (damage unchanged) */
     S.fx.push({k:'crescent',x:p.x,y:p.y-14,dir,range:w.range,arc:w.arc,fl:p.combo===1?-fl0:fl0,t:0,dur:it.type==='dagger'?.22:heavy?.42:.34,col,small:it.type==='dagger',heavy});
     if(heavy){S.fx.push({k:'ring',x:p.x+dir.x*w.range*.8,y:p.y+dir.y*w.range*.8,t:.04,dur:.4,col:'rgba(255,120,40,.9)',big:true});S.shake=Math.max(S.shake,.22)}}
@@ -1166,72 +1166,119 @@ function drawWeaponArt(c,type,col,angle){if(!HR_LOADED)return false;hrWeapon(c,t
 function hrHelmet(c,dir,off){
   const helm=hrGear('helm');if(!helm)return;const p=HERO_DATA.helms[dir],im=HR_IMAGES['helm-'+dir];c.save();c.translate(off[0],off[1]);if(helm.rar===0)c.filter='sepia(.4) brightness(.8)';else if(helm.rar===2)c.filter='sepia(.5) saturate(1.5)';else if(helm.rar===3)c.filter='sepia(.3) saturate(1.5) hue-rotate(305deg)';c.drawImage(im,...p.box);c.restore();
 }
+/* display-only length of the body animation; never longer than the real attack cooldown */
+function heroAtkDur(it,combo){const base={sword:.34,dagger:.22,spear:.38,bow:.3}[it.type]||.3,cd=WEAP[it.type].cd/(1+(gearStats().aspd||0));return Math.max(.18,Math.min(base*(combo===2&&it.type!=='bow'?1.18:1),cd*.95))}
 function drawHeroArt(c,x,y,face,moving,t,weapon,atk){
   if(!HR_LOADED)return false;
-  const dir=Math.abs(face.x)>.5?'side':face.y<0?'back':'front',mirror=dir==='side'&&face.x<0;
+  const dir=Math.abs(face.x)>.5?'side':face.y<0?'back':'front',mirror=dir==='side'&&face.x<0,side=dir==='side',ms=mirror?-1:1;
   const parts=HERO_DATA.views[dir],tm=RM?0:t,walk=moving&&!RM,ph=tm*11,step=walk?Math.sin(ph):0,k=atk?hrClamp(atk.k,0,1):0,active=!!atk&&k<1,type=weapon?.type||'sword';
-  const fx=HERO_FX,dy=walk?-Math.abs(Math.cos(ph))*1.35:Math.sin(tm*2.3)*.35,off=[0,dy];
-  let aim=Math.atan2(face.y*TILT,dir==='side'?Math.abs(face.x):face.x),lunge=0,weaponAngle=-1.12,pull=0,loaded=false;
-  let right=hrPoint(parts.lowerR.b,off),left=hrPoint(parts.lowerL.b,off);
-  if(weapon){right=dir==='side'?[10,-39+dy]:[15,-37+dy];left=dir==='side'?[-4-step*2,-42+dy]:[-15-step*1.5,-39+dy]}
-  if(type==='bow'&&weapon){right=dir==='side'?[9,-40+dy]:[14,-42+dy];weaponAngle=-.18;left=dir==='side'?[-7,-40+dy]:[-13,-39+dy]}
-  if(type==='spear'&&weapon){right=dir==='side'?[9,-39+dy]:[14,-37+dy];left=dir==='side'?[-6,-38+dy]:[-12,-41+dy];weaponAngle=-1.06}
+  const fx=HERO_FX,fwd=dir==='front'?1:-1;
+  const bob=walk?-Math.abs(Math.cos(ph))*(side?1.35:.9):Math.sin(tm*2.3)*.35;
+  /* World ground frame of the hero: gF forward, gR the hero's own right. Local = mirrored screen space. */
+  const fl=Math.hypot(face.x,face.y)||1,gF=[face.x/fl,face.y/fl],gR=[-gF[1],gF[0]];
+  const proj=(g,h)=>[ms*g[0],g[1]*TILT-h];
+  const F=proj(gF,0),Rl=proj(gR,0);
+  /* which anatomical hand holds the weapon in this view: +1 right, -1 left */
+  const hs=dir==='back'||(side&&!mirror)?1:-1;
+  /* ---- pose parameters (whole-body) ---- */
+  let lunge=0,crouch=0,lean=0,tw=0,roll=0,stepL=0,stepR=0,weaponAngle=-1.12,pull=0,loaded=false,ls=1,blade=null,twoHand=false,behind=dir==='back';
+  if(walk&&!side)roll=-step*.025;
+  const mixA=(a,b,q)=>a+Math.atan2(Math.sin(b-a),Math.cos(b-a))*q;
+  const b3=(phi,el)=>{const ce=Math.cos(el),g=[ce*(Math.cos(phi)*gF[0]+Math.sin(phi)*gR[0]),ce*(Math.cos(phi)*gF[1]+Math.sin(phi)*gR[1])];return{g,h:Math.sin(el)}};
+  /* blade direction for melee swings as a function of k (pure, so it can also draw a short trail) */
+  /* swing planes that read in every view: 1st = falling diagonal from the weapon side, 2nd = rising diagonal from the other side, 3rd = overhead slam */
+  const swingDir=kk=>{
+    if(atk.combo===2){const e1h=hrEase(kk/.2),e2h=hrEase((kk-.2)/.28),th=.3+2.1*e1h-3.1*e2h,lat=hs*(side?.12:.4);return{g:[Math.cos(th)*gF[0]+lat*gR[0],Math.cos(th)*gF[1]+lat*gR[1]],h:Math.sin(th)}}
+    const e1=hrEase(kk/.14),e2=hrEase((kk-.14)/.32),sv=hs*(atk.combo===1?-1:1),tau=atk.combo===1?(side?-.85:-.4):(side?1.2:.6),psi=1.45+.35*e1-2.9*e2;
+    const ct=Math.cos(tau),st=Math.sin(tau),cp=Math.cos(psi),spn=Math.sin(psi);
+    const g=[cp*gF[0]+spn*ct*sv*gR[0],cp*gF[1]+spn*ct*sv*gR[1]];return{g,h:spn*st};
+  };
   if(active&&weapon){
+    const e1=hrEase(k/.14),e2=hrEase((k-.14)/.32),rc=hrEase((k-.62)/.38),keep=1-rc;
     if(type==='bow'){
-      // Projectile damage/release is owned by attack(). At k=0 the bow is at full draw,
-      // then releases immediately and recovers to the carrying pose.
-      const release=1-hrEase(k/.18),recover=hrEase((k-.45)/.55),v=[Math.cos(aim),Math.sin(aim)];
-      const bowHand=hrMix([v[0]*19,-49+v[1]*14],right,recover);right=bowHand;
-      pull=release;loaded=k<.055;weaponAngle=aim*(1-recover)-.18*recover;
-      const ca=Math.cos(weaponAngle),sa=Math.sin(weaponAngle),n=-8.5-pull*12;left=[right[0]+ca*n,right[1]+sa*n];
+      const release=1-hrEase(k/.18);pull=release;loaded=k<.055;lunge=-1.5*release*keep;lean=-.06*release*keep;stepL=1.5*keep;stepR=-1.5*keep;
+    }else if(type==='spear'){
+      const big=atk.combo===2?1.35:1;
+      lunge=(-2.5*e1+4*e2*big)*keep;crouch=(1*e1+2.5*e2*big)*keep;lean=(-.1*e1+.2*e2*big)*keep;stepR=10*e2*big*keep;stepL=-7*e2*keep;
+      tw=hs*(.6*e1-.3*e2)*keep*(atk.combo===1?-1:1);
+    }else if(atk.combo===2){
+      const e1h=hrEase(k/.2),e2h=hrEase((k-.2)/.28);
+      lunge=(-1.5*e1h+4*e2h)*keep;crouch=(-1.8*e1h+5*e2h)*keep;lean=(-.16*e1h+.34*e2h)*keep;stepR=(-1+11*e2h)*keep;stepL=(1-8*e2h)*keep;tw=hs*.25*e1h*(1-e2h)*keep;twoHand=side;
     }else{
-      const wind=hrEase(k/.16),snap=hrEase((k-.16)/.28),recover=hrEase((k-.5)/.5),v=[Math.cos(aim),Math.sin(aim)];
-      lunge=(k<.16?-wind:4*snap)*(1-recover);
+      const sg=hs*(atk.combo===1?-1:1);
+      lunge=(-1.5*e1+3*e2)*keep;crouch=(1*e1+2*e2)*keep;lean=(-.08*e1+.2*e2)*keep;tw=sg*(.95*e1-1.95*e2)*keep;stepR=9*e2*keep;stepL=-7*e2*keep;
+    }
+    if(walk){lunge*=.45;crouch*=.4;stepL=stepR=0}
+    if(!side){stepL*=.5;stepR*=.5}
+  }
+  const off=[F[0]*lunge,bob+F[1]*lunge+crouch];
+  /* upper body: lean (pitch), twist (yaw, faked by squash/shift) and roll, all pivoting at the pelvis */
+  const P=[off[0],-40+off[1]],rot=lean*F[0]+tw*Rl[0]*.08+roll,sx=1-.09*Math.min(1,Math.abs(tw)),sh=[Rl[0]*tw*2.6,lean*F[1]*10];
+  const U=p=>{const dx=(p[0]-P[0])*sx,dy=p[1]-P[1],cs=Math.cos(rot),sn=Math.sin(rot);return[P[0]+sh[0]+dx*cs-dy*sn,P[1]+sh[1]+dx*sn+dy*cs]};
+  const withUpper=fn=>{c.save();c.translate(P[0]+sh[0],P[1]+sh[1]);c.rotate(rot);c.scale(sx,1);c.translate(-P[0],-P[1]);fn();c.restore()};
+  const shoulder=s=>U(hrPoint(parts['upper'+s].a,off));
+  const armLen=s=>{const p=parts['upper'+s],q=parts['lower'+s];return Math.hypot(p.b[0]-p.a[0],p.b[1]-p.a[1])+Math.hypot(q.b[0]-q.a[0],q.b[1]-q.a[1])};
+  /* ---- carry pose (absolute local coordinates) ---- */
+  const sway=walk&&!side?step*1.6*fwd:0;
+  let right=U(hrPoint(weapon?(side?[10,-39]:[15,-37]):parts.lowerR.b,off)),left=U(hrPoint(weapon?(side?[-4-step*2,-42]:[-15,-39+sway]):[parts.lowerL.b[0],parts.lowerL.b[1]-sway],off));
+  if(!weapon&&!side)right[1]+=sway;
+  if(type==='bow'&&weapon){right=U(hrPoint(side?[9,-40]:[14,-42],off));weaponAngle=-.18;left=U(hrPoint(side?[-7,-40]:[-13,-39],off))}
+  if(type==='spear'&&weapon){right=U(hrPoint(side?[9,-39]:[14,-37],off));left=U(hrPoint(side?[-6,-38]:[-12,-41],off));weaponAngle=-1.06}
+  const carryR=right,carryL=left,carryA=weaponAngle;
+  if(active&&weapon){
+    const rc=hrEase((k-.62)/.38),sR=shoulder('R'),reach=armLen('R');
+    if(type==='bow'){
+      const release=1-hrEase(k/.18),recover=hrEase((k-.45)/.55),v=proj(gF,0),n0=Math.hypot(v[0],v[1])||1,aim=Math.atan2(v[1],v[0]);
+      right=hrMix(U(hrPoint([v[0]/n0*19,-49+v[1]/n0*14],off)),carryR,recover);
+      weaponAngle=mixA(aim,carryA,recover);
+    }else{
+      let d;
       if(type==='spear'){
-        const reach=(-6*wind+24*snap)*(1-recover),center=[dir==='side'?4:0,-46+dy];right=[center[0]+v[0]*reach,center[1]+v[1]*reach*.8];left=[right[0]-v[0]*13,right[1]-v[1]*13];weaponAngle=aim;
-      }else if(type==='dagger'){
-        const slash=(atk.combo%2?-1:1)*(.5-1.05*snap),reach=(8+12*snap)*(1-recover);weaponAngle=aim+slash*(1-recover);right=hrMix([v[0]*reach,-45+v[1]*reach*.7],right,recover);left=hrMix([-v[0]*4,-43-v[1]*4],left,recover);
+        const e1=hrEase(k/.14),e2=hrEase((k-.14)/.32),side2=atk.combo===2?0:(atk.combo===1?-1:1)*hs*.14;
+        d=b3(side2,-.06);const dl=(-5*e1+(atk.combo===2?24:19)*e2),sp=proj(d.g,d.h),c0=U(hrPoint([side?4:0,-46],off));
+        right=[c0[0]+sp[0]*dl,c0[1]+sp[1]*dl];
       }else{
-        const sign=atk.combo%2?-1:1,arc=atk.combo===2?(-1.7+2.5*snap)*sign:(-1.3+2.7*snap)*sign;
-        weaponAngle=aim+arc*(1-recover);const radius=16+4*snap;right=hrMix([Math.cos(weaponAngle)*radius,-48+Math.sin(weaponAngle)*radius*.8],right,recover);left=hrMix([-10,-43],left,recover);
+        d=swingDir(k);const sp=proj(d.g,d.h),r=reach*(atk.combo===2?.82:.78);
+        right=[sR[0]+sp[0]*r,sR[1]+sp[1]*r+(atk.combo===2?0:5)];
       }
-      // Ease back to the carrying pose, including the weapon angle, before k=1.
-      weaponAngle=weaponAngle+Math.atan2(Math.sin(-1.12-weaponAngle),Math.cos(-1.12-weaponAngle))*recover;
-      if(type==='spear'){
-        right=hrMix(right,dir==='side'?[9,-39+dy]:[14,-37+dy],recover);
-        left=hrMix(left,dir==='side'?[-6,-38+dy]:[-12,-41+dy],recover);
-      }
+      const sp=proj(d.g,d.h);blade=d;
+      weaponAngle=Math.atan2(sp[1],sp[0]);ls=hrClamp(Math.hypot(sp[0],sp[1]),.42,1);
+      if(d.g[1]<-.28)behind=true;else if(dir==='back')behind=d.g[1]<.2;
+      /* free hand: joins the grip for the overhead slam, otherwise counter-balances the swing */
+      if(twoHand&&k<.7)left=[right[0]-Math.cos(weaponAngle)*3.5*ls,right[1]-Math.sin(weaponAngle)*3.5*ls+1];
+      else if(type!=='spear'){const sL=shoulder('L');left=[sL[0]-sp[0]*4-F[0]*8,sL[1]+16-sp[1]*3]}
+      const bi=hrEase(k/.07);right=hrMix(carryR,right,bi);left=hrMix(carryL,left,bi);weaponAngle=mixA(carryA,weaponAngle,bi);ls=1+(ls-1)*bi;
+      right=hrMix(right,carryR,rc);left=hrMix(left,carryL,rc);weaponAngle=mixA(weaponAngle,carryA,rc);ls=ls+(1-ls)*rc;if(rc>.5)behind=dir==='back';
     }
   }
-  off[0]=Math.cos(aim)*lunge;off[1]+=Math.sin(aim)*lunge*TILT;
   c.save();c.translate(Math.round(x),Math.round(y));c.imageSmoothingEnabled=false;
-  c.fillStyle='rgba(0,0,0,.32)';ell(c,0,1,13,4.2);
+  c.fillStyle='rgba(0,0,0,.32)';ell(c,0,1,13+Math.abs(lunge)*.4,4.2);
   if(fx&&fx.dead>=0){const q=hrEase(fx.dead/.48);c.translate(0,-2*q);c.rotate((face.x<0?1:-1)*1.48*q);if(fx.dead>2)c.globalAlpha*=Math.max(.4,1-(fx.dead-2)*.3)}
   else if(fx&&fx.hurt>=0&&fx.hurt<.22){const q=1-fx.hurt/.22;c.translate(-face.x*q*3,-face.y*q*2);if(fx.hurt<.08)c.filter='brightness(1.7) sepia(.4)'}
   if(mirror)c.scale(-1,1);
-  const foot=(side)=>{const p=parts['shin'+side].b,s=side==='L'?1:-1,u=step*s;return[p[0]+(dir==='side'?u*9:u*1.5),p[1]-(walk?Math.max(0,u)*6:0)+(dir==='side'?0:u*(dir==='back'?-2:2))]};
-  const leg=side=>hrLimb(c,dir,'thigh'+side,'shin'+side,hrPoint(parts['thigh'+side].a,off),foot(side),dir==='side'?-1:side==='L'?1:-1,dir==='side'&&side==='L');
-  const arm=(side,target)=>hrLimb(c,dir,'upper'+side,'lower'+side,hrPoint(parts['upper'+side].a,off),hrPoint(target,[off[0],off[1]-dy]),side==='L'?1:-1,dir==='side'&&side==='L');
-  const actualHand=()=>{const a=hrPoint(parts.upperR.a,off),p=parts.upperR,q=parts.lowerR,l1=Math.hypot(p.b[0]-p.a[0],p.b[1]-p.a[1]),l2=Math.hypot(q.b[0]-q.a[0],q.b[1]-q.a[1]);return hrIK(a,hrPoint(right,[off[0],off[1]-dy]),l1,l2,-1).end};
+  const foot=s=>{const p=parts['shin'+s].b,sg=s==='L'?1:-1,u=step*sg,st=s==='L'?stepL:stepR;
+    let q;if(side)q=[p[0]+u*9,p[1]-(walk?Math.max(0,u)*6:0)];
+    else{const sw=walk?Math.max(0,Math.cos(ph)*sg):0;q=[p[0]+u*.6,p[1]+u*2.2*fwd-sw*2.8]}
+    return[q[0]+F[0]*st,q[1]+F[1]*st]};
+  const leg=s=>{
+    const hip=hrPoint(parts['thigh'+s].a,off),end=foot(s),pt=parts['thigh'+s],ps=parts['shin'+s],l1=Math.hypot(pt.b[0]-pt.a[0],pt.b[1]-pt.a[1]),l2=Math.hypot(ps.b[0]-ps.a[0],ps.b[1]-ps.a[1]);
+    const ik=hrIK(hip,end,l1,l2,side?-1:s==='L'?1:-1);let knee=ik.joint;
+    /* seen from the front or back a stepping knee comes toward/away from the camera, not outward */
+    if(!side){const st=hrMix(hip,ik.end,l1/(l1+l2)),bend=crouch>1.5?.45:.85;knee=hrMix(knee,st,bend)}
+    const dim=side&&s==='L';hrSegment(c,dir,'thigh'+s,hip,knee,dim);hrSegment(c,dir,'shin'+s,knee,ik.end,dim)};
+  const arm=(s,target)=>hrLimb(c,dir,'upper'+s,'lower'+s,shoulder(s),target,s==='L'?1:-1,side&&s==='L');
+  const actualHand=()=>{const p=parts.upperR,q=parts.lowerR,l1=Math.hypot(p.b[0]-p.a[0],p.b[1]-p.a[1]),l2=Math.hypot(q.b[0]-q.a[0],q.b[1]-q.a[1]);return hrIK(shoulder('R'),right,l1,l2,-1).end};
   const hand=actualHand();
-  // Place the second hand from the actual clamped grip, so two-handed weapons
-  // stay attached even when a target direction reaches the end of an arm's range.
-  if(active&&type==='bow'){
-    const n=-8.5-pull*12;left=[hand[0]+Math.cos(weaponAngle)*n-off[0],hand[1]+Math.sin(weaponAngle)*n-off[1]+dy];
-  }else if(active&&type==='spear'&&k<.7){
-    left=[hand[0]-Math.cos(weaponAngle)*13-off[0],hand[1]-Math.sin(weaponAngle)*13-off[1]+dy];
-  }
-  const wpn=()=>{if(weapon)hrWeapon(c,type,weapon.col,hand,weaponAngle,pull,loaded)};
-  // Back-view weapons stay behind the torso; hands draw last and cover their grips.
-  if(dir==='back')wpn();
-  hrCape(c,dir,tm,walk,false,off);leg('L');if(dir==='side')arm('L',left);leg('R');
-  hrPart(c,dir,'torso',off);hrPart(c,dir,'head',off);hrCape(c,dir,tm,walk,true,off);hrHelmet(c,dir,off);
-  if(active&&type==='sword'&&k>.16&&k<.6&&!RM){
-    c.save();c.globalCompositeOperation='lighter';c.strokeStyle='rgba(247,225,181,.35)';c.lineWidth=2;c.beginPath();c.arc(hand[0],hand[1],34,weaponAngle-.5,weaponAngle);c.stroke();c.restore();
-  }
-  if(dir!=='back')wpn();if(dir!=='side')arm('L',left);arm('R',right);
-  // The amulet remains visible when equipped without obscuring the face.
-  const am=hrGear('amulet');if(am&&dir==='front'){c.strokeStyle='#b69a5e';c.lineWidth=.6;c.beginPath();c.moveTo(-4+off[0],-64+off[1]);c.lineTo(off[0],-57+off[1]);c.lineTo(4+off[0],-64+off[1]);c.stroke();c.fillStyle=RAR[am.rar].color;ell(c,off[0],-57+off[1],1,1.4)}
+  if(active&&type==='bow'){const n=-8.5-pull*12;left=[hand[0]+Math.cos(weaponAngle)*n,hand[1]+Math.sin(weaponAngle)*n]}
+  else if(active&&type==='spear'&&k<.7){left=[hand[0]-Math.cos(weaponAngle)*13*ls,hand[1]-Math.sin(weaponAngle)*13*ls]}
+  const wpn=()=>{if(!weapon)return;if(ls<.999&&type!=='bow'){c.save();c.translate(hand[0],hand[1]);c.rotate(weaponAngle);c.scale(ls,1);c.rotate(-weaponAngle);c.translate(-hand[0],-hand[1]);hrWeapon(c,type,weapon.col,hand,weaponAngle,pull,loaded);c.restore()}else hrWeapon(c,type,weapon.col,hand,weaponAngle,pull,loaded)};
+    if(behind)wpn();
+  withUpper(()=>hrCape(c,dir,tm,walk,false,off));
+  leg('L');if(side)arm('L',left);leg('R');
+  withUpper(()=>{hrPart(c,dir,'torso',off);hrPart(c,dir,'head',off);hrCape(c,dir,tm,walk,true,off);hrHelmet(c,dir,off);
+    const am=hrGear('amulet');if(am&&dir==='front'){c.strokeStyle='#b69a5e';c.lineWidth=.6;c.beginPath();c.moveTo(-4+off[0],-64+off[1]);c.lineTo(off[0],-57+off[1]);c.lineTo(4+off[0],-64+off[1]);c.stroke();c.fillStyle=RAR[am.rar].color;ell(c,off[0],-57+off[1],1,1.4)}});
+  if(!behind)wpn();
+  if(!side)arm('L',left);arm('R',right);
   c.restore();return true;
 }
 /* HERO_REBUILD_END */
@@ -2316,7 +2363,7 @@ function render(){
       if(S.t<(p.invT||0))c.globalAlpha=.5;
       const auD=S.t-(p.auraT??-9);if(auD<.9)drawSkillAura(c,p.x,p.y,auD,false);
       HERO_FX={hurt:S.t-p.lastHit,dead:-1};
-      if(!drawHeroArt(c,p.x,p.y,p.face,p.moving,S.t,{type:it.type,col:RAR[it.rar].color},since<.26?{k:since/.26,type:it.type,flip:(p.atkDir.x<0?-1:1)*(p.combo===1?-1:1),combo:p.combo||0}:null))drawHero(c,p.x,p.y,1,look,S.t,p.moving,{x:p.face.x,y:p.face.y},{type:it.type,col:RAR[it.rar].color},swing,S.t-p.lastHit<.4,{helm:hg&&RAR[hg.rar].color,armor:ag&&RAR[ag.rar].color,...Object.fromEntries(['gloves','boots','amulet'].map(t=>{const w=wornGear(t);return[t,w&&RAR[w.rar].color]}))});
+      if(!drawHeroArt(c,p.x,p.y,p.face,p.moving,S.t,{type:it.type,col:RAR[it.rar].color},since<heroAtkDur(it,p.combo)?{k:since/heroAtkDur(it,p.combo),type:it.type,flip:(p.atkDir.x<0?-1:1)*(p.combo===1?-1:1),combo:p.combo||0}:null))drawHero(c,p.x,p.y,1,look,S.t,p.moving,{x:p.face.x,y:p.face.y},{type:it.type,col:RAR[it.rar].color},swing,S.t-p.lastHit<.4,{helm:hg&&RAR[hg.rar].color,armor:ag&&RAR[ag.rar].color,...Object.fromEntries(['gloves','boots','amulet'].map(t=>{const w=wornGear(t);return[t,w&&RAR[w.rar].color]}))});
       HERO_FX=null;
       if(auD<.9)drawSkillAura(c,p.x,p.y,auD,true);
       c.globalAlpha=1}});
