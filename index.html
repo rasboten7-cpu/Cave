@@ -475,6 +475,124 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
 @media (max-width:640px){.overlay.title{place-items:end center}.ts-shade{background:linear-gradient(0deg,rgba(5,4,5,.95) 0%,rgba(5,4,5,.7) 45%,transparent 75%)}.ts-castle{width:100vw;left:0;bottom:30%}.ts-menu{margin:0 auto}}
 @media (max-height:480px){.ts-menu{gap:10px;padding-block:12px}.ts-title{font-size:34px}.ts-item{padding:7px 14px;font-size:17px}.ts-castle{width:52vw;bottom:8%}}
 @media (prefers-reduced-motion:reduce){.ts-ash,.ts-fog{animation:none;display:none}}
+/* ===== Bag & equipment v2 — dark-fantasy reliquary ===== */
+:root{--r-common:#a9b0bb;--r-unique:#5fa8e8;--r-legend:#a970ff;--r-imperial:#d4a640;
+  --iron:#2a2628;--iron-hi:#4a4246;--gilt:#b8924a;--gilt-hi:#e2c27a;--ember:#8e1c22;--leather:#151112}
+#drawer.inv2{position:fixed;inset:0;width:auto;max-width:none;z-index:60;display:grid;place-items:center;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+  background:radial-gradient(120% 90% at 50% 40%,rgba(10,6,7,.72),rgba(0,0,0,.92));border:0!important;box-shadow:none;overflow:hidden;gap:0;touch-action:manipulation}
+#drawer.inv2[hidden]{display:none}
+#drawer.inv2>*{flex-shrink:initial}
+.inv-frame{position:relative;width:min(1080px,100%);height:min(720px,100%);display:grid;grid-template-rows:auto 1fr;
+  background:
+   radial-gradient(140% 80% at 50% 0%,rgba(142,28,34,.16),transparent 60%),
+   repeating-linear-gradient(115deg,rgba(255,255,255,.012) 0 2px,transparent 2px 7px),
+   linear-gradient(180deg,#191314,#0e0a0b);
+  border:1px solid #000;box-shadow:inset 0 0 0 1px var(--iron-hi),inset 0 0 0 4px #0b0809,inset 0 0 0 5px rgba(184,146,74,.35),inset 0 0 60px rgba(0,0,0,.8),0 30px 80px rgba(0,0,0,.7);
+  animation:invIn .2s ease-out}
+.inv-frame::before,.inv-frame::after{content:"";position:absolute;width:34px;height:34px;pointer-events:none;
+  background:linear-gradient(135deg,var(--gilt-hi),var(--gilt) 40%,transparent 41%) top left/100% 100% no-repeat;opacity:.55;clip-path:polygon(0 0,100% 0,100% 12%,12% 12%,12% 100%,0 100%)}
+.inv-frame::before{top:6px;left:6px}
+.inv-frame::after{bottom:6px;right:6px;transform:rotate(180deg)}
+@keyframes invIn{from{opacity:0;transform:scale(.985) translateY(6px)}to{opacity:1;transform:none}}
+@keyframes paneIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.inv-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding:14px 18px 0;min-width:0}
+.inv-title{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+.inv-title h2{margin:0;font-family:var(--display);font-size:24px;color:var(--ink);text-shadow:0 2px 0 #000}
+.inv-cap{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.inv-cap b{color:var(--gilt-hi)}
+.inv-tabs{display:flex;gap:2px;justify-content:center;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(184,146,74,.25);align-self:end}
+.inv-tabs::-webkit-scrollbar{display:none}
+.inv-tabs button{position:relative;border:0;background:transparent;color:var(--muted);font-family:var(--display);font-weight:700;font-size:16px;padding:8px 14px 10px;white-space:nowrap;cursor:pointer;min-height:42px}
+.inv-tabs button[aria-selected=true]{color:var(--gilt-hi)}
+.inv-tabs button[aria-selected=true]::after{content:"";position:absolute;left:12%;right:12%;bottom:-1px;height:2px;background:linear-gradient(90deg,transparent,var(--gilt-hi),transparent)}
+#drawer.inv2 .close{width:42px;height:42px;border-radius:2px;border:1px solid var(--iron-hi);background:linear-gradient(180deg,#221a1c,#120d0e);color:var(--ink);font-size:18px;box-shadow:inset 0 0 0 2px #0b0809}
+.inv-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:16px;padding:14px 18px 18px;min-height:0}
+.inv-main{min-height:0;display:flex;flex-direction:column}
+.inv-pane{min-height:0;flex:1;display:flex;flex-direction:column;gap:12px;overflow-y:auto;overscroll-behavior:contain;padding-inline-end:4px;animation:paneIn .18s ease-out}
+.inv-pane[hidden]{display:none}
+.inv-pane::-webkit-scrollbar,.inv-side::-webkit-scrollbar{width:6px}
+.inv-pane::-webkit-scrollbar-thumb,.inv-side::-webkit-scrollbar-thumb{background:rgba(184,146,74,.35);border-radius:3px}
+.inv-side{min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.inv2 .sec-title{font-family:var(--display);font-weight:700;font-size:16px;color:var(--ink);margin:2px 0 0;display:flex;align-items:center;gap:10px}
+.inv2 .sec-title::after{content:"";flex:1;height:1px;background:linear-gradient(to left,rgba(184,146,74,.4),transparent)}
+/* item cells (bag grid + equipment doll) */
+.inv2 .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px}
+.inv2 .slot,.inv2 .eq-slot{--rc:var(--line);position:relative;aspect-ratio:1;border-radius:2px;padding:0;cursor:pointer;overflow:hidden;
+  background:radial-gradient(80% 80% at 50% 40%,#1d1719,#0c090a);border:1px solid #000;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--rc) 70%,#000),inset 0 0 0 3px #0a0708,inset 0 0 14px rgba(0,0,0,.9);transition:transform .12s,box-shadow .12s}
+.inv2 .slot:not(.filled){background:rgba(255,255,255,.015);box-shadow:inset 0 0 0 1px rgba(214,202,187,.07);cursor:default}
+.inv2 .slot.filled:hover,.inv2 .eq-slot.on:hover{transform:translateY(-1px)}
+.inv2 .slot .ico-img,.inv2 .eq-slot .ico-img{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:contain;border-radius:1px;filter:saturate(.92) brightness(.96)}
+.inv2 .slot svg,.inv2 .eq-slot svg{width:56%;height:56%;fill:none;stroke:var(--rc);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.inv2 .slot.r0,.inv2 .eq-slot.r0{--rc:var(--r-common)}.inv2 .slot.r1,.inv2 .eq-slot.r1{--rc:var(--r-unique)}
+.inv2 .slot.r2,.inv2 .eq-slot.r2{--rc:var(--r-legend)}.inv2 .slot.r3,.inv2 .eq-slot.r3{--rc:var(--r-imperial)}
+.inv2 .slot.uniq,.inv2 .eq-slot.uniq{--rc:#e0832a}
+.inv2 .slot.sel,.inv2 .eq-slot.sel{box-shadow:inset 0 0 0 1px var(--rc),inset 0 0 0 2px #0a0708,inset 0 0 0 3px var(--gilt-hi),inset 0 0 18px rgba(0,0,0,.6)}
+.inv2 .slot.r2::after,.inv2 .slot.r3::after,.inv2 .eq-slot.r2::after,.inv2 .eq-slot.r3::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 40%,color-mix(in srgb,var(--rc) 35%,transparent) 50%,transparent 60%) 0 0/250% 100% no-repeat;animation:shimmer 6s linear infinite}
+@keyframes shimmer{0%,70%{background-position:150% 0}100%{background-position:-60% 0}}
+.inv2 .slot .gr,.inv2 .eq-slot .gr{position:absolute;bottom:3px;left:4px;z-index:2;font-size:11px;font-weight:800;color:var(--ink);background:rgba(0,0,0,.72);padding:0 4px;border-radius:2px;font-variant-numeric:tabular-nums;line-height:16px}
+.inv2 .slot .eq{position:absolute;top:3px;right:3px;left:auto;z-index:2;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--gilt-hi),var(--gilt) 60%,#5a4220);box-shadow:0 0 0 1px #000;font-size:0}
+.inv2 .slot .eq::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;font-size:10px;font-weight:900;color:#1a1208}
+.inv2 .slot.dim{opacity:.22}
+.inv2 .pulse{animation:eqPulse .5s ease-out}
+@keyframes eqPulse{0%{box-shadow:inset 0 0 0 2px var(--gilt-hi),0 0 0 0 rgba(226,194,122,.7)}100%{box-shadow:inset 0 0 0 1px var(--rc),0 0 0 14px rgba(226,194,122,0)}}
+.inv-filter{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.inv-filter button{border:1px solid rgba(184,146,74,.45);background:#1a1314;color:var(--gilt-hi);border-radius:2px;padding:4px 10px;font-weight:700}
+/* equipment doll */
+.gear-doll{display:grid;grid-template-columns:minmax(56px,88px) minmax(140px,1fr) minmax(56px,88px);grid-template-rows:repeat(4,auto);gap:8px 8px;align-items:center;
+  padding:12px;border:1px solid #000;box-shadow:inset 0 0 0 1px rgba(184,146,74,.22),inset 0 0 40px rgba(0,0,0,.7);background:radial-gradient(60% 70% at 50% 45%,rgba(142,28,34,.14),transparent 70%),#0d0a0b}
+.gear-doll .eq-slot{width:100%;display:block}
+.gear-doll .eq-slot .lbl{position:absolute;inset:auto 0 0 0;z-index:2;font-size:10px;text-align:center;color:var(--muted);background:linear-gradient(transparent,rgba(0,0,0,.85));padding:6px 0 2px}
+.gear-doll .eq-slot:not(.on) svg{opacity:.45}
+.gear-doll .eq-slot:not(.on){cursor:pointer;box-shadow:inset 0 0 0 1px rgba(214,202,187,.12),inset 0 0 14px rgba(0,0,0,.9)}
+.gear-doll canvas{grid-column:2;grid-row:1/5;width:100%;max-width:240px;justify-self:center;aspect-ratio:220/280;height:auto;image-rendering:pixelated}
+.eq-stats2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat-grp{border:1px solid #000;box-shadow:inset 0 0 0 1px rgba(184,146,74,.18);background:#110d0e;padding:8px 10px;display:grid;gap:6px;align-content:start}
+.stat-grp h4{margin:0;font-family:var(--display);font-size:14px;color:var(--gilt)}
+.stat-row{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.stat-row svg{width:16px;height:16px;fill:none;stroke:var(--gilt);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.stat-row b{color:var(--ink);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.set-line{grid-column:1/-1;color:#e0a050;font-size:13px}
+/* detail panel */
+.inv2 .detail{border:1px solid #000;border-radius:0;padding:14px;display:grid;gap:10px;min-height:100%;align-content:start;
+  background:linear-gradient(180deg,#171112,#0e0a0b);box-shadow:inset 0 0 0 1px rgba(184,146,74,.25),inset 0 0 30px rgba(0,0,0,.7);animation:paneIn .16s ease-out}
+.d-head{display:grid;grid-template-columns:84px 1fr;gap:12px;align-items:center}
+.d-ico{--rc:var(--line);position:relative;aspect-ratio:1;background:radial-gradient(80% 80% at 50% 40%,#1d1719,#0b0809);border:1px solid #000;box-shadow:inset 0 0 0 1px var(--rc),inset 0 0 0 3px #0a0708,0 0 22px -10px var(--rc)}
+.d-ico .ico-img{position:absolute;inset:5px;width:calc(100% - 10px);height:calc(100% - 10px);object-fit:contain}
+.d-ico svg{width:60%;height:60%;margin:20%;fill:none;stroke:var(--rc);stroke-width:1.8}
+.inv2 .detail h3{margin:0;font-family:var(--display);font-size:20px;line-height:1.25}
+.inv2 .detail .rar{font-size:12px;font-weight:800;letter-spacing:.04em;opacity:.9}
+.inv2 .detail .stats{grid-template-columns:1fr;gap:6px}
+.inv2 .detail .stats>span{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(214,202,187,.06);padding-bottom:4px}
+.inv2 .detail .note{font-size:13px;line-height:1.7;color:var(--muted);margin:0}
+.cmp{border:1px dashed rgba(184,146,74,.3);padding:8px 10px;font-size:12.5px;color:var(--muted);display:grid;gap:3px}
+.cmp b{color:var(--ink)}
+.inv2 .delta{font-weight:800;font-variant-numeric:tabular-nums}
+.inv2 .delta.up{color:#6fd68a}.inv2 .delta.down{color:#e5535f}
+.inv2 .actions{display:flex;gap:8px;flex-wrap:wrap}
+.inv2 .actions button{flex:1 1 120px;min-height:44px;border-radius:2px;border:1px solid var(--iron-hi);background:linear-gradient(180deg,#1f1819,#120d0e);color:var(--ink);font-weight:700;box-shadow:inset 0 0 0 2px #0b0809}
+.inv2 .actions .primary{background:linear-gradient(180deg,#5a1418,#2c0b0d);border-color:var(--gilt);color:#f3e6cf;font-family:var(--display);font-size:16px}
+.inv2 .actions button:disabled{opacity:.38}
+.inv2 .pips i{width:10px;height:5px;border-radius:1px}
+/* other panes keep their content, lightly restyled */
+.inv2 .skill-list{display:grid;gap:8px}
+.inv2 .toggle{border-radius:2px}
+/* phones: near full screen; stack detail under the grid when narrow */
+@media (max-width:760px),(max-height:520px){
+  .inv-frame{height:100%;width:100%}
+  .inv-head{padding:10px 12px 0;gap:8px;grid-template-columns:auto 1fr auto}
+  .inv-title h2{font-size:20px}.inv-tabs button{font-size:14px;padding:6px 9px 8px;min-height:40px}
+  .inv-body{padding:10px 12px 12px;gap:10px}
+  .inv2 .inv-grid{grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}
+}
+@media (max-width:760px) and (min-aspect-ratio:1/1){.inv-body{grid-template-columns:minmax(0,1fr) minmax(250px,42%)}}
+@media (max-aspect-ratio:1/1){.inv-body{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,46%)}.inv-title .inv-cap{display:none}}
+@media (max-height:520px){.d-head{grid-template-columns:64px 1fr}.inv2 .detail{padding:10px;gap:8px}.inv2 .detail h3{font-size:17px}
+  .gear-doll{grid-template-columns:minmax(48px,62px) minmax(110px,1fr) minmax(48px,62px);padding:8px;gap:6px}
+  .eq-stats2{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){.inv-frame,.inv-pane,.inv2 .detail{animation:none}.inv2 .slot::after,.inv2 .eq-slot::after{animation:none}}
+
 </style>
 </head>
 <body>
@@ -565,21 +683,44 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
 
   <div class="death" id="death" hidden><div><h2>سقطت!</h2><p id="deathTxt">تعود إلى الحياة بعد لحظات…</p></div></div>
 
-  <aside class="drawer" id="drawer" hidden aria-label="الحقيبة">
-    <div class="drawer-head"><h2>الحقيبة</h2><button class="close" id="closeInv" type="button" aria-label="إغلاق">✕</button></div>
-    <label class="toggle" for="autoMergeIn"><input type="checkbox" id="autoMergeIn" checked><span><b>دمج تلقائي</b><small>كل أداة تدخل الحقيبة تندمج مع أداة من النوع والتقييم نفسيهما</small></span></label>
-    <div class="eq-panel"><div class="eq-slots" id="eqSlots"></div><div class="eq-stats" id="eqStats"></div></div>
-    <div class="grid" id="invGrid"></div>
-    <div class="detail" id="detail"></div>
-    <h3 class="drawer-sub">تفاعلات العناصر</h3>
-    <div class="skill-list" id="reactList"></div>
-    <h3 class="drawer-sub">المستهلكات</h3>
-    <div class="skill-list" id="consList"></div>
-    <h3 class="drawer-sub">مذكرات منسية</h3>
-    <div class="skill-list" id="pagesList"></div>
-    <h3 class="drawer-sub">المهارات</h3>
-    <div class="skill-list" id="skillList"></div>
-    <div class="table-wrap">
+  <aside class="drawer inv2" id="drawer" hidden aria-label="الحقيبة">
+  <div class="inv-frame" role="dialog" aria-modal="true" aria-labelledby="invTitle">
+    <header class="inv-head">
+      <div class="inv-title"><h2 id="invTitle">الحقيبة</h2><span class="inv-cap" id="invCap"></span></div>
+      <nav class="inv-tabs" role="tablist" aria-label="أقسام الحقيبة">
+        <button type="button" role="tab" data-tab="bag" aria-selected="true">الحقيبة</button>
+        <button type="button" role="tab" data-tab="gear" aria-selected="false">المعدات</button>
+        <button type="button" role="tab" data-tab="skills" aria-selected="false">المهارات</button>
+        <button type="button" role="tab" data-tab="lore" aria-selected="false">المذكرات</button>
+        <button type="button" role="tab" data-tab="more" aria-selected="false">الإعدادات</button>
+      </nav>
+      <button class="close" id="closeInv" type="button" aria-label="إغلاق">✕</button>
+    </header>
+    <div class="inv-body">
+      <div class="inv-main">
+        <section class="inv-pane" data-pane="bag" role="tabpanel">
+          <div class="inv-filter" id="invFilter" hidden></div>
+          <div class="grid inv-grid" id="invGrid"></div>
+          <h3 class="sec-title">المستهلكات</h3>
+          <div class="skill-list" id="consList"></div>
+        </section>
+        <section class="inv-pane" data-pane="gear" role="tabpanel" hidden>
+          <div class="gear-doll" id="eqSlots"></div>
+          <div class="eq-stats2" id="eqStats"></div>
+        </section>
+        <section class="inv-pane" data-pane="skills" role="tabpanel" hidden>
+          <h3 class="sec-title">المهارات</h3>
+          <div class="skill-list" id="skillList"></div>
+        </section>
+        <section class="inv-pane" data-pane="lore" role="tabpanel" hidden>
+          <h3 class="sec-title">مذكرات منسية</h3>
+          <div class="skill-list" id="pagesList"></div>
+          <h3 class="sec-title">تفاعلات العناصر</h3>
+          <div class="skill-list" id="reactList"></div>
+        </section>
+        <section class="inv-pane" data-pane="more" role="tabpanel" hidden>
+          <label class="toggle" for="autoMergeIn"><input type="checkbox" id="autoMergeIn" checked><span><b>دمج تلقائي</b><small>كل أداة تدخل الحقيبة تندمج مع أداة من النوع والتقييم نفسيهما</small></span></label>
+          <div class="table-wrap">
       <table>
         <caption>نسب الغنائم من الوحوش الضعيفة</caption>
         <thead><tr><th>التقييم</th><th>النسبة</th><th>مضاعف القوة</th></tr></thead>
@@ -598,7 +739,13 @@ button:focus-visible,input:focus-visible{outline-color:var(--bone)}
     <h3 class="drawer-sub">نقل الحفظ</h3>
     <p class="note">أتريد مواصلة اللعب بشخصيتك نفسها على جهاز آخر أو في نسخة الويب؟ انسخ رمز الحفظ والصقه هناك من شاشة البداية.</p>
     <button class="ghost-btn" id="exportBtn" type="button">انسخ رمز الحفظ</button>
-  </aside>
+  
+        </section>
+      </div>
+      <aside class="inv-side" id="invSide"><div class="detail" id="detail"></div></aside>
+    </div>
+  </div>
+</aside>
   <div class="overlay" id="xfer" hidden style="z-index:60">
     <div class="creator" style="width:min(520px,100%);gap:12px">
       <h2 class="drawer-sub" id="xferTitle">رمز الحفظ</h2>
@@ -685,8 +832,8 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const RAR=[
   {id:'common',name:'عادي',color:'#c9cfdc',mult:1},
   {id:'unique',name:'فريد',color:'#5fb8ff',mult:1.6},
-  {id:'legend',name:'أسطوري',color:'#ffb340',mult:2.5},
-  {id:'imperial',name:'إمبراطوري',color:'#ff4f7a',mult:4},
+  {id:'legend',name:'أسطوري',color:'#a970ff',mult:2.5},
+  {id:'imperial',name:'إمبراطوري',color:'#d4a640',mult:4},
 ];
 const WEAP={
   sword:{name:'سيف',range:64,arc:1.7,cd:.42,pow:1.0,desc:'ضربة قوس متوسطة'},
@@ -3337,29 +3484,51 @@ function renderShop(){
 /* double-tap (or double-click) an item to equip / unequip it */
 let lastTap={u:0,t:0};
 function dblTap(u){const now=performance.now(),hit=lastTap.u===u&&now-lastTap.t<420;lastTap={u,t:hit?0:now};if(hit&&S.sel===u){const b=$('eqBtn');if(b&&!b.disabled)b.click();return true}return false}
-function toggleInv(force){const d=$('drawer');const open=force===undefined?d.hidden:force;d.hidden=!open;S.paused=open||!$('shop').hidden||!$('cavePrompt').hidden||!$('soulPrompt').hidden||!$('story').hidden;if(open){atkHeld=false;keys.clear()}if(open){S.sel=S.sel&&S.inv.some(i=>i.uid===S.sel)?S.sel:S.eq;renderInv();$('closeInv').focus()}else $('invBtn').focus()}
+function toggleInv(force){const d=$('drawer');const open=force===undefined?d.hidden:force;d.hidden=!open;S.paused=open||!$('shop').hidden||!$('cavePrompt').hidden||!$('soulPrompt').hidden||!$('story').hidden;if(open){atkHeld=false;keys.clear()}if(open){S.sel=S.sel&&S.inv.some(i=>i.uid===S.sel)?S.sel:S.eq;S.invFilter=null;setInvTab(invTab);$('closeInv').focus()}else $('invBtn').focus()}
 $('invBtn').onclick=()=>toggleInv();$('closeInv').onclick=()=>toggleInv(false);
 $('autoMergeIn').onchange=e=>{S.autoMerge=e.target.checked;toast(S.autoMerge?'الدمج التلقائي مفعّل':'الدمج التلقائي متوقف');
   if(S.autoMerge)for(const it of [...S.inv])if(S.inv.includes(it))autoMerge(it);saveSoon();renderInv()};
+const STAT_ICO={atk:'<svg viewBox="0 0 24 24"><path d="M14.5 3.5 20.5 3.5 20.5 9.5 9 21 3 15Z"/><path d="M6 12l6 6"/></svg>',
+  aspd:'<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',crit:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>',
+  hp:'<svg viewBox="0 0 24 24"><path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 9c0 6-8 11-8 11z"/></svg>',def:'<svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z"/></svg>',
+  mana:'<svg viewBox="0 0 24 24"><path d="M12 2s6 7 6 12a6 6 0 0 1-12 0c0-5 6-12 6-12z"/></svg>',mspd:'<svg viewBox="0 0 24 24"><path d="M4 18h6l2-5 3 2 1 3h4M9 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM10 10l-3 4"/></svg>',
+  cdr:'<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>'};
+const EQ_LAYOUT=[['eqHelm','الخوذة','helm',1,1],['eqArmor','الدرع','armor',1,2],['eqGloves','القفازات','gloves',1,3],['eqBoots','الحذاء','boots',1,4],
+  ['eq','السلاح','sword',3,1],['eqAmulet','القلادة','amulet',3,2],['eqRing1','خاتم','ring',3,3],['eqRing2','خاتم','ring',3,4]];
+let invTab='bag',eqPulse=0;
 function renderEquip(){
-  const slots=[['eq','سلاح','sword'],...GSLOTS.map(g=>[g[1],g[2],g[0]])];
-  $('eqSlots').innerHTML=slots.map(([k,lbl,t],i)=>{const it=S.inv.find(x=>x.uid===S[k]);
-    return it?`<button type="button" class="eq-slot on ${it.uid===S.sel?'sel':''} ${it.uniq?'uniq':''}" data-u="${it.uid}" style="color:${it.uniq?'#ff9f1c':RAR[it.rar].color}" aria-label="${it.name}">${ICON[it.type]}<span>${it.grade>1?'Lv'+it.grade:lbl}</span></button>`
-      :`<button type="button" class="eq-slot" disabled aria-label="${lbl} فارغ">${ICON[t]}<span>${lbl}</span></button>`}).join('');
+  $('eqSlots').innerHTML=EQ_LAYOUT.map(([k,lbl,t,col,row])=>{const it=S.inv.find(x=>x.uid===S[k]),pos=`grid-column:${col};grid-row:${row}`;
+    return it?`<button type="button" class="eq-slot on r${it.rar} ${it.uniq?'uniq':''} ${it.uid===S.sel?'sel':''} ${it.uid===eqPulse?'pulse':''}" style="${pos}" data-u="${it.uid}" aria-label="${lbl}: ${it.name}">${ICON[it.type]}${it.grade>1?`<span class="gr">${AR(it.grade)}</span>`:''}</button>`
+      :`<button type="button" class="eq-slot" style="${pos}" data-t="${t}" aria-label="${lbl} فارغ — اعرض المتاح">${ICON[t]}<span class="lbl">${lbl}</span></button>`}).join('')+'<canvas id="eqHero" width="220" height="280" aria-hidden="true"></canvas>';
   $('eqSlots').querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{if(dblTap(+b.dataset.u))return;S.sel=+b.dataset.u;renderInv()});
-  const gs=gearStats(),it=eqItem(),w=WEAP[it.type];
-  $('eqStats').innerHTML=`<span>الهجوم <b>${AR(Math.round(playerAtk(it)*w.pow))}</b></span><span>سرعة الهجوم <b>+${pct(gs.aspd)}</b></span>
-    <span>الحرجة <b>${pct(.1+gs.crit)}</b> ×<b>${(1.8+gs.critDmg).toFixed(2)}</b></span><span>الحماية <b>${pct(dmgReduce())}</b></span>
-    <span>سرعة الحركة <b>+${pct(gs.mspd)}</b></span><span>انتظار المهارات <b>−${pct(gs.cdr)}</b></span>
-    <span>الصحة <b>${AR(mhp())}</b></span><span>المانا <b>${AR(maxMana())}</b></span>
-    ${setCount()?`<span style="grid-column:1/-1;color:#ff9f1c">طقم الزعماء ${AR(setCount())} من ٤${setBonus().p?` · +${pct(setBonus().p)} ضرر`+(setBonus().a?` · جيشك +${pct(setBonus().a)}`:''):' · ارتدِ قطعة أخرى لتفعيل المكافأة'}</span>`:''}`;
+  $('eqSlots').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.invFilter=b.dataset.t==='sword'?'weapon':b.dataset.t;setInvTab('bag')});
+  const gs=gearStats(),it=eqItem(),w=WEAP[it.type],row=(ic,l,v)=>`<div class="stat-row">${STAT_ICO[ic]}<span>${l}</span><b>${v}</b></div>`;
+  $('eqStats').innerHTML=`<div class="stat-grp"><h4>الهجوم</h4>${row('atk','الهجوم',AR(Math.round(playerAtk(it)*w.pow)))}${row('aspd','سرعة الهجوم','+'+pct(gs.aspd))}${row('crit','الضربة الحرجة',pct(.1+gs.crit)+' ×'+(1.8+gs.critDmg).toFixed(2))}</div>
+    <div class="stat-grp"><h4>الدفاع</h4>${row('hp','الصحة القصوى',AR(mhp()))}${row('def','الحماية',pct(dmgReduce()))}</div>
+    <div class="stat-grp"><h4>المنفعة</h4>${row('mana','المانا',AR(maxMana()))}${row('mspd','سرعة الحركة','+'+pct(gs.mspd))}${row('cdr','تقليل انتظار المهارات','−'+pct(gs.cdr))}</div>
+    ${setCount()?`<div class="set-line">طقم الزعماء ${AR(setCount())} من ٤${setBonus().p?` · +${pct(setBonus().p)} ضرر`+(setBonus().a?` · جيشك +${pct(setBonus().a)}`:''):' · ارتدِ قطعة أخرى لتفعيل المكافأة'}</div>`:''}`;
 }
+/* hero preview on the equipment tab (only animates while that tab is visible) */
+let eqHeroRaf=0;
+function eqHeroLoop(){eqHeroRaf=0;const cv=document.getElementById('eqHero');if(!cv||$('drawer').hidden||invTab!=='gear')return;
+  const x=cv.getContext('2d');x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,cv.width,cv.height);
+  const g=x.createRadialGradient(110,230,10,110,230,120);g.addColorStop(0,'rgba(142,28,34,.25)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,220,280);
+  x.save();x.imageSmoothingEnabled=false;x.scale(3,3);const it=eqItem();
+  drawHeroArt(x,36.7,88,{x:0,y:1},false,performance.now()/1000,{type:it.type,col:RAR[it.rar].color},null);x.restore();
+  eqHeroRaf=requestAnimationFrame(eqHeroLoop)}
+function setInvTab(tab){invTab=tab;document.querySelectorAll('#drawer [role=tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
+  document.querySelectorAll('#drawer .inv-pane').forEach(p=>p.hidden=p.dataset.pane!==tab);
+  $('invSide').hidden=!(tab==='bag'||tab==='gear');renderInv();if(tab==='gear'&&!eqHeroRaf)eqHeroRaf=requestAnimationFrame(eqHeroLoop)}
+
 function renderInv(){
   $('autoMergeIn').checked=!!S.autoMerge;renderEquip();
+  $('invCap').innerHTML=`<b>${AR(S.inv.length)}</b> / ${AR(S.bagMax)}`;
+  const flt=S.invFilter,fm=it=>!flt||(flt==='weapon'?!isGear(it.type):it.type===flt),FN={weapon:'الأسلحة',helm:'الخوذ',armor:'الدروع',gloves:'القفازات',boots:'الأحذية',ring:'الخواتم',amulet:'القلائد'};
+  const fe=$('invFilter');fe.hidden=!flt;if(flt){fe.innerHTML=`<span>يعرض: ${FN[flt]||''}</span><button type="button" id="clrFilter">عرض الكل ✕</button>`;$('clrFilter').onclick=()=>{S.invFilter=null;renderInv()}}
   const g=$('invGrid');g.innerHTML='';
   for(let i=0;i<S.bagMax;i++){
     const it=S.inv[i],b=document.createElement('button');b.type='button';b.className='slot';b.id='slot'+i;
-    if(it){b.classList.add('filled');if(it.uniq)b.classList.add('uniq');b.style.color=it.uniq?'#ff9f1c':RAR[it.rar].color;b.innerHTML=ICON[it.type]+(isEquipped(it.uid)?'<span class="eq">مجهّز</span>':'')+(it.grade>1?`<span class="gr">${it.grade}</span>`:'');
+    if(it){b.classList.add('filled','r'+it.rar);if(it.uniq)b.classList.add('uniq');if(!fm(it))b.classList.add('dim');if(it.uid===eqPulse)b.classList.add('pulse');b.innerHTML=ICON[it.type]+(isEquipped(it.uid)?'<span class="eq" title="مجهّز">مجهّز</span>':'')+(it.grade>1?`<span class="gr">${AR(it.grade)}</span>`:'');
       b.setAttribute('aria-label',`${it.name}، ${RAR[it.rar].name}`);if(it.uid===S.sel)b.classList.add('sel');b.onclick=()=>{if(dblTap(it.uid))return;S.sel=it.uid;renderInv()}}
     else{b.disabled=true;b.setAttribute('aria-label','خانة فارغة')}
     g.appendChild(b);
@@ -3380,9 +3549,12 @@ function renderInv(){
     stats=`<span>السرعة <b>${(1/w.cd).toFixed(1)}/ث</b></span><span>الضرر بالثانية <b>${mine}</b> ${!worn&&diff?`<span class="delta ${diff>0?'up':'down'}">${diff>0?'+':''}${diff}</span>`:''}</span>`;desc=w.desc;
   }
   const UQ=it.uniq&&UNIQ[it.uniq],nc=UQ?'#ff9f1c':R.color;
-  d.innerHTML=`<span class="rar" style="color:${nc}">${UQ?'غرض زعيم · ':''}${R.name} · ${kindName}</span><h3 style="color:${nc}">${it.name}</h3>
+  const slotItems=gear?GSLOTS.filter(g=>g[0]===it.type).map(g=>S.inv.find(i=>i.uid===S[g[1]])).filter(Boolean):[eqItem()];
+  const cmp=worn?'<div class="cmp">هذه القطعة مجهّزة الآن.</div>':slotItems.length?`<div class="cmp"><span>المجهّز حاليًا في الخانة نفسها:</span>${slotItems.map(c=>`<span><b style="color:${c.uniq?'#ff9f1c':RAR[c.rar].color}">${c.name}</b> · قوة ${AR(c.power)}${gear?' · '+gearMain(c).txt:''}</span>`).join('')}</div>`:'<div class="cmp">الخانة فارغة — ارتداؤها زيادة صافية.</div>';
+  d.innerHTML=`<div class="d-head"><div class="d-ico" style="--rc:${nc}">${ICON[it.type]}</div><div><span class="rar" style="color:${nc}">${UQ?'غرض زعيم · ':''}${R.name} · ${kindName}</span><h3 style="color:${nc}">${it.name}</h3></div></div>
     <div class="stats"><span>قوة الأداة <b>${it.power}</b></span><span style="color:${R.color};grid-column:1/-1;display:flex;gap:8px;align-items:center">مستوى الأداة <b>${AR(it.grade)}</b> من ١٠ <span class="pips">${Array.from({length:10},(_,i)=>`<i class="${i<it.grade?'on':''}"></i>`).join('')}</span></span>
     ${stats}</div>
+    ${cmp}
     <p class="note">${desc}</p>
     ${UQ?`<p class="uniq-fx">✦ ${UQ.fx}</p><p class="note">طقم الزعماء (${AR(setCount())} من ٤ ملبوسة): قطعتان = +١٠٪ ضرر لك · ثلاث = +١٥٪ ضرر و+١٠٪ لجيشك · الأربع = +٢٠٪ ضرر و+١٥٪ لجيشك.</p>`:''}
     <div class="actions"><button type="button" class="primary" id="eqBtn" ${worn&&!gear?'disabled':''}>${worn?(gear?'انزع':'مجهّز'):(gear?'ارتدِ':'جهّز')}</button>
@@ -3393,7 +3565,7 @@ function renderInv(){
     if(gear&&worn){const k=EQK.find(k=>S[k]===it.uid);S[k]=0;toast(`نزعت ${it.name}`)}
     else{let k=slotKey(it.type);
       if(it.type==='ring'){if(!S.eqRing1)k='eqRing1';else if(!S.eqRing2)k='eqRing2';else{const r1=S.inv.find(i=>i.uid===S.eqRing1),r2=S.inv.find(i=>i.uid===S.eqRing2);k=gearMain(r1).v<=gearMain(r2).v?'eqRing1':'eqRing2'}}
-      S[k]=it.uid;toast(`${gear?'ارتديت':'جهّزت'} ${it.name}`,R.color)}
+      S[k]=it.uid;eqPulse=it.uid;setTimeout(()=>{eqPulse=0},600);toast(`${gear?'ارتديت':'جهّزت'} ${it.name}`,R.color)}
     S.p.hp=Math.min(S.p.hp,mhp());saveSoon();renderInv()};
   $('dropBtn').onclick=()=>{const g=sellPrice(it);S.inv=S.inv.filter(x=>x.uid!==it.uid);S.gold+=g;S.sel=S.eq;toast(`بعت ${it.name} بـ ${AR(g)} ذهب`,'#ffd36e');saveSoon();renderInv();if(!$('shop').hidden)renderShop()};
   renderSkillList();renderPages();renderCons();
@@ -3535,7 +3707,7 @@ function frame(now){
 const hot=window.claude&&window.claude.hot;
 if(hot&&hot.snapshot)hot.snapshot(()=>S.running?{p:S.scene==='cave'?{...S.p,x:S.field.x,y:S.field.y}:S.p,inv:S.inv,eq:S.eq,...Object.fromEntries(GSLOTS.map(g=>[g[1],S[g[1]]])),kills:S.kills,uidc,look:{...look},potions:S.potions,army:S.army,zone:S.zone,cleared:S.cleared,clears:S.clears,gold:S.gold,manaPots:S.manaPots,bagMax:S.bagMax,autoMerge:S.autoMerge,story:S.story,uniqPity:S.uniqPity||{},uniqGot:S.uniqGot||{},gifts:S.gifts||{},cons:S.cons,buffsLeft:Object.fromEntries(Object.keys(S.buffs||{}).filter(buffOn).map(k=>[k,S.buffs[k]-S.t])),reactSeen:S.reactSeen||{}}:{});
 $('replayIntro').onclick=()=>showIntro(Object.assign(()=>{},{skip:true,label:'رجوع'}));
-document.querySelectorAll('[data-hart]').forEach(b=>b.onclick=()=>setHeroArt(b.dataset.hart));setHeroArt(heroArt);document.querySelectorAll('[data-aart]').forEach(b=>b.onclick=()=>setAtkArt(b.dataset.aart));setAtkArt(atkArt);document.querySelectorAll('[data-armart]').forEach(b=>b.onclick=()=>setArmorArt(b.dataset.armart));setArmorArt(armorArt);
+document.querySelectorAll('[data-hart]').forEach(b=>b.onclick=()=>setHeroArt(b.dataset.hart));setHeroArt(heroArt);document.querySelectorAll('[data-aart]').forEach(b=>b.onclick=()=>setAtkArt(b.dataset.aart));setAtkArt(atkArt);document.querySelectorAll('[data-armart]').forEach(b=>b.onclick=()=>setArmorArt(b.dataset.armart));setArmorArt(armorArt);document.querySelectorAll('#drawer [role=tab]').forEach(b=>b.onclick=()=>setInvTab(b.dataset.tab));
 $('rotateSkip').onclick=()=>$('rotateHint').classList.add('off');
 {const enc=o=>'COS1:'+btoa(unescape(encodeURIComponent(JSON.stringify(o)))),dec=t=>JSON.parse(decodeURIComponent(escape(atob(t.trim().replace(/^COS1:/,'')))));
  const open=(mode)=>{$('xfer').hidden=false;const ta=$('xferTxt');$('xferGo').hidden=mode!=='in';
