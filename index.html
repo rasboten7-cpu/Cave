@@ -1085,7 +1085,7 @@ function useSkill(i){
   if(!rank){toast(`${sk.name} تنفتح عند المستوى ${AR(sk.lvl)}`,'#5fa8ff');return}
   if(S.t-(S.skillT[sk.id]??-99)<skCd(sk))return;
   const cost=skillCost(sk);if(p.mana<cost){toast('المانا لا تكفي','#5fa8ff');return}
-  p.mana-=cost;S.skillT[sk.id]=S.t;SND.skill(sk.id);
+  p.mana-=cost;S.skillT[sk.id]=S.t;SND.skill(sk.id);p.auraT=S.t;
   const it=eqItem(),base=playerAtk(it)*WEAP[it.type].pow*skillMult(sk)*dmgMul();
   const dmg=k=>({d:Math.round(base*k*rand(.9,1.1)),crit:false});
   const dirTo=m=>{const d=Math.hypot(m.x-p.x,m.y-p.y)||1;return{x:(m.x-p.x)/d,y:(m.y-p.y)/d}};
@@ -1180,7 +1180,7 @@ function hurtPlayer(dmg){
   const p=S.p;if(p.dead||S.t<(p.invT||0))return;
   dmg=Math.max(1,Math.round(dmg*(1-dmgReduce())*rand(.88,1.12)));p.hp-=dmg;p.lastHit=S.t;
   floatTxt(p.x,p.y-56,'-'+dmg,'#ff5d7a',16);SND.hurt();
-  if(p.hp<=0){p.hp=0;p.dead=true;p.deadT=3;$('death').hidden=false;SND.death();S.eproj=[];S.haz=[];
+  if(p.hp<=0){p.hp=0;p.dead=true;p.deadT=3;p.deathAt=S.t;$('death').hidden=false;SND.death();S.eproj=[];S.haz=[];
     $('deathTxt').textContent=S.phase==='soulfight'?`انتصرت الروح وضاعت فرصة التجنيد. اهزم ${bossDef().name} من جديد لتحظى بفرصة أخرى.`:S.scene==='cave'?`${bossDef().name} طردك من المغارة. قوِّ نفسك وعُد.`:'تعود إلى الحياة بعد لحظات.';
     for(const mm of S.mons)mm.aggro=false}
 }
@@ -1789,6 +1789,56 @@ const HELM_AT={"walk": [[[0.0, -60], [0.0, -60], [0.0, -60], [0.0, -58], [0.0, -
 function drawHelm(c,dir,kind,i){if(armorArt==='old'||!S.inv||!S.eqHelm)return;const h=S.inv.find(q=>q.uid===S.eqHelm);if(!h)return;
   const im=HELM_IMG[(h.rar+1)+'_'+['front','back','side'][dir]];if(!okImg(im))return;const P=HELM_AT[kind][dir][i];
   c.drawImage(im,Math.round(P[0]-im.naturalWidth/2),P[1]-1)}
+/* blood-red skill aura: swirling crescents on the ground + flame tongues around the hero (style-guide "special skill") */
+function drawSkillAura(c,x,y,d,front){const k=d/.9,fade=k<.15?k/.15:1-(k-.15)/.85;if(fade<=0)return;
+  c.save();c.globalCompositeOperation='lighter';
+  if(!front){c.save();c.translate(x,y);c.scale(1,TILT);
+    for(let j=0;j<3;j++){const r=16+k*26+j*7,a0=S.t*(5-j)+j*2.1;c.lineWidth=4-j;
+      c.strokeStyle=`rgba(${225-j*30},8,${18+j*6},${.85*fade})`;c.beginPath();c.arc(0,0,r,a0,a0+2.2);c.stroke();
+      c.strokeStyle=`rgba(255,${60+j*20},60,${.4*fade})`;c.lineWidth=1;c.beginPath();c.arc(0,0,r-1,a0+.3,a0+1.6);c.stroke()}
+    const g=c.createRadialGradient(0,0,4,0,0,44);g.addColorStop(0,`rgba(200,20,20,${.35*fade})`);g.addColorStop(1,'rgba(120,0,0,0)');c.fillStyle=g;c.beginPath();c.arc(0,0,44,0,Math.PI*2);c.fill();c.restore()}
+  else{for(let j=0;j<7;j++){const s=(j*137.5)%360*Math.PI/180,ox=Math.cos(s)*12,ph=(S.t*1.6+j*.37)%1,h=18+((j*53)%14);
+      c.fillStyle=`rgba(225,${10+j*5},24,${.6*fade*(1-ph)})`;c.beginPath();c.moveTo(x+ox-3,y-4-ph*30);c.quadraticCurveTo(x+ox,y-4-ph*30-h,x+ox+3,y-4-ph*30);c.fill()}
+    for(let j=0;j<10;j++){const ph=(S.t*.9+j*.13)%1,ex=x+Math.sin(j*7.3+S.t*2)*16;c.fillStyle=`rgba(255,${70+j*6},60,${fade*(1-ph)})`;c.fillRect(ex,y-8-ph*60,2,2)}}
+  c.restore();if(!front)addLight(x,y-20,160*fade,'255,40,30',false)}
+let HERO_FX=null;
+/* red scarf (always) + cape whose length follows the armour rarity; drawn as crisp pixels on a small offscreen canvas */
+const CAPE_CV=document.createElement('canvas');CAPE_CV.width=CAPE_CV.height=128;const CAPE_X=CAPE_CV.getContext('2d',{willReadFrequently:true});
+const CAPE_COL={dk:'#3a0a0e',md:'#6a1216',bs:'#8e1c20',lt:'#b4302c',hl:'#d4503c'};
+function capeTier(){if(!S.inv||!S.eqArmor)return 0;const a=S.inv.find(q=>q.uid===S.eqArmor);return a?(a.rar>=2?2:a.rar>=1?1:0):0}
+function capeCrisp(){const id=CAPE_X.getImageData(0,0,128,128),D=id.data;for(let i=3;i<D.length;i+=4)D[i]=D[i]>110?255:0;CAPE_X.putImageData(id,0,0)}
+function poly(x,pts,col){x.fillStyle=col;x.beginPath();x.moveTo(pts[0][0],pts[0][1]);for(const q of pts.slice(1))x.lineTo(q[0],q[1]);x.closePath();x.fill()}
+/* layer 'under' = cape behind the body (front/side views); 'over' = cape over the back (up view) + scarf */
+function drawCapeAt(c,dir,kind,i,layer,moving,t,atk){
+  const P=kind==='walk'?HELM_AT.walk[dir][i]:HELM_AT.atk[dir][i];if(!P)return;
+  const nx=P[0]+64,ny=P[1]+11+100,tier=capeTier(),x=CAPE_X;let drew=false;
+  x.clearRect(0,0,128,128);
+  const sway=Math.sin(t*2.6)*1,run=moving?Math.sin(t*11):0,flare=atk?6:0;
+  if(tier&&((layer==='under'&&dir!==1)||(layer==='over'&&dir===1))){
+    const L=tier===2?30:17;drew=true;
+    if(dir===2){ // side: trails behind (to the left in local space)
+      const tr=(moving?6:2)+flare+run*1.5;
+      poly(x,[[nx+2,ny],[nx-3,ny+1],[nx-8-tr,ny+L],[nx-1-tr*.5,ny+L+1],[nx+3,ny+L*.5]],CAPE_COL.bs);
+      poly(x,[[nx-1,ny+2],[nx-3,ny+3],[nx-7-tr,ny+L-1],[nx-5-tr,ny+L]],CAPE_COL.md);
+      poly(x,[[nx+2,ny],[nx+3,ny+L*.5],[nx+1,ny+L*.5]],CAPE_COL.lt);
+    }else{
+      const w=7,bw=10+flare*.6+(moving?1:0),wav=run*1.2+sway*.6;
+      const pts=[[nx-w,ny],[nx+w,ny],[nx+bw+wav,ny+L],[nx+bw*.4,ny+L+1+run],[nx-bw*.4,ny+L+1-run],[nx-bw+wav,ny+L]];
+      poly(x,pts,dir===1?CAPE_COL.bs:CAPE_COL.md);
+      // folds
+      poly(x,[[nx-2,ny+2],[nx-1,ny+2],[nx-3+wav,ny+L],[nx-5+wav,ny+L]],CAPE_COL.dk);
+      poly(x,[[nx+3,ny+2],[nx+4,ny+2],[nx+5+wav,ny+L],[nx+3+wav,ny+L]],CAPE_COL.dk);
+      if(dir===1)poly(x,[[nx-w,ny],[nx-w+2,ny],[nx-bw+wav+2,ny+L],[nx-bw+wav,ny+L]],CAPE_COL.lt);
+    }
+  }
+  if(layer==='over'&&dir!==1){ // scarf around the neck with a fluttering tail
+    drew=true;const sy=ny+(dir===2?0:1);
+    if(dir===2){poly(x,[[nx-3,sy],[nx+4,sy],[nx+4,sy+3],[nx-3,sy+3]],CAPE_COL.bs);x.fillStyle=CAPE_COL.lt;x.fillRect(nx-2,sy,6,1);
+      const ft=(moving?3:1)+run;poly(x,[[nx-3,sy+1],[nx-3,sy+3],[nx-7-ft,sy+5+run*.5],[nx-6-ft,sy+3]],CAPE_COL.md)}
+    else{poly(x,[[nx-5,sy],[nx+5,sy],[nx+5,sy+3],[nx-5,sy+3]],CAPE_COL.bs);x.fillStyle=CAPE_COL.lt;x.fillRect(nx-4,sy,8,1);
+      x.fillStyle=CAPE_COL.md;x.fillRect(nx+2,sy+3,2,3+(moving?1:0));x.fillStyle=CAPE_COL.dk;x.fillRect(nx+2,sy+6+(moving?1:0),2,1)}
+  }
+  if(!drew)return;capeCrisp();c.drawImage(CAPE_CV,-64,-100)}
 /* gloves: painted glove per rarity on each hand (weapon fist rides the arm; off hand from a per-frame table) */
 const GLOVE_SRC={"img": {"1_front": ["iVBORw0KGgoAAAANSUhEUgAAAAcAAAANCAYAAABlyXS1AAAA80lEQVR4nGWQv0rDUBTGfzcmpolRJF0tdhQFcfABfB3fR+jQRVzc3J3chCIFLZ0KbdFWaQ1NaxNjrK3HQe9twW/64PvHOYo/hIEvmsdpplgVZNyU2lVFpHsr2mhpw0XlkqODMi+9lgkZ0S/YPNTvGb6Oua6eEQa+KF17srfLfmiRuZuc3zSI00yZ5DRPsDZs2p2n/7WBo5h95QSuY0Rbk26U4DrQjlIjqjDw5fT4kObokVLosZgrtuwdqvW732RrErHtebBweH57Z7TWX272ph/kc2GQzigXiySf38tNv1CiMeiACMI6tf6QOM2UuZMV6N/+AFxDYPH1Xv4wAAAAAElFTkSuQmCC", "iVBORw0KGgoAAAANSUhEUgAAAAcAAAANCAYAAABlyXS1AAAA+ElEQVR4nFWQS0rDUBiFv4RYmvRGMFB8VCkIEsGpOOgK3ICLcBmOnTlyJG7BgegyhCLiA1SsjaTtDQlpUgPxOtB7rf/owDnn4+dY/F4gPKW1zAuLeSO/uVL96zOl1LPSQVsHJvKDcLPDxcmpKTmB8NT50THxWDKMhlSftTEtjT3obdN1a+7iisv+KzIvLIN9H8QkqiLKUtM0pt+0mWYly8I8jaPFw2hKlwZvo/KvGQhPHe7uEbZbdHyXcFX8xz5mA5LyC4cG/kKT/a02gfCUDRAlM3bWVpgUFems5iX9QTsyL6xbUEstl/uxpMZmY3EdeMJsOL+t3vcbQchhwcjAyyQAAAAASUVORK5CYII="], "1_back": ["iVBORw0KGgoAAAANSUhEUgAAAAcAAAANCAYAAABlyXS1AAAA70lEQVR4nGWPQUrDQBiFv0kMLWEEE3EhEcRsChUEb6BewYO49BBC8RCC9AgeoLRLceFCqyC2UtROi6ZjjI7jQmYU+1YP3v+9xw9/lMrYpjK2/FcqY9tpt+zbxZk/CFxwdHjAVmMD9fzggcCZRNbpdXsMhiNOW8ekMrbCkXubOY3EokxEu3uFKrTw5KxQVJWhfzear63VAqIQVhfrPlxw5nFSUuoPxvpzntzOlphVhp182YcilbHdb2ZcPk0JBUxKw26+wsn5/U/t7fSVd/NFIARZtMaNKn43m8k61y9DIhvSGfRhDKrQwv/pdlShhfPfpnpZW1l40jwAAAAASUVORK5CYII=", "iVBORw0KGgoAAAANSUhEUgAAAAcAAAANCAYAAABlyXS1AAAA+klEQVR4nF2QsUrDUBiFv4ReSi+3Yu+gkILULh2ri4iDD+Ar9DV8AJ/CQScXNzdxEBEXR+ukCIJiwGJtE5p6SaK1XgdNYj3TgfOfD84Pv9JKWq2k5b+0kvbl8tBen+zPHLiZGQ76tJp1Tvd2yA5KWkl7vHtAMLrFP7/gKy2ITobdWmnSqoEfWY66j4QmdnJs73WISSYYU1TzUAlBpWyZq0zysJSZ57EhuTOYz2KNq5W022vrbDbmCZIpbU/NYh8in7P7iLIQdHspnbaHVtK6AE+jdxrVRdIpvKUf3AzGP83QxM5VP2BjyaMmBAtVyWp9udiZbf370tDEzjcAdV1BQeh6CgAAAABJRU5ErkJggg=="], "1_side": ["iVBORw0KGgoAAAANSUhEUgAAAAgAAAANCAYAAACUwi84AAAA+klEQVR4nG2QT0rDQBSHv4kxkGFqYai48ADiEbyMBxCPId7ArQtP0K3r6koQioKoBUGpYDCTtonTtPkzbixNib/dg++9970Hf9FKOq2k479oJd338NoNLs9akKeVdHE6Q3cD1E7YavYAxv0L7CRmmpgWILSS7vz0mF5X8HB7wzQRXA1HmMwKAB/gI17weHdPEJSYed1eESeW0WeEqCrK7XwD8AGmb++keclzlGImxabD6sz9juJgL2BXByzSmv5ThMms8ABMZsU4zcgL8JY+Ysvj5OgQraTzm+N6oSRbllSu5uXLrB1WeY0LZvMfagp0J1w7NF/erE1mxS9rsWnpmkL9wwAAAABJRU5ErkJggg==", "iVBORw0KGgoAAAANSUhEUgAAAAcAAAANCAYAAABlyXS1AAAA40lEQVR4nGWQwUoCURiFvzuJ5fVqzSUHocUsWwtte4OeqndpJYFCqzbtbEDFVQTWQjRrombCuMwoBLdFjXrrrH445+McfviVVtJqJS1/pZW0s96lXUZtJ+BpJW0yvibQuzy8vDtQCaBz0SUMG3Subv6b0f0bw37EfPLkmB7Ah8kZ3E3w1Q7npy2K3hLAAYr+Z46uCJaV+ZoUxdpGtczJUY04WTFKDKnJhFek9muHNP06YbDndqYmE4/xM9M043a64Ow4QCtp1yTA+HVBbHK+fhgc07NlQr9KoPRm0PYbizs1mfgGBaxNoCK4yYUAAAAASUVORK5CYII="], "2_front": ["iVBORw0KGgoAAAANSUhEUgAAAAYAAAANCAYAAACKCx+LAAAAzUlEQVR4nGNggAIhHq7/Qjxc/xmQgRAP1//+qqr/Z7ZtgEsywSSfvHrOICTIwbCgtpRBiIfrPwtM4trN2wxbtu1iePjkOQOKDhV5MYbfjAwMXz79QpWQlJRmYGdlZrh7+TKqBBcHM8OHZ48ZWNjZUSW27j3McOf+AwZLfVmIhBAP1//SuFSG7IRIBnkFeQZrJ38GBgYGBhYGBgaG2y8fMzDcY2R4/OYzw+KN6xFGPXzylOHmrTsMbtY2DL9/sqH63EhH739Dbgr2YEEWBABjS0QBITn/ngAAAABJRU5ErkJggg==", "iVBORw0KGgoAAAANSUhEUgAAAAYAAAANCAYAAACKCx+LAAAAz0lEQVR4nGNggAIhHq7/Qjxc/xmQgRAP1/9T29f+39jfBZdkEuLh+j+9vo5BkJ+D4dKTe3DFLAwMDAzbjxxnePz6EcPVa9fgEkwMDAwMv/6yMPCJSTKoKcmgSjy7f4eB+e8PBgEhcVQJIW52hhs3bjLw83Ci2iHGxcDw8NEDhms376BK6FrYMzx9dYfB0cmZwe/qQ4bKyVP/szAwMDAcPn+OgZeLjeHslVsMT56/ROhg/cvNYKqnx3Ds0imGj19+ofo8Lybmv6G2NvZgQRYEAD73RrHs1GWhAAAAAElFTkSuQmCC"], "2_back": ["iVBORw0KGgoAAAANSUhEUgAAAAYAAAANCAYAAACKCx+LAAAA4klEQVR4nFWQzUoCUQCFvyuzmLlcf+Y6NAghQdDG52jfC/QAQats1b5Nb9ELtHJrtFJ3rQpKS4OGmpwugZOSldeFac5Zno+PAwf+opW0WknLerSS9qx+bFuNixXMLeHzh6HoCc5PT9BKWmcJHh96tDsdrm/uyRhbmxt8Ixilv1ng5n0C5RB1b7PAc2ZELwmhXFSrjeblFbVqmWLeXRhaSbu/u8fR4QFlv8Ts5+vfGJiI7SjgbvBK9+kdAKGVtGEQMJ1O2KmEvJlP+sOYnEnHIk4SXOnjFQr0hzEmHYvMLetfzQHkYUyRl/n1owAAAABJRU5ErkJggg==", "iVBORw0KGgoAAAANSUhEUgAAAAYAAAANCAYAAACKCx+LAAAA20lEQVR4nFWQQUrDQABFXyaBMZOBktEG1FU33siFZyjFhSDuegTxIHXhGdSNCIKoRUtDKLHQ2CgYRoTouCmx+dv3P3werGK0ckYrx3qMVu7yYuTOz04bKIxWbtgfkGyFjPNJUw4Aru5u+fUtj0/jBgiAulZ82C96u902KLIHYh2ymWy3gRQ++WxG6P+fCgBMFJFnGdc39+3Fj6gJ5AYnx4ccHexjtHIBwMtbSfxdkU4npO8LADyjldvb6SGEZVF9Iv2I+bJAlJX1nl9T4k6ClB3my4Kysl5Ly7qrP409TYqecTpIAAAAAElFTkSuQmCC"], "2_side": ["iVBORw0KGgoAAAANSUhEUgAAAAgAAAAOCAYAAAASVl2WAAABHUlEQVR4nG2RvUoDQRSFvxlCouParIUgCv6Aggg2Fr6EoKKIhSBYiT6CTyAExEp8AMHS3jJFiCImWMQQicT4syZZNzJMfizGQqOJ66lu8Z17LufCt1xHWddRlv/kOsp+FDx7Go+HINkejHjkpfYcMkvXUfbk4JC7bJZytRwChOsou7qwzNBgjP6+Xlr1KPvHR/jaiJ+IfCFPyauysrSI0d0xEiASHSDwA7zXCk+1RhiYGB6j9FAkl7tlbma8C4gA1O8zaFMnkUzSbHVXIX1txFnmkkE1QizSw9bGOjuba7T7kAC+NuKqeEPRq3KeSFEJNHu727iOsrJz3eToFPr9jUazQeo6/XtDW4FnuMilERLmZ6e/iuoE/v7B10Z8AnVdbn/dKj7wAAAAAElFTkSuQmCC", "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAOCAYAAADjXQYbAAAA/ElEQVR4nG2QT0sCURTFf76cEZ+j0ECLmgqCMGgVNH0tCaIWbYJa1L5V9QH8DkG7UCy0whZubNEfkgpz6mlWo69NM/Gqu7rwu+cc7oHvcR2pXUdqfo/rSB00m3pvc8M4ENFi2690P5UhEq4j9c5agVrllIfWtQkBjo7PqJyUWfSX/sLWS0CpWmd2aoLtlVWiXAEg0x7Pd7dc1hvIpDCVk9kU71aGq8YFj2E/honolblpj5nxHEOR5rBco616iRiuF5ax7A8I3xgOLLZ290lGFt7YKAfFIiODPvn5BbOE+5sApbo8dTrkMqmfzMjaz/vY2ZBS9Zy26sXs3/K/AEREWJhCpodjAAAAAElFTkSuQmCC"], "3_front": ["iVBORw0KGgoAAAANSUhEUgAAAAcAAAAOCAYAAADjXQYbAAABA0lEQVR4nH2Qy0rDUBRFV5o00iQk9VqoWpAoKFgciDgpTjvxS/wL/0Rw5EeIAydOCg4EQSEoWCUgjfHRNG1i63VQcn2Be3Rgn3UeG75JOJYUjiX5LeFY8mBvQ8rOvmowCqO9Jjg6n2C6ZwooFUWUwXqjQhj22W02EI4llemVNXx7SC9J6E6qP8mwnxHE7/SeRyzoNmongPyQPMQSb5ByctchTlJNkZtLJrV6na0V++9B3TinNa9xc/uiTE04lmyvLjLQM7yqS9PNiHOPw9OrKWnM6CzXTGaNMccXESV77mvsfWrwVvYZVnwuH3NG4+krWpHQznaLp9eI6yAAIE5S7d/QPwHtBFo8N38TrwAAAABJRU5ErkJggg==", "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAOCAYAAADjXQYbAAABCklEQVR4nH2QPUvDYBSFnzekmI8XwdeS2EUURNHBQd1cXPwYHTr7C5z9K/4AVwfdBOmoDgpdVFAsRcUqFJO2iSkamziYtIrgnS73OedyOIJslLTSfPfCSACIHNzsrnNR99ko6ozunOKFkdBz9d5RnetAsu/V8hOakla6Mu1Qa8YsTug8tHsDCPAxMsNzy8ctdJhVyW/oSAMtSTis+pw9/XB6YSQOKscQ9ehqJkk/c+YEWCjZ6EM2y3PqL7x6DJgvQRLHfSiUtNLy0jjvwSsoF42Yxn2H80Y7S2uO8dKKMegidXCd4cFb0yiyuVbm057kTU7R5Bv269te3aJyd4JRMKneXuKFkRD/Ff8FOn1dHPuNKlgAAAAASUVORK5CYII="], "3_back": ["iVBORw0KGgoAAAANSUhEUgAAAAcAAAAOCAYAAADjXQYbAAAA+klEQVR4nH2QPUvDUBSGn7T16+YSarQtpBgQKl2KQkfnDo7+Dnd/i3/AX+AuuHRREXEUO3SJSOMtNm1ik3KvUxI/wHc68J7nnJcXvsmVwrhSGH7LlcJcnvWMuT4vFmq50W/bXAwzNpyHAqjkQ7iq0vPWCMKU08NtXClMYW6ZCt0dw/Or4mXR+klGacb9OCJaJPhNh+InQJoZZlqwrt65Gd+i5rFVkN12lVRDZ9f+G2gUxOzX4W3yUZquFKbvNfG9OrYt6fiSk6O9Mu1SL3FEDTVVXD1N+TSb5dmVaBAozSSxGc00rcYBAFbe0OB4QJKFDO8eAVDz2Pq39C8bzlzgzxlBewAAAABJRU5ErkJggg==", "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAOCAYAAADjXQYbAAAA/ElEQVR4nG2QvUrDYBSGnyRKkq9pkA9KUCsOlqpDxtJJXJ28AO/F63B0dBMcnPy5BUHQrQgKqdWmNbFt2gbyOWgaor7TgffvnAM/kI5Q0hGK35COUPHZkbo43isJ9Hw4vXzg5Cbm0F8hF+jSEapdd3n+gKan8fg2o+ScmU160Sf+qqJe1Raklnfub1exK4L7TkwQJQxGE23RGYZThlMT29LLsQCNmsmSabDrmX/JIExob1l042IhTTpCHew0yNIX5OY6w/GcrJ9y1el9OxPb4i5IeO2GLBswNrIi1nXXeE90+mmFp2BOpET5FICW77Ph1Ti/vmUwmhQH//f8Lzs3WO4HvxEsAAAAAElFTkSuQmCC"], "3_side": ["iVBORw0KGgoAAAANSUhEUgAAAAgAAAAOCAYAAAASVl2WAAABEElEQVR4nG2RsUrDUBSGv5ukloSoGBxUbLE6KApuQruJq4/g5O4LCL6Cu09gBxcXNyfRQbtZEJUWhWLJING2yU1jaq+L1cT4T2f4znfO4cB3HNtSjm0p/otjW0rdHqqbg80MZIyK6sk5Z7VOpllzbEsd70xzUY9ZmTXZ25ojadEAji4HdKMOG0s6b10tZTAA/FjSfGhRDfJ0Qj09AqAd6sj+JzI3gT8kC1j5AuUi3LUCyotmFli3h7jvikpJEImxNOD5Upw2GoR9nZd2j3ggWC1O/VyiAXi+FPevPcyc4COKWCuMs7+7jWNbykjqFkoVeiLADyOu6u7vDqPEcpLr2jOPTy7zyzMAiCTw9w+eL8UX5o5jLwW6wLIAAAAASUVORK5CYII=", "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAOCAYAAADjXQYbAAAA9ElEQVR4nGWQvUoDQRSFv9ldUWcnW4xKAhaLFkEIplCwtM8T2PoSPoat4Av4EBaWgaTRIhIs/ENjogsTTcaFGOLYGMyYU1049zscDvxKK+m0ko7/0kq6h7NDVz/a9h6i6dFsdzk9H3pQoJV0x7UiTx3Dbjn2TYCTyy96mSURY8+MAN4GltdBRLOzPE8uRZJh9x2dBBxU1pmWCgA2V0pQKFDWUK0u/JHG5qJxf8NL9kE4GXHRyv1YgLViyiQuES8G1CopWkkXABibi3r7jue+oHWbsZEmPgnw2DP0xyHh6hYAYnbC/Z09Rt+fNK6uMTYXs+Dc+D+ikVF03XLe1wAAAABJRU5ErkJggg=="], "4_front": ["iVBORw0KGgoAAAANSUhEUgAAAAcAAAAOCAYAAADjXQYbAAABGElEQVR4nH3Qz0oCURTH8e8dJMbbmHIbm4VFEQaCK1cZRYsiaNEmeoBo1yratA6iR+g1opUQLYNok5H9AUUocMpaxAQ6DTao06JGkaCzOpzPORz4CX5LGTIIe8f1BIAI4XBeYSExcxbrR0Uc1xNauG0/dvn80ngu1DjfnUMZMuhhPaEzsWzRisN7ahaAHqYz09hvPh9DGmNmbhCtxCg39084zTYLW5uDPz2/gd6NY45PhqP+Zen2mrWNPKkZ+ReRSV7bOhelWh+VIYPTnVVWFvNkMxmsmMbJwTbKkEEEoPDSYSqtc1etc1VtEFUVACIAlXKZbqfJ8IhkbylL0Wn9oON64uzBDrSoIip9klaM/eNLHNcT4r/gvwHTKVxBGHDy/AAAAABJRU5ErkJggg==", "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAOCAYAAADjXQYbAAABFklEQVR4nH2Qv0rDYADEf19MpQnBP3HQokOmFquFDi4dRERx0klxEdy6+ACCj+ALCL6AD+DmolbQ6qItYgcLIlWxEZqQkgZKAp+LMRTBmw5+3B2c4EemocvYO34gANQYHG1NM9ZN04tcyudIxw+EYhq6PC4v0a32+PQjGo/9uAAFwNEL2JpCfnUGd0IZhIVcidaw4K3tY2WzCXT8QKzv7WDKiKv7V8zM1GASQJ20GHJVtJH0L1RjkytaFDbmObu4/pu8rDzw4vRxw9EEmoYuTw52yYwL8nNF1lZKVPYXMQ1dqgDvXzbNdkjzwyMMUzQ6erLpdTw2F2Z5rt8hUhq1Wh0AEd93uL3MTctGIji9fcLxAyH+O/4b9stgesukkwwAAAAASUVORK5CYII="], "4_back": ["iVBORw0KGgoAAAANSUhEUgAAAAYAAAAOCAYAAAAMn20lAAAA6klEQVR4nGNkgAIhHq7/MPa7L98YmWCCiTIcDMt9FBjeTjFjEOLh+s8CU/XvLRMD2+W/DLPf3WRgYGBgYIJJvBZmYvgl/J/hBbscqoSaniTDvXcfGZgEhFAlWPmkGL7++cfA+/kBqgQn4y8GYRYOBjF9D1SJ7x+fMwg4KTN46HCgSnxkFmN4/peTYcWmgwwMDAwMLEI8XP8XZzgz8OubM7y7fZLh8HmIHSwMDAwMRx5+ZZD6c4Lh48sXDPf+8DIwMHyAGPX+5x+Gh69+MWhpmTOY6FsxwIEQD9f/FH/X/61pof+RwwwuiSwIAEC2SGe1tdDXAAAAAElFTkSuQmCC", "iVBORw0KGgoAAAANSUhEUgAAAAYAAAAOCAYAAAAMn20lAAAA50lEQVR4nFWQwUoCURhGz70NosNN8hqUILaJWhUI4q5NtGvTIsQn8Anc+A4tfQSRdm3c1LZeIajElaIVJc04OKOQ14XddP7lf76PD44A0Mo1/N04mArs09ycmk7l0DTP9owNSYBG64PF84JJ99cWcQD89D5bBAwlEKyABEipLCNm5I9z/w0J4ESfvPdn7BYKcaC2jzAIkiob3ygVNcOdA6Lvl3ij3XkgVBlef3QcBJOQhITq9QV39Uu0co0DIHSOt14fkXpk/OWvN8onJTLpiIEXMfXmAAirpXZ1jh/Oub1/WvuycFPmEkG0S0orUXJ6AAAAAElFTkSuQmCC"], "4_side": ["iVBORw0KGgoAAAANSUhEUgAAAAgAAAAOCAYAAAASVl2WAAABDElEQVR4nGWROy8EYRhGz3yzwU4mJB8i65KQLXdJiA7ZRkfJD9D5C36GSrGNTmFdCqVG5xJCQiMhVraQWXORHTMyVw1idp72PTlvnjzwE6lrqdS1lK6I32Njs8J2dZRuSEhdS83GHPZhG2VA5XixnIEEwE7dxComTNVKnHa8/Iu4NE+rJ+DN/mJ1fSkDFABajoMZCcLbVz5FOW8IVcmI1LCaAUHYyQKW6ym7B/t0+ocZK+n0hq28ASD2fYaqk3yo45xsTP81EQCW6yl754/YbZva8grGxGzeANA0fG7Ojri6vKC+tYbUtTQDLMxUeHpPiApFru9e8obBOOHh3uC56SD7IgCU/0D3DpbrKd9lfWH/sIDFHQAAAABJRU5ErkJggg==", "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAOCAYAAADjXQYbAAAA+ElEQVR4nGWQsUoDURBFzz5WWZ9vE/IgLKbQLQymEQUFwR8IVultRKwUwVZsrfwCG9HOxkLwAyws7bQQRAQLjWQTEiMhmgQcG4277m3PnBnuwE+s0WKNFmJRv+BsrcjupE98QFmj5XS1QP+qjTYeKTPSC3wGY4RLQRrevrwj0xM8197SsIfH9cMj9fs2x5VweFcBZLwC/Z7CHx/l7unPVs1O1zk8P6FRb2GKLu6USa4FaAwcbmojDDJhGu5sbjM7N0/gZ7k82Ej0xRotW5VlWSnlZH+9LNZoGZoA1eorH19CPpsDwI3DxZkSUSti7+iCZqfrJEr/f/43WR5Lv7sp6woAAAAASUVORK5CYII="]}, "pv": {"1_front": [10.0, 10.0], "1_back": [10.0, 10.0], "1_side": [10.0, 10.0], "2_front": [10.1, 10.1], "2_back": [10.1, 10.1], "2_side": [10.3, 10.3], "3_front": [10.6, 10.6], "3_back": [10.6, 10.6], "3_side": [10.7, 10.4], "4_front": [10.7, 10.7], "4_back": [10.7, 10.7], "4_side": [10.7, 10.6]}, "walkOff": [[[-8.0, -23], [-8.2, -23], [-8.0, -23], [-7.1, -22], [-6.8, -22], [-7.0, -23], [-8.0, -25], [-10.0, -25], [-10.1, -25], [-10.0, -25]], [[-9.7, -24], [-9.6, -24], [-9.7, -24], [-9.7, -24], [-9.7, -24], [-8.6, -24], [-9.7, -24], [-9.7, -24], [-9.7, -24], [-10.8, -24]]], "atkOff": [[[4.5, -13], [-13, -34], [12.5, -23], null], [[7, -17], [-16, -19.5], [-11, -24], null], [[9, -21], null, [10, -41], null]]},GLOVE_IMG={};
 function gloveImg(k,side){const id=k+side;let im=GLOVE_IMG[id];if(!im){const s=GLOVE_SRC.img[k];if(!s)return null;im=new Image();im.src='data:image/png;base64,'+s[side];GLOVE_IMG[id]=im}return okImg(im)?im:null}
@@ -1844,8 +1894,8 @@ function drawBowPose(c,dir,k,weapon,mirror){const FR=ATK_META.fr,pi=k<.7?1:2,dn=
   const bowL=()=>{c.save();c.translate(F[0],F[1]);if(!drawWeaponArt(c,'bow',weapon.col,aim))drawWeapon(c,'bow',weapon.col,aim,0);c.restore();
     c.strokeStyle='rgba(235,225,200,.85)';c.lineWidth=.8;c.beginPath();c.moveTo(t1[0],t1[1]);c.lineTo(nx,ny);c.lineTo(t2[0],t2[1]);c.stroke();
     if(pull){c.strokeStyle='#d9c7a0';c.lineWidth=1.2;c.beginPath();c.moveTo(P[0],P[1]);c.lineTo(F[0]+ca*8,F[1]+sa*8);c.stroke();c.fillStyle='#e8eef8';c.beginPath();c.moveTo(F[0]+ca*11,F[1]+sa*11);c.lineTo(F[0]+ca*7-sa*2,F[1]+sa*7+ca*2);c.lineTo(F[0]+ca*7+sa*2,F[1]+sa*7-ca*2);c.fill()}};
-  if(pi===1){if(dir===1)bowL();c.drawImage(heroLook().atk,FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay,FR,FR);drawOv(c,heroLook(),'atk',[2],FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay);drawChest(c,dir,'atk',0,FR);drawAtkGloves(c,dir,1);drawHelm(c,dir,'atk',1);if(dir!==1)bowL()}
-  else{const R=ATK_META.fist[dn][2];c.drawImage(heroLook().atk,2*FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay,FR,FR);drawOv(c,heroLook(),'atk',[2],2*FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay);drawChest(c,dir,'atk',0,2*FR);drawAtkGloves(c,dir,2);drawHelm(c,dir,'atk',2);c.save();c.translate(R[0],R[1]);if(!drawWeaponArt(c,'bow',weapon.col,Math.PI/2*(dir===1?-1:1)*.6))drawWeapon(c,'bow',weapon.col,0,0);c.restore()}
+  if(pi===1){if(dir===1)bowL();drawCapeAt(c,dir,'atk',1,'under',false,S.t,true);c.drawImage(heroLook().atk,FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay,FR,FR);drawOv(c,heroLook(),'atk',[2],FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay);drawChest(c,dir,'atk',0,FR);drawCapeAt(c,dir,'atk',1,'over',false,S.t,true);drawAtkGloves(c,dir,1);drawHelm(c,dir,'atk',1);if(dir!==1)bowL()}
+  else{const R=ATK_META.fist[dn][2];drawCapeAt(c,dir,'atk',2,'under',false,S.t,true);c.drawImage(heroLook().atk,2*FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay,FR,FR);drawOv(c,heroLook(),'atk',[2],2*FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay);drawChest(c,dir,'atk',0,2*FR);drawCapeAt(c,dir,'atk',2,'over',false,S.t,true);drawAtkGloves(c,dir,2);drawHelm(c,dir,'atk',2);c.save();c.translate(R[0],R[1]);if(!drawWeaponArt(c,'bow',weapon.col,Math.PI/2*(dir===1?-1:1)*.6))drawWeapon(c,'bow',weapon.col,0,0);c.restore()}
   c.imageSmoothingEnabled=sm;c.restore();return true}
 /* full-body attack poses (both arms drawn); weapon attached at the fist of each pose */
 function drawAtkPose(c,dir,atk,weapon,mirror){if(atkArt==='old'||!ATK_SHEET.complete||!ATK_SHEET.naturalWidth)return false;
@@ -1856,7 +1906,7 @@ function drawAtkPose(c,dir,atk,weapon,mirror){if(atkArt==='old'||!ATK_SHEET.comp
   c.save();if(mirror)c.scale(-1,1);
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   const wpn=()=>{if(!weapon)return;c.save();c.translate(F[0],F[1]);if(!drawWeaponArt(c,weapon.type,weapon.col,ang))drawWeapon(c,weapon.type,weapon.col,ang,0);c.restore()};
-  if(dir===1)wpn();c.drawImage(heroLook().atk,pi*FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay,FR,FR);drawOv(c,heroLook(),'atk',[2],pi*FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay);drawChest(c,dir,'atk',0,pi*FR);drawAtkGloves(c,dir,pi);drawHelm(c,dir,'atk',pi);if(dir!==1)wpn();
+  if(dir===1)wpn();drawCapeAt(c,dir,'atk',pi,'under',false,S.t,true);c.drawImage(heroLook().atk,pi*FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay,FR,FR);drawOv(c,heroLook(),'atk',[2],pi*FR,dir*FR,FR,FR,-ATK_META.ax,-ATK_META.ay);drawChest(c,dir,'atk',0,pi*FR);drawCapeAt(c,dir,'atk',pi,'over',false,S.t,true);drawAtkGloves(c,dir,pi);drawHelm(c,dir,'atk',pi);if(dir!==1)wpn();
   c.imageSmoothingEnabled=sm;c.restore();return true}
 /* hero rig: body sheet without the weapon arm + a separate arm that swings and holds the weapon */
 const HERO_RIG={"sh":[[[11.44,-45.06],[11.44,-45.06],[11.44,-45.06],[11.32,-43.57],[11.32,-43.57],[11.32,-45.06],[11.44,-47.06],[11.21,-47.57],[11.47,-47.57],[11.21,-47.06]],[[11.45,-44.88],[11.45,-44.88],[11.45,-44.88],[11.21,-44.37],[11.21,-44.37],[11.21,-44.88],[11.45,-44.88],[11.31,-44.37],[10.92,-44.37],[11.31,-44.88]],[[-1.59,-48.28],[-1.59,-48.28],[-1.59,-48.28],[-0.67,-48.28],[-1.56,-47.87],[-0.78,-48.28],[-1.59,-48.28],[-1.07,-47.28],[-0.89,-48.87],[-1.37,-48.28]]],"arm":{"down":{"pv":[5.19,1.71],"fist":[5.2,24.13]},"up":{"pv":[5.2,1.63],"fist":[6.99,22.27]},"right":{"pv":[5.52,1.49],"fist":[5.05,23.15]}}};
@@ -1865,7 +1915,14 @@ function drawHeroArt(c,x,y,face,moving,t,weapon,atk){
   if(heroArt==='old'||!HERO_SHEET.complete||!HERO_SHEET.naturalWidth)return false;
   const dir=face.y<-.6?1:Math.abs(face.x)>.35?2:0,dn=['down','up','right'][dir],k=moving?Math.floor(t*11)%8:0,col=moving?2+k:Math.floor(t*1.4)%2;
   const LK=heroLook(),arm=LK.arm[dn],R=HERO_RIG.arm[dn],sh=HERO_RIG.sh[dir][col];
-  c.save();c.translate(Math.round(x),Math.round(y));c.fillStyle='rgba(0,0,0,.32)';ell(c,0,0,12,4);
+  c.save();c.translate(Math.round(x),Math.round(y));
+  /* hurt recoil / death fall (set by the caller through HERO_FX) */
+  const FX=HERO_FX;if(FX&&FX.dead>=0){const d=FX.dead,k=Math.min(1,d/.42),e=k*k*(3-2*k),side=face.x<0?1:-1;
+    c.fillStyle='rgba(80,6,10,'+Math.min(.75,d*.5)+')';ell(c,side*-14*e,-2,Math.min(22,6+d*14),Math.min(8,2+d*5));
+    if(d>2.2)c.globalAlpha*=Math.max(.35,1-(d-2.2)*.5);c.translate(0,-2*e);c.rotate(side*-1.45*e)}
+  else{c.fillStyle='rgba(0,0,0,.32)';ell(c,0,0,12,4)}
+  if(FX&&FX.hurt<.24){const k=1-FX.hurt/.24;c.translate(Math.round(-face.x*4*k),Math.round(-face.y*3*k*TILT));c.rotate((face.x<0?1:-1)*.12*k*(dir===2?1:.4));
+    if(FX.hurt<.09)c.filter='brightness(1.6) sepia(1) saturate(6) hue-rotate(-40deg)'}
   if(dir===2&&face.x<0)c.scale(-1,1);
   /* arm angle: hang + walk sway, or a weighted swing while attacking */
   const ph=k/8*Math.PI*2,sway=moving?-Math.sin(ph)*(dir===2?16:5)*Math.PI/180:0;
@@ -1911,12 +1968,13 @@ function drawHeroArt(c,x,y,face,moving,t,weapon,atk){
   const wpn=()=>{if(!weapon)return;c.save();c.translate(hx,hy);if(!drawWeaponArt(c,weapon.type,weapon.col,th+Math.PI/2,fs)){drawWeapon(c,weapon.type,weapon.col,th+Math.PI/2,0)}c.restore()};
   const drawArm=()=>{if(arm.complete===false)return;c.save();c.translate(sh[0],sh[1]);c.rotate(th);c.scale(1,P.af);c.drawImage(arm,-R.pv[0],-R.pv[1]);drawGlove(c,dir,1,R.fist[0]-R.pv[0],R.fist[1]-R.pv[1]);c.restore()};
   if(dir===1){wpn()}
+  drawCapeAt(c,dir,'walk',col,'under',moving,t,false);
   c.drawImage(LK.sheet,col*64,dir*64,64,64,-32,-62,64,64);
-  drawOv(c,LK,'sheet',[2],col*64,dir*64,64,64,-32,-62);if(dir!==2)drawChest(c,dir,'walk',col);if(dir!==2){const o=GLOVE_SRC.walkOff[dir][col];drawGlove(c,dir,0,o[0],o[1])}
+  drawOv(c,LK,'sheet',[2],col*64,dir*64,64,64,-32,-62);if(dir!==2)drawChest(c,dir,'walk',col);if(dir!==2)drawCapeAt(c,dir,'walk',col,'over',moving,t,false);if(dir!==2){const o=GLOVE_SRC.walkOff[dir][col];drawGlove(c,dir,0,o[0],o[1])}
   drawHelm(c,dir,'walk',col);
   if(dir!==1){wpn()}
   drawArm();
-  if(dir===2){drawChest(c,dir,'walk',col);drawHelm(c,dir,'walk',col)}
+  if(dir===2){drawChest(c,dir,'walk',col);drawCapeAt(c,dir,'walk',col,'over',moving,t,false);drawHelm(c,dir,'walk',col)}
   c.imageSmoothingEnabled=sm;c.restore();return true;
 }
 function drawHero(c,x,y,s,L,t,moving,face,weapon,swing,hurt,gear){
@@ -2658,6 +2716,7 @@ function render(){
     else if(so.type==='frost'){c.save();c.scale(.55,.55);c.translate(0,40);drawFrostDragon(c,S.t,'#e6f7ff',al,false,true);c.restore()}
     else if(so.type==='thorn'){c.save();c.scale(.6,.6);c.translate(0,40);drawThornLady(c,S.t,'#e8ffd8',al,false);c.restore()}else drawSlimeQueen(c,30,S.t,'#c9b5ff',false,al);c.shadowBlur=0;
     c.font='700 13px "Reem Kufi",Tajawal,system-ui,sans-serif';c.textAlign='center';c.fillStyle='#e8a6ff';c.fillText('روح '+BOSSES[so.type].name,0,-74);c.restore()}})}
+  if(p.dead&&heroArt==='new')ents.push({y:p.y,d:()=>{HERO_FX={hurt:9,dead:S.t-(p.deathAt??S.t)};drawHeroArt(c,p.x,p.y,p.face,false,S.t,null,null);HERO_FX=null}});
   if(!p.dead){
     const since=S.t-p.atkT;let swing=0;
     if(since<.22&&!w.proj)swing=it.type==='spear'?0:(-1.2+since/.22*2.4)*(p.atkDir.x<0?-1:1);
@@ -2667,7 +2726,11 @@ function render(){
       if(S.t<(p.rootT||0)){c.strokeStyle='#5f9a3a';c.lineWidth=3;for(let j=0;j<5;j++){const a=j*1.26;c.beginPath();c.moveTo(p.x+Math.cos(a)*16,p.y+Math.sin(a)*6);c.quadraticCurveTo(p.x+Math.cos(a)*6,p.y-10,p.x+Math.cos(a+1)*4,p.y-18);c.stroke()}}
       if(S.t<(p.slowT||0)){c.strokeStyle='rgba(159,227,255,.85)';c.lineWidth=3;c.beginPath();c.ellipse(p.x,p.y,18,18*TILT,0,0,Math.PI*2);c.stroke()}
       if(S.t<(p.invT||0))c.globalAlpha=.5;
+      const auD=S.t-(p.auraT??-9);if(auD<.9)drawSkillAura(c,p.x,p.y,auD,false);
+      HERO_FX={hurt:S.t-p.lastHit,dead:-1};
       if(!drawHeroArt(c,p.x,p.y,p.face,p.moving,S.t,{type:it.type,col:RAR[it.rar].color},since<.26?{k:since/.26,type:it.type,flip:(p.atkDir.x<0?-1:1)*(p.combo===1?-1:1),combo:p.combo||0}:null))drawHero(c,p.x,p.y,1,look,S.t,p.moving,{x:p.face.x,y:p.face.y},{type:it.type,col:RAR[it.rar].color},swing,S.t-p.lastHit<.4,{helm:hg&&RAR[hg.rar].color,armor:ag&&RAR[ag.rar].color,...Object.fromEntries(['gloves','boots','amulet'].map(t=>{const w=wornGear(t);return[t,w&&RAR[w.rar].color]}))});
+      HERO_FX=null;
+      if(auD<.9)drawSkillAura(c,p.x,p.y,auD,true);
       c.globalAlpha=1}});
   }
   for(const a of S.army)ents.push({y:a.y,d:()=>drawAlly(c,a,S.t)});
