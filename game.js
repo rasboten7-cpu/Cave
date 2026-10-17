@@ -221,7 +221,7 @@ function newPlayer(){
 /* ---------- canvas ---------- */
 const cv=$('game'),ctx=cv.getContext('2d');let VW=0,VH=0,DPR=1;
 let ZM=1;
-function resize(){DPR=Math.min(matchMedia('(pointer:coarse)').matches?1.5:2,window.devicePixelRatio||1);const w=cv.clientWidth,h=cv.clientHeight,sh=Math.min(w,h);ZM=sh<620?Math.max(.6,sh/620):1;VW=w/ZM;VH=h/ZM;cv.width=w*DPR;cv.height=h*DPR}
+function resize(){DPR=Math.min(matchMedia('(pointer:coarse)').matches?1.25:2,window.devicePixelRatio||1);const w=cv.clientWidth,h=cv.clientHeight,sh=Math.min(w,h);ZM=sh<620?Math.max(.6,sh/620):1;VW=w/ZM;VH=h/ZM;cv.width=w*DPR;cv.height=h*DPR}
 new ResizeObserver(resize).observe(cv);resize();
 
 /* ---------- input ---------- */
@@ -959,6 +959,7 @@ function update(dt){
     p.hp=Math.min(p.hp,mhp());p.mana=Math.min(maxMana(),(p.mana??maxMana())+maxMana()*.035*dt);
   }
   for(const m of S.mons){
+    if(isRefugeScene()){m.aggro=false;m.charge=0;m.lungeT=0;continue}
     if(m.poison&&S.t<m.poison.until){m.hp-=m.poison.dps*(m.kind==='boss'&&m.poison.by!=='player'?soulBossFactor(m):1)*dt;m.poison.tick+=dt;
       if(m.poison.tick>.5){m.poison.tick=0;floatTxt(m.x+rand(-8,8),m.y-34,String(Math.round(m.poison.dps*.5)),'#8be36a',12)}
       if(m.hp<=0){m.lastBy=m.poison.by||'player';kill(m);continue}}
@@ -1015,7 +1016,7 @@ function update(dt){
     m.x=clamp(m.x,b.x0,b.x1);m.y=clamp(m.y,b.y0,b.y1);m.flash=Math.max(0,m.flash-dt);if(m.strikeT)m.strikeT=Math.max(0,m.strikeT-dt);
     if(!p.dead&&!isCaster(m)&&d<m.r+(onAlly?allyR(onAlly):12)&&S.t-m.lastHit>.9){m.lastHit=S.t;m.attackAt=S.t;onAlly?hurtAlly(onAlly,m.atk):hurtPlayer(m.atk)}
   }
-  for(let i=0;i<S.mons.length;i++)for(let j=i+1;j<S.mons.length;j++){
+  if(!isRefugeScene())for(let i=0;i<S.mons.length;i++)for(let j=i+1;j<S.mons.length;j++){
     const a=S.mons[i],c=S.mons[j],dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy)||1,min=a.r+c.r;
     if(d<min){const o=min-d,wa=a.kind==='boss'?0:c.kind==='boss'?1:.5,wc=1-wa;a.x-=dx/d*o*wa;a.y-=dy/d*o*wa;c.x+=dx/d*o*wc;c.y+=dy/d*o*wc}
   }
@@ -1065,7 +1066,7 @@ function update(dt){
     if(f.k==='frostp'||f.k==='shard'){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vx*=Math.pow(.25,dt);f.vy*=Math.pow(.25,dt);if(f.k==='shard')f.rot+=f.vr*dt}
     f.t+=dt;if(f.k==='spark'){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vy+=380*dt}if(f.t>=f.dur)S.fx.splice(i,1)}
   for(let i=S.texts.length-1;i>=0;i--){const t=S.texts[i];t.t+=dt;t.y-=32*dt;if(t.t>.9)S.texts.splice(i,1)}
-  if(S.scene==='field'){const n=S.mons.filter(m=>m.kind!=='boss').length;if(n<18){let g=0;while(S.mons.length<18&&g++<60)spawnMonster()}else if(n<MON_CAP){S.spawnT=(S.spawnT||0)-dt;if(S.spawnT<=0){S.spawnT=1.6;spawnMonster()}}}
+  refillFieldPopulation(dt);
   for(const m of S.mons)if(m.elite&&!m.announced&&Math.hypot(m.x-p.x,m.y-p.y)<700){m.announced=true;toast(`⭐ ظهر وحش نخبة: ${m.eName} Lv${m.lvl}`,'#ffd36e',true);SND.rare(1)}
   if(S.scene==='cave'){caveFix(p,p._cx,p._cy);for(const m of S.mons)caveFix(m);for(const a of S.army)caveFix(a);for(const d of S.drops)caveFix(d)}
   p._cx=p.x;p._cy=p.y;
@@ -3224,11 +3225,9 @@ BOSSES.astefan.desc+=' درع الدم يمتص معظم ضرر الأرواح �
 const polishPrince=updateAstefan;
 updateAstefan=function(m,dt){polishPrince(m,dt);if(S.t>=(m.exposedUntil||0))m.hp=Math.min(m.max,m.hp+m.max*.0025*dt)};
 
-/* A cached deformable mesh changes wings, claws, head, roots and torso independently.
-   Native image geometry stays intact; individual frames are shared by equal creatures. */
-// One shared memory budget; distant creatures never allocate animation canvases.
-const creatureFrameCache=new Map(),creatureIds=new WeakMap(),creatureLast=new WeakMap();
-let creatureId=0,creatureBytes=0,creatureRasterSpent=0;
+/* Articulated source-image patches animate body parts without clipping or raster canvases. */
+// Keep only tiny motion grids; textures stay immutable on the GPU.
+const creatureFrameCache=new Map();let creatureBytes=0,creatureRasterSpent=0;
 function creatureWarp(kind,u,v,t,active){const breath=Math.sin(t*2.7),walk=Math.sin(t*10),side=u-.5,edge=Math.pow(Math.abs(side)*2,1.8);let x=u,y=v;
  const torso=Math.exp(-Math.pow((v-.5)/.27,2))*(1-edge*.65);x+=side*breath*.022*torso;y-=breath*.009*torso;
  if(kind==='boss_frost'||kind==='frostDragon'){
@@ -3256,24 +3255,14 @@ function creatureWarp(kind,u,v,t,active){const breath=Math.sin(t*2.7),walk=Math.
   x+=Math.sin(t*3+v*5)*edge*Math.max(0,v-.4)*.018;y-=breath*Math.exp(-Math.pow(side/.25,2))*Math.max(0,.65-v)*.018;
  }
  return [x,y]}
-function triangleImage(c,im,s,d){const [s0,s1,s2]=s,[d0,d1,d2]=d,den=(s1[0]-s0[0])*(s2[1]-s0[1])-(s2[0]-s0[0])*(s1[1]-s0[1]);if(Math.abs(den)<.001)return;
- const a=((d1[0]-d0[0])*(s2[1]-s0[1])-(d2[0]-d0[0])*(s1[1]-s0[1]))/den,b=((d1[1]-d0[1])*(s2[1]-s0[1])-(d2[1]-d0[1])*(s1[1]-s0[1]))/den,cc=((d2[0]-d0[0])*(s1[0]-s0[0])-(d1[0]-d0[0])*(s2[0]-s0[0]))/den,dd=((d2[1]-d0[1])*(s1[0]-s0[0])-(d1[1]-d0[1])*(s2[0]-s0[0]))/den;
- c.save();c.beginPath();c.moveTo(...d0);c.lineTo(...d1);c.lineTo(...d2);c.closePath();c.clip();c.transform(a,b,cc,dd,d0[0]-a*s0[0]-cc*s0[1],d0[1]-b*s0[0]-dd*s0[1]);c.drawImage(im,0,0);c.restore()}
-function creatureFrame(im,kind,t,active){if(RM)return im;if(!creatureIds.has(im))creatureIds.set(im,++creatureId);const frame=Math.floor((t%2)*8),key=creatureIds.get(im)+':'+kind+':'+!!active+':'+frame;
- if(creatureFrameCache.has(key)){const entry=creatureFrameCache.get(key);creatureFrameCache.delete(key);creatureFrameCache.set(key,entry);creatureLast.set(im,entry.cv);return entry.cv}
- if(creatureRasterSpent>2)return creatureLast.get(im)||im;
- const start=performance.now(),iw=im.naturalWidth||im.width,ih=im.naturalHeight||im.height,limit=/boss|queen|Dragon|treant/.test(kind)?192:128,scale=Math.min(1,limit/Math.max(iw,ih)),w=Math.max(1,Math.round(iw*scale)),h=Math.max(1,Math.round(ih*scale)),cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.imageSmoothingEnabled=true;const NX=4,NY=4,tt=frame/8;
- // Rasterize from a small source once, rather than repeatedly sampling the full atlas.
- let source=im;if(scale<1){source=document.createElement('canvas');source.width=w;source.height=h;source.getContext('2d').drawImage(im,0,0,w,h)}
- const pt=(i,j)=>{const p=creatureWarp(kind,i/NX,j/NY,tt,active);return[p[0]*w,p[1]*h]};
- for(let j=0;j<NY;j++)for(let i=0;i<NX;i++){const s=[[i*w/NX,j*h/NY],[(i+1)*w/NX,j*h/NY],[(i+1)*w/NX,(j+1)*h/NY],[i*w/NX,(j+1)*h/NY]],d=[pt(i,j),pt(i+1,j),pt(i+1,j+1),pt(i,j+1)];triangleImage(c,source,[s[0],s[1],s[2]],[d[0],d[1],d[2]]);triangleImage(c,source,[s[0],s[2],s[3]],[d[0],d[2],d[3]])}
- const bytes=w*h*4;while(creatureBytes+bytes>24*1024*1024&&creatureFrameCache.size){const k=creatureFrameCache.keys().next().value;creatureBytes-=creatureFrameCache.get(k).bytes;creatureFrameCache.delete(k)}creatureFrameCache.set(key,{cv,bytes});creatureBytes+=bytes;creatureLast.set(im,cv);creatureRasterSpent+=performance.now()-start;return cv}
-function drawCreatureFrame(c,im,kind,t,x,y,w,h,active=false){c.drawImage(creatureFrame(im,kind,t,active),x,y,w,h)}
+function creatureGrid(kind,t,active){const frame=Math.floor((t%4)*12),key=kind+':'+!!active+':'+frame;if(creatureFrameCache.has(key))return creatureFrameCache.get(key);const pts=new Float32Array(40);for(let j=0;j<=4;j++)for(let i=0;i<=3;i++){const p=creatureWarp(kind,i/3,j/4,frame/12,active),k=(j*4+i)*2;pts[k]=p[0];pts[k+1]=p[1]}if(creatureFrameCache.size>=128){const k=creatureFrameCache.keys().next().value;creatureBytes-=creatureFrameCache.get(k).byteLength;creatureFrameCache.delete(k)}creatureFrameCache.set(key,pts);creatureBytes+=pts.byteLength;return pts}
+function drawCreatureFrame(c,im,kind,t,x,y,w,h,active=false){if(RM){c.drawImage(im,x,y,w,h);return}const iw=im.naturalWidth||im.width,ih=im.naturalHeight||im.height,g=creatureGrid(kind,t,active);c.save();c.translate(x,y);
+ for(let j=0;j<4;j++)for(let i=0;i<3;i++){const k=(j*4+i)*2,r=k+2,b=k+8,sx=i*iw/3,sy=j*ih/4,sw=Math.min(iw-sx,iw/3+.7),sh=Math.min(ih-sy,ih/4+.7);c.save();c.transform((g[r]-g[k])*w/(iw/3),(g[r+1]-g[k+1])*h/(iw/3),(g[b]-g[k])*w/(ih/4),(g[b+1]-g[k+1])*h/(ih/4),g[k]*w,g[k+1]*h);c.drawImage(im,sx,sy,sw,sh,0,0,sw,sh);c.restore()}c.restore()}
 const nativeExpandedBoss=drawExpandedBossArt;
 drawExpandedBossArt=function(c,key,t,body,alpha,angry,move){const im=monImg(key,'front');if(!im)return false;const maxH={boss_scorp:145,boss_frost:180,boss_thorn:156}[key]||160,k=Math.min(1,maxH/im.naturalHeight);c.save();c.scale(k,k);const ok=nativeExpandedBoss(c,key,t,body,alpha,angry,move);c.restore();return ok};
 // Allies have fixed compact silhouettes, independent of level growth.
 drawAlly=function(c,a,t){const A=ALLIES[a.type],evo=allyEvo(a),H={queen:51,scorp:59,frost:88,thorn:81}[a.type]+(evo?5:0);c.save();c.translate(a.x,a.y);if(a.down){c.fillStyle=A.ui;c.font='10px Tajawal';c.textAlign='center';c.fillText(AR(Math.ceil(a.downT))+'ث',0,-8);c.restore();return}
- c.strokeStyle=A.ui+'88';c.lineWidth=1;c.beginPath();c.ellipse(0,2,allyR(a)+3,(allyR(a)+3)*TILT,0,0,Math.PI*2);c.stroke();const key=a.type==='queen'?'queen':'boss_'+a.type,im=monImg(key,'front');if(im){const w=H*im.naturalWidth/im.naturalHeight;c.save();if(a.face<0)c.scale(-1,1);if(a.flash>0)c.filter='brightness(1.9)';drawCreatureFrame(c,im,key,t+(a.type==='scorp'?1:0),-w/2,-H,w,H,S.t-(a.atkT||-9)<.4);c.restore()}
+ c.strokeStyle=A.ui+'88';c.lineWidth=1;c.beginPath();c.ellipse(0,2,allyR(a)+3,(allyR(a)+3)*TILT,0,0,Math.PI*2);c.stroke();const key=a.type==='queen'?'queen':'boss_'+a.type,im=monImg(key,'front');if(im){const w=H*im.naturalWidth/im.naturalHeight;c.save();if(a.face<0)c.scale(-1,1);drawCreatureFrame(c,a.flash>0?(monWhite(key,'front')||im):im,key,t+(a.type==='scorp'?1:0),-w/2,-H,w,H,S.t-(a.atkT||-9)<.4);c.restore()}
  c.fillStyle=A.ui;c.font='9px Tajawal';c.textAlign='center';c.fillText(A.name,0,-H-5);c.restore()};
 const atlasCutCache={};
 function cutSprite(key){if(atlasCutCache[key])return atlasCutCache[key];const b=EXPANSION_ART.boxes[key],im=expansionImages.sprites;if(!b||!okImg(im))return null;const cv=document.createElement('canvas');cv.width=b[2];cv.height=b[3];cv.getContext('2d').drawImage(im,...b,0,0,b[2],b[3]);return atlasCutCache[key]=cv}
@@ -3325,7 +3314,7 @@ const beforeMeadowSpawn=spawnMonster;
 spawnMonster=function(){if(S.zone!==1)return beforeMeadowSpawn();const p=S.p;
  // Distant normal monsters are recycled, so the larger region remains inhabited.
  for(let i=S.mons.length-1;i>=0;i--){const m=S.mons[i];if(!m.meadowGuard&&m.kind!=='boss'&&Math.hypot(m.x-p.x,(m.y-p.y)*TILT)>1200)S.mons.splice(i,1)}
- const a=rand(0,Math.PI*2),d=rand(430,850),x=clamp(p.x+Math.cos(a)*d,70,S.W-70),y=clamp(p.y+Math.sin(a)*d/TILT,70,S.H-70);if(meadowKeep().some(o=>Math.hypot(x-o.x,y-o.y)<160))return;
+ const a=rand(0,Math.PI*2),d=rand(430,850),x=clamp(p.x+Math.cos(a)*d,70,S.W-70),y=clamp(p.y+Math.sin(a)*d/TILT,70,S.H-70);if(inQuietField(x,y)||meadowKeep().some(o=>Math.hypot(x-o.x,y-o.y)<160))return;
  const Z=ZONES[1];let k='slime',r=Math.random();for(const[key,w]of Z.kinds){if(r<w){k=key;break}r-=w}const m=makeMon(k,zoneLevel(x,y),x,y);if(Math.random()<.012)makeElite(m);S.mons.push(m)};
 function startMeadowChallenge(){const st=meadowState();if(st.rewarded)return;st.challenge=true;spawnMeadowGuards();toast('أطلال الحراس: اهزم الحراس الأربعة وافتح الصندوق.','#d4ba84',true);saveSoon()}
 function spawnMeadowGuards(){const st=meadowState();if(!st.challenge||st.rewarded)return;for(const i of st.remaining){if(S.mons.some(m=>m.meadowGuard===i+1))continue;const off=[[-95,-20],[100,-20],[-60,95],[75,110]][i],m=makeMon(i%2?'rockling':'beetle',i<2?4:5,MEADOW.ruins.x+off[0],MEADOW.ruins.y+off[1]);m.meadowGuard=i+1;m.hp=m.max=Math.round(m.hp*1.25);m.eName='حارس الأطلال';S.mons.push(m)}}
@@ -3383,8 +3372,8 @@ drawHeroArt=function(c,x,y,face,moving,t,weapon,atk){
  const dir=face.y<-.6?'back':Math.abs(face.x)>.35?'side':'front',f=hrLegacyFrame(dir,moving&&!RM,RM?0:t,atk,weapon?.type||'sword');
  // The bow's pull changes within a single attack pose, so preserve its exact progression.
  if(atk&&weapon?.type==='bow')return heroPaintPose(c,x,y,face,moving,t,weapon,atk);
- const key=[dir,face.x<0,moving,f.row,f.col,f.phase,f.attack,atk?.combo||0,weapon?.type||'',weapon?.col||'',look.hairDye,look.shirtDye,look.skinTone,look.scarfDye,armorArt,...GSLOTS.map(g=>{const it=wornGear(g[0]);return it?it.rar:-1}),Math.floor((t%(Math.PI*2/2.5))*4)].join('|');
- let pose=heroPoseCache.get(key);if(!pose){pose=document.createElement('canvas');pose.width=256;pose.height=256;const a=pose.getContext('2d');a.translate(128,204);heroPaintPose(a,0,0,face,moving,t,weapon,atk);if(heroPoseCache.size>=96)heroPoseCache.delete(heroPoseCache.keys().next().value);heroPoseCache.set(key,pose)}c.drawImage(pose,Math.round(x)-128,Math.round(y)-204);return true;
+ const key=[dir,face.x<0,moving,f.row,f.col,f.phase,f.attack,atk?.combo||0,weapon?.type||'',weapon?.col||'',look.hairDye,look.shirtDye,look.skinTone,look.scarfDye,armorArt,...GSLOTS.map(g=>{const it=wornGear(g[0]);return it?it.rar:-1}),moving?f.phase:Math.floor((t%(Math.PI*2/2.5))*4)].join('|');
+ let pose=heroPoseCache.get(key);if(!pose){pose=document.createElement('canvas');pose.width=256;pose.height=256;const a=pose.getContext('2d');a.translate(128,204);heroPaintPose(a,0,0,face,moving,t,weapon,atk);if(heroPoseCache.size>=48)heroPoseCache.delete(heroPoseCache.keys().next().value);heroPoseCache.set(key,pose)}c.drawImage(pose,Math.round(x)-128,Math.round(y)-204);return true;
 };
 
 /* Meadow town: services, material economy, professions and preparation. */
@@ -3419,7 +3408,7 @@ $('townClose').onclick=closeTown;
 function townMessage(text){townNotice=text;renderTown()}
 function renderTown(){const t=townState(),body=$('townBody');$('townTitle').textContent=townPage==='mine'?'منجم السراج':townPage==='fishing'?'بحيرة المرآة':SERVICES[townPage]?.name||CITY.name;$('townSubtitle').textContent=townPage==='forge'||townPage==='armor'?'التطوير بالخامات والذهب. المعدات المتشابهة لا تندمج.':townPage==='mayor'?'مهمات أهل المدينة تقودك إلى المنجم والبحيرة ثم الاستعداد لملكة الوحل.':'الخدمات والمواد والتجهيز قبل الرحلة.';$('townWallet').textContent=`${AR(S.gold)} ذهب · ${AR(mat('iron'))} حديد · ${AR(mat('coal'))} فحم · ${AR(mat('crystal'))} بلورات`;$('townNotice').textContent=townNotice;body.replaceChildren();$('townTabs').replaceChildren();
  if(townPage!=='activity'&&nearService('apothecary'))for(const[id,name]of [['apothecary','الجرعات'],['cooking','الطبخ']]){const b=document.createElement('button');b.type='button';b.textContent=name;b.className=townPage===id?'on':'';b.onclick=()=>{townPage=id;renderTown()};$('townTabs').append(b)}
- if(townPage==='forge'||townPage==='armor')renderForge(body,townPage==='armor');else if(townPage==='stable')renderStable(body);else if(townPage==='mayor')renderMayor(body);else if(townPage==='cooking')renderCooking(body);else if(townPage==='apothecary')renderApothecary(body);else if(townPage==='mine')body.append(townCard('منجم السراج','<p>عروق الحديد والفحم قرب المدخل، والبلورات في العمق. احمِ نفسك من الحراس قبل التعدين.</p><p>الخام يذهب إلى مخزن المواد، ولا يحتل خانة معدات.</p>','ادخل المنجم',()=>{closeTown();enterMine()}));else if(townPage==='fishing')body.append(townCard('الصيد عند الرصيف','<p>ارمِ الخيط من الرصيف وراقب العوّامة في الماء. اضغط عند اللدغة، ثم اسحب وارخِ الخيط حتى لا ينقطع. جودة السحب قد تمنح سمكة فضية.</p><p>كل محاولة تستهلك طُعمًا واحدًا. تحصل على العدة من رئيس المدينة.</p>','ارمِ الخيط',startFishing,!t.rod||mat('bait')<1));
+ if(townPage==='forge'||townPage==='armor')renderForge(body,townPage==='armor');else if(townPage==='stable')renderStable(body);else if(townPage==='mayor')renderMayor(body);else if(townPage==='cooking')renderCooking(body);else if(townPage==='apothecary')renderApothecary(body);else if(townPage==='mine')body.append(townCard('منجم السراج','<p>منجم آمن بلا وحوش: عروق الحديد والفحم قرب المدخل، والبلورات في العمق. استخرج الخامات بهدوء.</p><p>الخام يذهب إلى مخزن المواد، ولا يحتل خانة معدات.</p>','ادخل المنجم',()=>{closeTown();enterMine()}));else if(townPage==='fishing')body.append(townCard('الصيد عند الرصيف','<p>ارمِ الخيط من الرصيف وراقب العوّامة في الماء. اضغط عند اللدغة، ثم اسحب وارخِ الخيط حتى لا ينقطع. جودة السحب قد تمنح سمكة فضية.</p><p>كل محاولة تستهلك طُعمًا واحدًا. تحصل على العدة من رئيس المدينة.</p>','ارمِ الخيط',startFishing,!t.rod||mat('bait')<1));
  if(townConfirm)renderTownConfirm(body);
 }
 
@@ -3468,7 +3457,7 @@ function startMining(id){const n=VEINS.find(n=>n.id===id);if(!n||S.scene!=='mine
 function resolveActivity(now=performance.now()){const a=activity;if(!a)return false;if(a.lastStrike&&now-a.lastStrike<350)return false;if(a.kind==='fish'&&now-a.started<1200)return false;a.lastStrike=now;const value=activityCursor(now),good=value>=.4&&value<=.62;
  if(a.kind==='fish'){if(!good){stopActivity();townPage='fishing';townNotice='أفلتت السمكة. جرّب السحب داخل المنطقة الخضراء.';renderTown();return false}const rare=Math.abs(value-.51)<.025;giveMat(rare?'rareFish':'fish',1);townState().counters.caught++;gainExp(rare?30:15,S.p);stopActivity();townPage='fishing';townNotice='اصطدت '+(rare?'سمكة فضية نادرة':'سمكة بحيرة')+' وأودعت في المواد.';renderTown();return true}
  if(good)a.hits++;else a.misses++;if(a.hits>=3){const n=a.node;giveMat(n.mat,n.amount);townState().counters.mined+=n.amount;townState().cooldowns[n.id]=Date.now()+60000;gainExp(n.mat==='crystal'?45:25,S.p);stopActivity();closeTown();toast('استخرجت '+AR(n.amount)+' '+MATS[n.mat].name,'#b3d9cc');return true}if(a.misses>=4){stopActivity();closeTown();toast('توقفت المحاولة. يمكنك المحاولة مجددًا.','#d4bba3');return false}if($('activityStats'))$('activityStats').textContent=`ضربات موفقة ${AR(a.hits)}/٣ · أخطاء ${AR(a.misses)}/٤`;return good}
-function enterMine(){if(S.zone!==1||S.scene!=='field'||Math.hypot(S.p.x-MINE.x,S.p.y-MINE.y)>200)return false;if(!townState().pickaxe){toast('استلم المعول من رئيس المدينة أولًا.','#d5bd96');return false}dismount();miningReturn={x:S.p.x,y:S.p.y+100,mons:S.mons,drops:S.drops};S.scene='mine';S.mons=[];S.drops=[];S.proj=[];S.eproj=[];S.aproj=[];S.haz=[];Object.assign(S.p,{x:580,y:860,face:{x:0,y:-1}});for(const[k,l,x,y]of [['beetle',4,530,520],['shroom',5,720,520],['rockling',7,600,330]])S.mons.push(makeMon(k,l,x,y));S.army.forEach((a,i)=>{a.x=540+i*30;a.y=880});S.cam.x=S.p.x-VW/2;S.cam.y=S.p.y*TILT-VH/2;contextBtn.hidden=true;saveSoon();toast('منجم السراج · البلورات في العمق','#a8c9d9');return true}
+function enterMine(){if(S.zone!==1||S.scene!=='field'||Math.hypot(S.p.x-MINE.x,S.p.y-MINE.y)>200)return false;if(!townState().pickaxe){toast('استلم المعول من رئيس المدينة أولًا.','#d5bd96');return false}dismount();miningReturn={x:S.p.x,y:S.p.y+100,mons:S.mons,drops:S.drops};S.scene='mine';S.mons=[];S.drops=[];S.proj=[];S.eproj=[];S.aproj=[];S.haz=[];Object.assign(S.p,{x:580,y:860,face:{x:0,y:-1}});S.army.forEach((a,i)=>{a.x=540+i*30;a.y=880});S.cam.x=S.p.x-VW/2;S.cam.y=S.p.y*TILT-VH/2;contextBtn.hidden=true;saveSoon();toast('منجم السراج · البلورات في العمق','#a8c9d9');return true}
 function leaveMine(){if(S.scene!=='mine')return false;const back=miningReturn||{x:MINE.x,y:MINE.y+110,mons:[],drops:[]};const leftovers=[];for(const dr of S.drops)if(dr.it){const equipment=!!WEAP[dr.it.type]||!!GEAR[dr.it.type];if(equipment&&S.inv.length>=S.bagMax)leftovers.push(dr);else if(!pickup(dr))leftovers.push(dr);}S.scene='field';S.mons=back.mons||[];S.drops=[...(back.drops||[]),...leftovers.map((dr,i)=>({...dr,x:back.x+20+i*8,y:back.y+20,t:0}))];S.proj=[];S.eproj=[];S.aproj=[];S.haz=[];S.p.x=back.x;S.p.y=back.y;S.p.invT=S.t+1;S.army.forEach((a,i)=>{a.x=S.p.x+(i%2?45:-45);a.y=S.p.y+30});S.cam.x=S.p.x-VW/2;S.cam.y=S.p.y*TILT-VH/2;miningReturn=null;saveSoon();return true}
 
 /* Hooks preserve existing saves and hero appearance. Old gear is never downgraded. */
@@ -3565,7 +3554,7 @@ expansionEnts=function(ents,c){if(S.scene==='mine'){drawMineEntities(ents,c);ret
 const townHero=drawHeroArt;
 drawHeroArt=function(c,x,y,face,moving,t,weapon,atk){if(riding&&c===ctx&&x===S.p.x&&y===S.p.y&&!HERO_PREVIEW&&S.scene==='field'){const kind=townState().selectedMount||'horse',dir=face.y<-.6?'back':Math.abs(face.x)>.35?'side':'front',key=kind+'-'+dir;c.save();const bob=moving?Math.sin(t*10)*1.4:0;cityImage(c,key,x,y+bob,kind==='horse'?77:61,dir==='side'&&face.x<0);c.beginPath();c.rect(x-60,y-150,120,78);c.clip();townHero(c,x,y-40+bob,face,false,t,null,null);c.restore();return true}return townHero(c,x,y,face,moving,t,weapon,atk)};
 const townHud=hud;
-hud=function(){townHud();if(S.zone===1){const t=townState();$('questLine').textContent=S.scene==='mine'?'منجم السراج · اهزم الحراس ثم عدّن · الخروج جنوبًا':!t.pickaxe?'مدينة السراج · قابل الرئيس سالم واستلم عدة الرحلة':t.quests.queen===2?'أهل السراج يتذكرون انتصارك · بوابة الصحراء شمال شرق':t.meal.kind==='ward'&&t.meal.left>0?'مؤن مقاومة الوحل جاهزة · تحدَّ ملكة الوحل عندما تستعد':'الحداد والمنجم والبحيرة · المهمات عند الرئيس · المواد داخل الحقيبة'}contextBtn.hidden=S.paused||!townContext||!S.running};
+hud=function(){townHud();if(S.zone===1){const t=townState();$('questLine').textContent=S.scene==='mine'?'منجم السراج الآمن · استخرج الخامات · الخروج جنوبًا':!t.pickaxe?'مدينة السراج · قابل الرئيس سالم واستلم عدة الرحلة':t.quests.queen===2?'أهل السراج يتذكرون انتصارك · بوابة الصحراء شمال شرق':t.meal.kind==='ward'&&t.meal.left>0?'مؤن مقاومة الوحل جاهزة · تحدَّ ملكة الوحل عندما تستعد':'الحداد والمنجم والبحيرة · المهمات عند الرئيس · المواد داخل الحقيبة'}contextBtn.hidden=S.paused||!townContext||!S.running};
 const townMap=drawMeadowMap;
 drawMeadowMap=function(){townMap();const c=$('meadowMapCanvas').getContext('2d');c.strokeStyle='#d0b880';c.lineWidth=2;c.strokeRect(CITY.x0*.15,CITY.y0*.15,(CITY.x1-CITY.x0)*.15,(CITY.y1-CITY.y0)*.15);c.font='14px Tajawal';c.textAlign='center';c.fillStyle='#e5ca92';c.fillText('مدينة السراج',100,605);for(const[p,name,col]of [[MINE,'المنجم','#b6c9d6'],[LAKE,'البحيرة','#a3d3de']]){c.fillStyle=col;c.beginPath();c.arc(p.x*.15,p.y*.15,7,0,Math.PI*2);c.fill();c.fillText(name,p.x*.15,p.y*.15-14)}};
 const townExitTrial=exitTrial;
@@ -3621,7 +3610,7 @@ meadowKeep=function(){if(S.zone!==1)return[];if(!townKeepPoints){townKeepPoints=
 
 let cityFloorCache=null,lakeFloorCache=null,wallTile=null;
 function pathStroke(c,points,width,color){c.beginPath();points.forEach((p,i)=>i?c.lineTo(...p):c.moveTo(...p));c.lineCap='round';c.lineJoin='round';c.lineWidth=width;c.strokeStyle=color;c.stroke()}
-function makeCityFloor(){const cv=document.createElement('canvas');cv.width=1800;cv.height=1450;const c=cv.getContext('2d');c.translate(-80,-2750);
+function makeCityFloor(){const[cv,c]=groundSurface(1800,1450);c.translate(-80,-2750);
  // Soft dirt and grass at the foot of the walls; no rectangular ground plate.
  for(let j=0;j<115;j++){const h=hash(j,401),x=180+hash(j,402)*1590,y=2850+hash(j,403)*1230;c.fillStyle=`rgba(65,61,39,${.1+h*.16})`;ell(c,x,y,110+h*90,65+h*65)}
  c.fillStyle=terrainPattern(c,'earth');rr(c,205,2885,1530,1140,28);c.fillStyle='rgba(46,56,35,.26)';rr(c,205,2885,1530,1140,28);
@@ -3636,7 +3625,7 @@ function makeCityFloor(){const cv=document.createElement('canvas');cv.width=1800
  cityFloorCache=cv;
 }
 function traceLake(c,scale=1){c.beginPath();for(let i=0;i<100;i++){const p=lakePoint(i/100*Math.PI*2,scale);i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y)}c.closePath()}
-function makeLakeFloor(){const cv=document.createElement('canvas');cv.width=1100;cv.height=950;const c=cv.getContext('2d');c.translate(-(LAKE.x-550),-(LAKE.y-475));
+function makeLakeFloor(){const[cv,c]=groundSurface(1100,950);c.translate(-(LAKE.x-550),-(LAKE.y-475));
  for(let i=12;i>=1;i--){traceLake(c,1.04+i*.007);c.fillStyle=`rgba(66,71,39,${.02+i*.002})`;c.fill()}
  traceLake(c,1.065);c.fillStyle=terrainPattern(c,'earth');c.fill();traceLake(c,1.025);c.fillStyle='#546954';c.fill();traceLake(c);c.fillStyle='#346967';c.fill();
  const g=c.createRadialGradient(LAKE.x-110,LAKE.y-70,50,LAKE.x,LAKE.y,440);g.addColorStop(0,'#163d45');g.addColorStop(.63,'#24585c');g.addColorStop(1,'#477d70');traceLake(c,.975);c.fillStyle=terrainPattern(c,'water');c.fill();c.save();c.globalAlpha=.5;c.fillStyle=g;c.fill();c.restore();
@@ -3646,7 +3635,7 @@ function makeLakeFloor(){const cv=document.createElement('canvas');cv.width=1100
  for(const[a,k]of [[.4,.75],[2.3,.8],[4.3,.82]]){const p=lakePoint(a,k);for(let i=0;i<5;i++){c.fillStyle='#496d42';ell(c,p.x+i*11,p.y+Math.sin(i)*12,10,7);c.fillStyle='#97a176';ell(c,p.x+i*11+1,p.y+Math.sin(i)*12,3,2)}}
  const d=LAKE.dock;c.fillStyle='#151e1b88';rr(c,d.x-24,d.y-43,225,99,4);c.fillStyle='#403727';rr(c,d.x-25,d.y-40,220,80,2);for(let x=d.x-20;x<d.x+190;x+=18){c.fillStyle=hash(x,20)>.5?'#806447':'#6f573e';rr(c,x,d.y-37,16,74,1);for(let j=0;j<5;j++){c.strokeStyle=j%2?'#392e2270':'#b19b6b50';c.lineWidth=.7;c.beginPath();c.moveTo(x+2+j*2,d.y-34);c.lineTo(x+3+j*2,d.y+30);c.stroke()}c.strokeStyle='#b49865';c.lineWidth=1;c.beginPath();c.moveTo(x+3,d.y-30);c.lineTo(x+12,d.y-30);c.stroke()}lakeFloorCache=cv;
 }
-function drawCityFloor(c){if(!cityFloorCache)makeCityFloor();if(!lakeFloorCache)makeLakeFloor();if(worldVisible(975,3480,1150))c.drawImage(cityFloorCache,80,2750);if(worldVisible(LAKE.x,LAKE.y,650)){c.drawImage(lakeFloorCache,LAKE.x-550,LAKE.y-475);drawLakeLife(c)}}
+function drawCityFloor(c){if(!cityFloorCache)makeCityFloor();if(!lakeFloorCache)makeLakeFloor();if(worldVisible(975,3480,1150))c.drawImage(cityFloorCache,80,2750,1800,1450);if(worldVisible(LAKE.x,LAKE.y,650)){c.drawImage(lakeFloorCache,LAKE.x-550,LAKE.y-475,1100,950);drawLakeLife(c)}}
 const LAKE_FISH=Array.from({length:10},(_,i)=>({phase:i*2.399,speed:.16+(i%3)*.035,r:.23+(i%4)*.12,size:8+i%4}));
 function drawLakeLife(c){c.save();traceLake(c,.95);c.clip();const time=RM?0:S.t;for(const[i,f]of LAKE_FISH.entries()){const a=f.phase+time*f.speed,x=LAKE.x+Math.cos(a)*LAKE.rx*f.r,y=LAKE.y+Math.sin(a*.94+f.phase)*LAKE.ry*f.r,angle=Math.atan2(Math.cos(a*.94+f.phase)*LAKE.ry*.94,-Math.sin(a)*LAKE.rx),shimmer=.52+Math.sin(time+i)*.1;c.save();c.translate(x,y);c.rotate(angle);c.globalAlpha=shimmer;c.fillStyle=i===0?'#cad5b9':'#355852';ell(c,0,0,f.size,f.size*.35);c.beginPath();c.moveTo(-f.size+2,0);c.lineTo(-f.size-5,4);c.lineTo(-f.size-5,-4);c.closePath();c.fill();c.fillStyle='#9aaf98';ell(c,2,-1,f.size*.5,1);c.restore()}
  for(let i=0;i<5;i++){const a=i*1.7,x=LAKE.x+Math.cos(a)*220,y=LAKE.y+Math.sin(a)*180,k=(time*.22+i*.27)%1;c.globalAlpha=(1-k)*.22;c.strokeStyle='#bbd2bc';c.lineWidth=1.3;c.beginPath();c.ellipse(x,y,8+k*34,5+k*20,0,0,Math.PI*2);c.stroke()}c.restore()}
@@ -3758,25 +3747,25 @@ const professionValidate=validateExpansionSave;validateExpansionSave=function(d)
 /* Textured exploration surfaces are baked in bounded chunks; props keep depth sorting. */
 const roadChunks=new Map();let ruinsFloor=null,mineFloor=null;
 const ROAD_SEGMENTS=MEADOW_ROADS.flatMap(road=>road.slice(1).map((p,i)=>({a:road[i],b:p})));
-function roadChunk(cx,cy){const key=cx+','+cy;if(roadChunks.has(key)){const cv=roadChunks.get(key);roadChunks.delete(key);roadChunks.set(key,cv);return cv}const cv=document.createElement('canvas');cv.width=cv.height=512;const c=cv.getContext('2d');c.translate(-cx*512,-cy*512);
+function roadChunk(cx,cy){const key=cx+','+cy;if(roadChunks.has(key)){const cv=roadChunks.get(key);roadChunks.delete(key);roadChunks.set(key,cv);return cv}const[cv,c]=groundSurface(512,512);c.translate(-cx*512,-cy*512);
  for(const{a,b}of ROAD_SEGMENTS){if(Math.max(a[0],b[0])+100<cx*512||Math.min(a[0],b[0])-100>(cx+1)*512||Math.max(a[1],b[1])+100<cy*512||Math.min(a[1],b[1])-100>(cy+1)*512)continue;const points=[a,b];for(const[width,alpha]of [[92,.08],[80,.12],[69,.22],[56,.58]]){c.save();c.globalAlpha=alpha;pathStroke(c,points,width,terrainPattern(c,'earth'));c.restore()}c.save();c.globalAlpha=.2;pathStroke(c,points,22,terrainPattern(c,'paving'));c.restore();
   const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy),nx=-dy/len,ny=dx/len;for(const sign of [-1,1])pathStroke(c,[[a[0]+nx*sign*15,a[1]+ny*sign*15],[b[0]+nx*sign*15,b[1]+ny*sign*15]],3,'rgba(34,31,21,.18)');
   for(let i=0;i<len/24;i++){const k=i*24/len,h=hash(i,a[0]+b[1]),side=(h-.5)*115,x=a[0]+dx*k+nx*side,y=a[1]+dy*k+ny*side;if(x<cx*512-10||x>(cx+1)*512+10||y<cy*512-10||y>(cy+1)*512+10)continue;if(h>.6){c.fillStyle=terrainPattern(c,'wall');c.beginPath();c.moveTo(x-3,y+2);c.lineTo(x-5,y-1);c.lineTo(x+2,y-4);c.lineTo(x+6,y+1);c.closePath();c.fill()}else if(h<.24){c.strokeStyle='#5f67432e';c.lineWidth=1;c.beginPath();c.moveTo(x,y+2);c.lineTo(x-2,y-4);c.lineTo(x+1,y);c.lineTo(x+4,y-5);c.stroke()}}}
  if(roadChunks.size>=24)roadChunks.delete(roadChunks.keys().next().value);roadChunks.set(key,cv);return cv}
-meadowRoads=function(c){if(S.zone!==1||S.scene!=='field')return;const x0=Math.floor(S.cam.x/512),x1=Math.floor((S.cam.x+VW)/512),y0=Math.floor(S.cam.y/TILT/512),y1=Math.floor((S.cam.y+VH)/TILT/512);for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++)c.drawImage(roadChunk(x,y),x*512,y*512)};
-function makeRuinsFloor(){const cv=document.createElement('canvas');cv.width=800;cv.height=700;const c=cv.getContext('2d');c.translate(400,350);for(let i=0;i<70;i++){const a=i*2.4,r=120+hash(i,70)*170;c.fillStyle='rgba(47,43,29,.08)';ell(c,Math.cos(a)*r,Math.sin(a)*r*.82,60,45)}
+meadowRoads=function(c){if(S.zone!==1||S.scene!=='field')return;const x0=Math.floor(S.cam.x/512),x1=Math.floor((S.cam.x+VW)/512),y0=Math.floor(S.cam.y/TILT/512),y1=Math.floor((S.cam.y+VH)/TILT/512);for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++)c.drawImage(roadChunk(x,y),x*512,y*512,512,512)};
+function makeRuinsFloor(){const[cv,c]=groundSurface(800,700);c.translate(400,350);for(let i=0;i<70;i++){const a=i*2.4,r=120+hash(i,70)*170;c.fillStyle='rgba(47,43,29,.08)';ell(c,Math.cos(a)*r,Math.sin(a)*r*.82,60,45)}
  c.save();c.beginPath();for(let i=0;i<28;i++){const a=i/28*Math.PI*2,r=230+hash(i,79)*25;i?c.lineTo(Math.cos(a)*r,Math.sin(a)*r*.8):c.moveTo(Math.cos(a)*r,Math.sin(a)*r*.8)}c.closePath();c.fillStyle=terrainPattern(c,'paving');c.fill();c.clip();c.fillStyle='rgba(56,67,40,.28)';c.fillRect(-270,-240,540,480);for(let i=0;i<65;i++){const x=hash(i,81)*500-250,y=hash(i,82)*420-210;c.strokeStyle=i%2?'#243126aa':'#72715866';c.lineWidth=1+hash(i,83)*2;c.beginPath();c.moveTo(x-15,y);c.lineTo(x,y+10);c.lineTo(x-8,y+20);c.lineTo(x+8,y+32);c.stroke()}c.restore();
  c.strokeStyle='#a3976644';c.lineWidth=3;c.beginPath();c.ellipse(0,0,120,100,0,0,Math.PI*2);c.stroke();c.beginPath();for(let i=0;i<6;i++){const a=i*Math.PI/3;c.moveTo(Math.cos(a)*115,Math.sin(a)*95);c.lineTo(Math.cos(a+2.1)*115,Math.sin(a+2.1)*95)}c.stroke();for(let i=0;i<30;i++){const a=i*2.4,x=Math.cos(a)*(180+hash(i,85)*100),y=Math.sin(a)*(145+hash(i,86)*85);c.fillStyle=terrainPattern(c,'wall');ell(c,x,y,4+hash(i,87)*9,3+hash(i,88)*7)}ruinsFloor=cv}
-function drawRuinsFloor(c){if(!worldVisible(MEADOW.ruins.x,MEADOW.ruins.y,500))return;if(!ruinsFloor)makeRuinsFloor();c.drawImage(ruinsFloor,MEADOW.ruins.x-400,MEADOW.ruins.y-350)}
+function drawRuinsFloor(c){if(!worldVisible(MEADOW.ruins.x,MEADOW.ruins.y,500))return;if(!ruinsFloor)makeRuinsFloor();c.drawImage(ruinsFloor,MEADOW.ruins.x-400,MEADOW.ruins.y-350,800,700)}
 function drawRuinsEnts(ents,c,st){const p=MEADOW.ruins;if(!worldVisible(p.x,p.y,550))return;for(const[x,y,h,key,flip]of [[p.x,p.y-165,165,'arch',false],[p.x-220,p.y+35,77,'rubble',false],[p.x+225,p.y+55,86,'rubble',true],[p.x+125,p.y-140,48,'rubble',true]])ents.push({y,d:()=>professionSprite(c,key,x,y,h,flip)});
  ents.push({y:p.y,d:()=>{professionSprite(c,st.rewarded?'chestOpen':'chest',p.x,p.y,55);c.save();c.translate(p.x,p.y);c.textAlign='center';label2(c,-68,st.rewarded?'أطلال الحراس · مكتملة':'صندوق عهد الحراس','#c9bb8c','12px Tajawal');c.restore();if(!st.rewarded)addLight(p.x,p.y-20,120,'210,174,90',false)}})}
 
-function makeMineFloor(){const cv=document.createElement('canvas');cv.width=1340;cv.height=1180;const c=cv.getContext('2d');c.translate(70,110);c.fillStyle=terrainPattern(c,'wall');c.fillRect(-45,-15,1280,1100);c.fillStyle='#121b1ec4';c.fillRect(-45,-15,1280,1100);
+function makeMineFloor(){const[cv,c]=groundSurface(1340,1180);c.translate(70,110);c.fillStyle=terrainPattern(c,'wall');c.fillRect(-45,-15,1280,1100);c.fillStyle='#121b1ec4';c.fillRect(-45,-15,1280,1100);
  c.save();c.beginPath();for(const[x,y]of [[100,90],[330,70],[560,96],[810,70],[1100,105],[1140,310],[1105,560],[1140,780],[1075,975],[780,1005],[590,970],[310,1010],[90,960],[55,700],[85,440],[55,240]])c.lineTo(x,y);c.closePath();c.clip();c.fillStyle=terrainPattern(c,'earth');c.fillRect(40,65,1110,945);c.fillStyle='#17202766';c.fillRect(40,65,1110,945);const path=[[580,930],[580,620],[540,300],[570,180]];pathStroke(c,path,95,'#151d1d66');pathStroke(c,path,66,terrainPattern(c,'wall'));c.fillStyle='#101a2166';c.fillRect(40,65,1110,945);
  // Embedded cart tracks, sleepers and scattered mineral chips.
  for(let y=325;y<930;y+=35){const x=y<620?540+(y-300)/320*40:580;c.fillStyle='#4b3f30';rr(c,x-35,y-5,70,10,2);c.strokeStyle='#9c896647';c.lineWidth=1;c.strokeRect(x-33,y-4,66,8)}for(const ox of [-22,22])pathStroke(c,[[580+ox,940],[580+ox,620],[540+ox,320]],3,'#8b8d81');
  for(let i=0;i<180;i++){const x=100+hash(i,741)*1000,y=130+hash(i,742)*800;c.fillStyle=i%4?'#58615b':'#94866a';ell(c,x,y,1+hash(i,743)*4,1+hash(i,744)*3)}c.restore();for(let i=0;i<7;i++){c.fillStyle='#756b5260';rr(c,535,875+i*11,90,6,2)}mineFloor=cv}
-drawMineFloor=function(c){c.fillStyle='#080e13';c.fillRect(S.cam.x-300,S.cam.y/TILT-300,VW+600,VH/TILT+600);if(!mineFloor)makeMineFloor();c.drawImage(mineFloor,-70,-110);for(const[x,y]of [[150,280],[1030,300],[170,780],[1030,790]])addLight(x,y-65,190,'222,161,92',true);for(const n of VEINS)if(n.mat==='crystal'&&oreReady(n))addLight(n.x,n.y-30,170,'124,184,220',false)};
+drawMineFloor=function(c){c.fillStyle='#080e13';c.fillRect(S.cam.x-300,S.cam.y/TILT-300,VW+600,VH/TILT+600);if(!mineFloor)makeMineFloor();c.drawImage(mineFloor,-70,-110,1340,1180);for(const[x,y]of [[150,280],[1030,300],[170,780],[1030,790]])addLight(x,y-65,190,'222,161,92',true);for(const n of VEINS)if(n.mat==='crystal'&&oreReady(n))addLight(n.x,n.y-30,170,'124,184,220',false)};
 const depletedOreImages={};
 function depletedOre(key){if(depletedOreImages[key])return depletedOreImages[key];const b=PROFESSION_ART.boxes[key];if(!b||!okImg(professionAtlas))return null;const cv=document.createElement('canvas');cv.width=b[2];cv.height=b[3];const c=cv.getContext('2d');c.drawImage(professionAtlas,...b,0,0,cv.width,cv.height);c.globalCompositeOperation='source-atop';c.fillStyle='rgba(31,40,43,.72)';c.fillRect(0,0,cv.width,cv.height);return depletedOreImages[key]=cv}
 function drawMineEntities(ents,c){for(const x of [110,350,590,830,1070])if(worldVisible(x,105,220))ents.push({y:105,d:()=>professionSprite(c,'support',x,105,145)});for(const y of [370,630,900])for(const x of [10,1190])if(worldVisible(x,y,200))ents.push({y,d:()=>professionSprite(c,'support',x,y,140,x>1000)});
@@ -3792,6 +3781,33 @@ detailedProp=function(c,type,x,y,t,h){if((S.zone===1&&S.scene==='field')||S.scen
  if(type==='wall'&&okImg(professionAtlas))return professionSprite(c,'rubble',x,y,42+h*24,h>.5);
  if((type==='cart'||type==='barrels')&&mImg(type)){const m=MCAMP[type],scale=(type==='cart'?72:48)/(m.h||100);c.save();c.translate(x,y);c.scale(scale,scale);mDraw(c,type,0,0,h>.6);c.restore();return true}}
  return explorationDetailedProp(c,type,x,y,t,h)};
+
+/* Settlement territory has no hostile spawns, pursuit, missiles or mine encounters. */
+const TOUCH_RENDER=matchMedia('(pointer:coarse)').matches;
+function groundSurface(w,h){const cv=document.createElement('canvas');cv.width=Math.ceil(w*(TOUCH_RENDER?.85:1));cv.height=Math.ceil(h*(TOUCH_RENDER?.5:1));const c=cv.getContext('2d');c.scale(cv.width/w,cv.height/h);return[cv,c]}
+function inQuietField(x,y){if(S.zone!==1||S.scene!=='field')return false;
+ if(x>=50&&x<=2050&&y>=2500&&y<=4210)return true;
+ if(Math.hypot((x-LAKE.x)/(LAKE.rx+260),(y-LAKE.y)/(LAKE.ry+400))<=1)return true;
+ if(x>=1720&&x<=2380&&y>=2940&&y<=3780)return true;
+ return Math.hypot((x-MINE.x)/300,(y-MINE.y)/490)<=1;
+}
+function isRefugeScene(){return S.scene==='mine'||(!!S.p&&inQuietField(S.p.x,S.p.y))}
+inTown=function(x=S.p?.x,y=S.p?.y){return S.scene==='mine'||inQuietField(x,y)};
+const refugeSpawn=spawnMonster;
+spawnMonster=function(){if(S.scene!=='field'||isRefugeScene())return;refugeSpawn();for(let i=S.mons.length-1;i>=0;i--)if(inQuietField(S.mons[i].x,S.mons[i].y))S.mons.splice(i,1)};
+function refillFieldPopulation(dt){if(S.scene!=='field'||isRefugeScene()||S.p.dead)return;S.spawnT=(S.spawnT||0)-dt;if(S.spawnT>0)return;const touch=matchMedia('(pointer:coarse)').matches,low=touch?12:18,cap=touch?24:MON_CAP,n=S.mons.filter(m=>m.kind!=='boss').length;S.spawnT=n<low?.35:1.6;if(n>=cap)return;const budget=Math.min(n<low?4:1,cap-n);for(let i=0;i<budget;i++)spawnMonster()}
+function cleanRefugeHostiles(after=false){S.haz=S.haz||[];if(S.scene==='mine'){S.mons.length=0;S.eproj.length=0;S.haz.length=0;return}if(S.scene!=='field'||S.zone!==1)return;
+ for(let i=S.mons.length-1;i>=0;i--){const m=S.mons[i];if(inQuietField(m.x,m.y)){if(after&&Number.isFinite(m.wildX)&&!inQuietField(m.wildX,m.wildY)){m.x=m.wildX;m.y=m.wildY;m.aggro=false;m.charge=0;m.lungeT=0;m.kb.x=m.kb.y=0;m.shotT=Math.max(1,m.shotT||0)}else{m.hp=0;S.mons.splice(i,1)}}else if(!after){m.wildX=m.x;m.wildY=m.y}}
+ for(let i=S.eproj.length-1;i>=0;i--)if(inQuietField(S.eproj[i].x,S.eproj[i].y))S.eproj.splice(i,1);
+ for(let i=S.haz.length-1;i>=0;i--)if(inQuietField(S.haz[i].x,S.haz[i].y))S.haz.splice(i,1);
+ if(isRefugeScene()){S.p.slowT=0;S.p.rootT=0}
+}
+const refugeUpdate=update;
+update=function(dt){cleanRefugeHostiles();refugeUpdate(dt);cleanRefugeHostiles(true)};
+const refugeHurtAlly=hurtAlly;
+hurtAlly=function(a,d){if(S.scene==='mine'||inQuietField(a.x,a.y))return;return refugeHurtAlly(a,d)};
+const refugeSafeProfession=safeProfession;
+safeProfession=function(){return !S.p.dead&&(isRefugeScene()||refugeSafeProfession())};
 
 /* ---------- loop ---------- */
 let last=performance.now(),lastWorldPaint=0;
