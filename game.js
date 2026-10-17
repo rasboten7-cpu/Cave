@@ -236,7 +236,7 @@ addEventListener('keydown',e=>{
   else if(k==='q'||k==='ض'){if(S.running&&!S.paused)drinkPotion()}
   else if(e.code==='KeyR'){if(S.running)openPlans()}
   else if(e.code==='KeyT'){if(S.running&&!S.paused)useCons('recall')}
-  else if(e.code==='KeyM'){cycleAudio()}
+  else if(e.code==='KeyM'){if(S.running&&!e.repeat)toggleAtlas()}
   else if(/^Digit[1-5]$/.test(e.code)){if(S.running&&!S.paused&&$('drawer').hidden)useSkill(+e.code.slice(5)-1)}
   else if(k==='escape'){if(closeExpansionTop())return;if(!$('cavePrompt').hidden)closeCavePrompt();else if(!$('soulPrompt').hidden)closeSoulPrompt();else if(!$('shop').hidden)closeShop();else if(!$('drawer').hidden)toggleInv(false)}
   else keys.add(e.code);
@@ -3808,6 +3808,90 @@ const refugeHurtAlly=hurtAlly;
 hurtAlly=function(a,d){if(S.scene==='mine'||inQuietField(a.x,a.y))return;return refugeHurtAlly(a,d)};
 const refugeSafeProfession=safeProfession;
 safeProfession=function(){return !S.p.dead&&(isRefugeScene()||refugeSafeProfession())};
+
+/* World-space cartography. One cached terrain layer, small live markers at 5 Hz. */
+const portraitRing=document.createElement('div');portraitRing.id='fieldPortrait';portraitRing.setAttribute('aria-hidden','true');
+const fieldFace=document.createElement('canvas');fieldFace.width=fieldFace.height=112;portraitRing.append(fieldFace);$('heroCard').prepend(portraitRing);
+$('hudLayer').append($('questLine'));
+const miniAtlas=document.createElement('button');miniAtlas.id='miniAtlas';miniAtlas.type='button';miniAtlas.title='خريطة المنطقة · M';miniAtlas.setAttribute('aria-label','افتح خريطة المنطقة');miniAtlas.innerHTML='<canvas id="miniAtlasCanvas" width="256" height="256" aria-hidden="true"></canvas><span class="atlas-north">ش</span><span class="atlas-name" id="miniAtlasName"></span><span class="atlas-key">⌖</span>';$('hudLayer').append(miniAtlas);
+const atlasModal=document.createElement('div');atlasModal.id='atlasModal';atlasModal.className='extra-overlay';atlasModal.hidden=true;atlasModal.innerHTML='<section id="atlasPanel" class="extra-panel" role="dialog" aria-modal="true" aria-labelledby="atlasTitle"><div class="extra-head"><div><h2 id="atlasTitle">خريطة المنطقة</h2><span id="atlasScene"></span></div><button type="button" class="extra-close" id="closeAtlas" aria-label="إغلاق الخريطة">×</button></div><canvas id="atlasCanvas" width="900" height="500" aria-label="خريطة المنطقة الحالية، اضغط لوضع علامة وجهة"></canvas><div id="atlasLegend"></div><div id="atlasFooter"><p id="atlasHint">اضغط على الخريطة لوضع علامة وجهة. الشمال أعلى الخريطة.</p><button type="button" id="clearAtlasPin">مسح العلامة</button></div></section>';$('app').append(atlasModal);
+let atlasLayer=null,atlasKey='',atlasMetrics=null,atlasPin=null,atlasPaintAt=-Infinity,atlasPortraitKey='',atlasCacheBuilds=0,atlasPaints=0;
+const ATLAS_COLORS={player:'#f6e9b1',ally:'#8bdac3',enemy:'#e96766',boss:'#f1786b',cave:'#eabd75',gate:'#9c9ded',mine:'#b7c1d3',fish:'#80c9db',city:'#d2c49b',forge:'#d1ab7a',armor:'#a8bdcf',stable:'#c5bd8b',apothecary:'#c7a1c4',mayor:'#ead17c',ruins:'#d0a886',memory:'#aaa7d8',arch:'#87b8c7',ore:'#adbfcc',exit:'#e7cda0',pin:'#f2cf6e'};
+function atlasSceneKey(){return S.zone+':'+S.scene+':'+(S.scene==='cave'?caveKey():'')}
+function atlasSceneName(){return S.scene==='mine'?'منجم السراج':S.scene==='cave'?bossDef().cave:ZONES[S.zone].title}
+function atlasBounds(){if(S.scene==='field'){const d=worldSize(S.zone);return{x0:0,y0:0,x1:d.w,y1:d.h}}if(S.scene==='mine')return{x0:40,y0:60,x1:1160,y1:980};const b=bounds();return{x0:Math.max(0,b.x0-50),y0:Math.max(0,b.y0-75),x1:b.x1+50,y1:b.y1+75}}
+function atlasFeatures(){
+ if(S.scene==='mine')return[...VEINS.map(v=>({...v,kind:'ore',name:MATS[v.mat].name})),{x:580,y:860,kind:'exit',name:'الخروج إلى المروج'}];
+ if(S.scene==='cave'){const A=artCave(),[x,y]=A?artW(A,...A.exit):[ARW/2,ARH-70];return[{x,y,kind:'exit',name:S.bossWon?'الخروج':'المخرج · يفتح بعد النصر'}]}
+ const points=CAVES.filter(v=>v.zone===S.zone).map(v=>({...v,kind:'cave',name:BOSSES[v.boss].cave}));
+ for(const g of GATES.filter(v=>v.zone===S.zone))points.push({...g,kind:'gate',locked:!!g.need&&!S.cleared[g.need],name:'بوابة '+ZONES[g.to].title+(g.need&&!S.cleared[g.need]?' · مغلقة':'')});
+ if(S.zone===1){points.push({x:970,y:2810,kind:'city',name:'مدينة السراج'},...Object.entries(SERVICES).map(([kind,v])=>({...serviceDoor(v),kind,name:v.name})),{...MINE,kind:'mine',name:'منجم السراج'},{...LAKE.dock,kind:'fish',name:'رصيف الصيد'},{...MEADOW.ruins,kind:'ruins',name:'أطلال الحراس'},{...MEADOW.memorial,kind:'memory',name:'نصب الحاج المنسي'},{...MEADOW.arch,kind:'arch',name:'قوس العودة'},{...MEADOW.homeArch,kind:'arch',name:'قوس المدينة'})}
+ else if(MERCHANTS[S.zone])points.push({...MERCHANTS[S.zone],kind:'city',name:'التاجر والورش'});
+ return points;
+}
+function atlasLine(c,points,width,color){c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.stroke()}
+function buildAtlasLayer(){const b=atlasBounds(),ratio=(b.x1-b.x0)/((b.y1-b.y0)*TILT),layer=document.createElement('canvas');layer.width=640;layer.height=Math.max(200,Math.ceil(640/ratio));const c=layer.getContext('2d'),sx=layer.width/(b.x1-b.x0),sy=layer.height/(b.y1-b.y0);c.scale(sx,sy);c.translate(-b.x0,-b.y0);const colors={1:['#263b2d','#38503a'],2:['#554432','#6a573b'],3:['#3b535b','#536b70'],4:['#20392e','#2e4838'],5:['#263c39','#354b40']},pal=colors[S.zone]||colors[1];c.fillStyle=S.scene==='field'?pal[0]:'#101b1d';c.fillRect(b.x0,b.y0,b.x1-b.x0,b.y1-b.y0);
+ if(S.scene==='field'){
+  // Cartographic grain, fixed seed: never regenerated during ordinary movement.
+  for(let i=0;i<220;i++){const x=hash(i,710+S.zone)*b.x1,y=hash(i,731+S.zone)*b.y1;c.fillStyle=i%3?pal[1]:'#101f1c';c.globalAlpha=.19;c.beginPath();c.ellipse(x,y,20+hash(i,74)*95,24+hash(i,75)*110,0,0,Math.PI*2);c.fill()}c.globalAlpha=1;
+  if(S.zone===1){for(const road of MEADOW_ROADS){atlasLine(c,road,52,'#14271f');atlasLine(c,road,25,'#9c9464')}
+   c.fillStyle='#4d5942';c.fillRect(CITY.x0,CITY.y0,CITY.x1-CITY.x0,CITY.y1-CITY.y0);for(const wall of WALL_RECTS){c.fillStyle='#b1ad88';c.fillRect(wall.x0,wall.y0,wall.x1-wall.x0,wall.y1-wall.y0)}
+   for(const road of [[[935,2850],[935,3990]],[[300,3420],[1770,3420]],[[300,3890],[1520,3890]]])atlasLine(c,road,38,'#8b8866');
+   for(const v of Object.values(SERVICES)){c.fillStyle='#a8a17e';c.fillRect(v.x-102,v.y-135,204,135);c.fillStyle='#353e30';c.fillRect(v.x-75,v.y-115,150,85)}
+   traceLake(c,1.08);c.fillStyle='#70846b';c.fill();traceLake(c);c.fillStyle='#3e7780';c.fill();traceLake(c,.75);c.fillStyle='#2b5965';c.fill();atlasLine(c,[[LAKE.dock.x-20,LAKE.dock.y],[LAKE.dock.x+190,LAKE.dock.y]],63,'#c1a17b');
+  }
+ }else if(S.scene==='mine'){
+  c.fillStyle='#46514e';c.fillRect(90,110,1020,820);c.strokeStyle='#878b75';c.lineWidth=12;c.strokeRect(90,110,1020,820);atlasLine(c,[[580,860],[580,190]],24,'#8e8571');for(let y=240;y<850;y+=75)atlasLine(c,[[540,y],[620,y]],8,'#b0a388');
+ }else{
+  c.fillStyle='#4a514a';const A=artCave();if(A){for(const poly of A.walk){c.beginPath();poly.forEach(([u,v],i)=>i?c.lineTo(u*A.kx,v*A.ky):c.moveTo(u*A.kx,v*A.ky));c.closePath();c.fill();c.strokeStyle='#858571';c.lineWidth=8;c.stroke()}}
+  else{const q=bounds();c.fillRect(q.x0,q.y0,q.x1-q.x0,q.y1-q.y0);c.fillStyle='#101b1d';for(const poly of CAVE_HOLES){c.beginPath();poly.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill()}c.fillStyle='#ac9672';const v=CAVE_BRIDGE;c.fillRect(v.x0,v.y0,v.x1-v.x0,v.y1-v.y0)}
+ }
+ atlasLayer=layer;atlasMetrics={...b,sx,sy};atlasCacheBuilds++;
+}
+function atlasIcon(c,x,y,kind,size=5,locked=false){const color=ATLAS_COLORS[kind]||'#cfbf95';c.save();c.translate(x,y);c.lineWidth=1.7;c.strokeStyle='#101a18';c.fillStyle=color;
+ if(kind==='enemy'||kind==='ally'||kind==='ore'){c.beginPath();c.arc(0,0,size*.65,0,Math.PI*2);c.fill();c.stroke()}
+ else if(kind==='cave'){c.beginPath();c.moveTo(-size,size*.6);c.lineTo(-size,-size*.4);c.quadraticCurveTo(0,-size*1.8,size,-size*.4);c.lineTo(size,size*.6);c.closePath();c.fill();c.fillStyle='#1c2720';c.fillRect(-size*.35,-size*.45,size*.7,size*1.1)}
+ else if(kind==='gate'||kind==='arch'||kind==='pin'||kind==='memory'){c.rotate(Math.PI/4);c.fillRect(-size*.65,-size*.65,size*1.3,size*1.3);c.strokeRect(-size*.65,-size*.65,size*1.3,size*1.3);if(locked){c.fillStyle='#27332e';c.fillRect(-size*.3,-size*.3,size*.6,size*.6)}}
+ else if(kind==='boss'){c.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4,r=i%2?size*.5:size*1.25;i?c.lineTo(Math.cos(a)*r,Math.sin(a)*r):c.moveTo(r,0)}c.closePath();c.fill();c.stroke()}
+ else if(kind==='fish'){c.beginPath();c.ellipse(0,0,size,size*.5,0,0,Math.PI*2);c.fill();c.beginPath();c.moveTo(size*.5,0);c.lineTo(size*1.5,-size*.7);c.lineTo(size*1.5,size*.7);c.fill()}
+ else if(kind==='mine'||kind==='forge'){c.strokeStyle=color;c.lineWidth=2;c.beginPath();c.moveTo(-size,size);c.lineTo(size,-size);c.moveTo(-size,-size*.6);c.quadraticCurveTo(size*.6,-size*1.5,size*1.2,0);c.stroke()}
+ else if(kind==='exit'){c.strokeStyle=color;c.strokeRect(-size,-size,size*2,size*2);c.beginPath();c.moveTo(-size*.6,0);c.lineTo(size*.6,0);c.lineTo(0,-size*.6);c.moveTo(size*.6,0);c.lineTo(0,size*.6);c.stroke()}
+ else{c.fillRect(-size,-size*.7,size*2,size*1.5);c.beginPath();c.moveTo(-size*1.2,-size*.7);c.lineTo(0,-size*1.5);c.lineTo(size*1.2,-size*.7);c.fill();c.stroke()}
+ c.restore();
+}
+function drawAtlas(c,full=false){if(!S.running||!S.p)return;const key=atlasSceneKey();if(atlasKey!==key){atlasKey=key;atlasPin=null;buildAtlasLayer()}const W=c.canvas.width,H=c.canvas.height,b=atlasMetrics;let sx,sy,ox,oy;
+ c.clearRect(0,0,W,H);c.fillStyle='#10211c';c.fillRect(0,0,W,H);
+ if(full){const scale=Math.min((W-64)/(b.x1-b.x0),(H-64)/((b.y1-b.y0)*TILT));sx=scale;sy=scale*TILT;ox=(W-(b.x1-b.x0)*sx)/2-b.x0*sx;oy=(H-(b.y1-b.y0)*sy)/2-b.y0*sy}
+ else{const span=S.scene==='field'?1560:Math.max(b.x1-b.x0,(b.y1-b.y0)*TILT)*1.25;sx=W/span;sy=sx*TILT;ox=W/2-S.p.x*sx;oy=H/2-S.p.y*sy}
+ c.drawImage(atlasLayer,ox+b.x0*sx,oy+b.y0*sy,(b.x1-b.x0)*sx,(b.y1-b.y0)*sy);
+ const xy=(x,y)=>[ox+x*sx,oy+y*sy],features=atlasFeatures();
+ if(atlasPin){const[x,y]=xy(atlasPin.x,atlasPin.y),[px,py]=xy(S.p.x,S.p.y);c.strokeStyle='#e5c87b99';c.lineWidth=1.5;c.setLineDash([4,5]);c.beginPath();c.moveTo(px,py);c.lineTo(x,y);c.stroke();c.setLineDash([])}
+ for(const f of features){let[x,y]=xy(f.x,f.y);if(!full&&Math.hypot(x-W/2,y-H/2)>W*.45){if(!['gate','cave','mine','fish'].includes(f.kind))continue;const a=Math.atan2(y-H/2,x-W/2);x=W/2+Math.cos(a)*W*.435;y=H/2+Math.sin(a)*H*.435;c.globalAlpha=.6}atlasIcon(c,x,y,f.kind,full?6:6.5,f.locked);c.globalAlpha=1;
+  if(full&&!['forge','armor','stable','mayor','apothecary','arch','ore'].includes(f.kind)){c.font='24px Tajawal, sans-serif';c.textAlign='center';c.fillStyle='#eadfc1';c.strokeStyle='#10201c';c.lineWidth=4;const text=f.name.replace(' · مغلقة',' 🔒');const labelY=y<42?y+25:y-14;c.strokeText(text,x,labelY);c.fillText(text,x,labelY)}
+ }
+ for(const m of S.mons){if(m.hp<=0||(!full&&Math.hypot(m.x-S.p.x,(m.y-S.p.y)*TILT)>720))continue;const[x,y]=xy(m.x,m.y);atlasIcon(c,x,y,m.kind==='boss'?'boss':'enemy',m.kind==='boss'?7:4)}
+ for(const a of S.army)if(!a.down){const[x,y]=xy(a.x,a.y);atlasIcon(c,x,y,'ally',5)}
+ if(atlasPin){let[x,y]=xy(atlasPin.x,atlasPin.y);if(!full){const a=Math.atan2(y-H/2,x-W/2),r=Math.min(W*.39,Math.hypot(x-W/2,y-H/2));x=W/2+Math.cos(a)*r;y=H/2+Math.sin(a)*r}atlasIcon(c,x,y,'pin',8)}
+ const[px,py]=xy(S.p.x,S.p.y),face=S.p.face||{x:0,y:-1};c.save();c.translate(px,py);c.rotate(Math.atan2(face.y*TILT,face.x)+Math.PI/2);c.fillStyle=ATLAS_COLORS.player;c.strokeStyle='#142019';c.lineWidth=2;c.beginPath();c.moveTo(0,-10);c.lineTo(7,7);c.lineTo(0,3);c.lineTo(-7,7);c.closePath();c.fill();c.stroke();c.restore();
+ if(full){atlasModal._transform={sx,sy,ox,oy};c.strokeStyle='#81917466';c.lineWidth=1;c.strokeRect(ox+b.x0*sx,oy+b.y0*sy,(b.x1-b.x0)*sx,(b.y1-b.y0)*sy)}atlasPaints++;
+}
+function paintFieldPortrait(){if(!HR_LOADED)return;const key=[look.skinTone,look.hairDye,look.eye,look.hair].join('|');if(key===atlasPortraitKey)return;atlasPortraitKey=key;const c=fieldFace.getContext('2d'),head=hrImage('front','head',HERO_DATA.views.front.head);c.clearRect(0,0,112,112);if(head){const k=Math.min(92/head.width,104/head.height);c.imageSmoothingEnabled=false;c.drawImage(head,(112-head.width*k)/2,(112-head.height*k)/2,head.width*k,head.height*k)}}
+function atlasHint(){if(atlasPin){const d=Math.round(Math.hypot(atlasPin.x-S.p.x,(atlasPin.y-S.p.y)*TILT));$('atlasHint').textContent=(atlasPin.name||'علامة وجهة')+' · المسافة '+AR(d)+' · العلامة للإرشاد فقط'}else $('atlasHint').textContent='اضغط على الخريطة لوضع علامة وجهة. الشمال أعلى الخريطة.';$('clearAtlasPin').disabled=!atlasPin}
+function openAtlas(){if(!S.running||S.paused)return;openExtra('atlasModal');if(atlasModal.hidden)return;$('atlasTitle').textContent=atlasSceneName();$('atlasScene').textContent=S.scene==='field'?'خريطة المنطقة · موقعك والمعالم · الشمال ↑':S.scene==='mine'?'عروق الخامات والمخرج · منطقة آمنة':'ساحة الزعيم · المخرج يفتح بعد النصر';const kinds=S.scene==='mine'?['player','ally','ore','exit','pin']:S.scene==='cave'?['player','ally','boss','exit','pin']:['player','ally','enemy','cave','gate','city',...(S.zone===1?['mine','fish','forge','armor','stable','apothecary','mayor']:[]),'pin'];const names={player:'أنت',ally:'أرواحك',enemy:'وحش',boss:'الزعيم',ore:'خام',exit:'مخرج',cave:'مغارة',gate:'بوابة',city:'مدينة / تاجر',mine:'منجم',fish:'صيد',forge:'أسلحة',armor:'دروع',stable:'إسطبل',apothecary:'جرعات',mayor:'مهمات',pin:'وجهتك'};$('atlasLegend').innerHTML=kinds.map(k=>'<span><i style="--dot:'+ATLAS_COLORS[k]+'"></i>'+names[k]+'</span>').join('');drawAtlas($('atlasCanvas').getContext('2d'),true);atlasHint()}
+function toggleAtlas(){if(!atlasModal.hidden)closeAtlas();else openAtlas()}
+function closeAtlas(){closeExtra('atlasModal');miniAtlas.focus()}
+miniAtlas.onclick=toggleAtlas;$('closeAtlas').onclick=closeAtlas;$('clearAtlasPin').onclick=()=>{atlasPin=null;drawAtlas($('atlasCanvas').getContext('2d'),true);atlasHint();atlasPaintAt=-Infinity};
+$('atlasCanvas').onclick=e=>{const r=e.currentTarget.getBoundingClientRect(),t=atlasModal._transform;if(!t)return;const u=(e.clientX-r.left)*900/r.width,v=(e.clientY-r.top)*500/r.height,x=(u-t.ox)/t.sx,y=(v-t.oy)/t.sy,b=atlasMetrics;if(x<b.x0||x>b.x1||y<b.y0||y>b.y1)return;const near=atlasFeatures().find(f=>Math.hypot((f.x-x)*t.sx,(f.y-y)*t.sy)<18);atlasPin=near?{x:near.x,y:near.y,name:near.name}:{x,y};drawAtlas($('atlasCanvas').getContext('2d'),true);atlasHint();atlasPaintAt=-Infinity};
+const atlasSettlePause=settlePause;settlePause=function(){atlasSettlePause();if(!atlasModal.hidden)S.paused=true};
+const atlasCloseTop=closeExpansionTop;closeExpansionTop=function(){if(!atlasModal.hidden){closeAtlas();return true}return atlasCloseTop()};
+const atlasExitTrial=exitTrial;exitTrial=function(){atlasModal.hidden=true;atlasPin=null;atlasExitTrial()};
+const fieldHud=hud;hud=function(){fieldHud();paintFieldPortrait();portraitRing.style.setProperty('--xp-turn',clamp(S.p.exp/need(S.p.lvl),0,1)*360+'deg');const now=performance.now();if(now-atlasPaintAt>=200||atlasKey!==atlasSceneKey()){atlasPaintAt=now;drawAtlas($('miniAtlasCanvas').getContext('2d'));$('miniAtlasName').textContent=atlasSceneName();if(!atlasModal.hidden){drawAtlas($('atlasCanvas').getContext('2d'),true);atlasHint()}}};
+// The compass rim replaces the old floating edge arrows.
+edgeArrow=function(){};
+addEventListener('keydown',e=>{if(!typing()&&e.code==='KeyV')cycleAudio()});
+
+// The atlas owns input while open, including inventory and movement shortcuts.
+addEventListener('keydown',e=>{if(!atlasModal.hidden&&!['KeyM','Escape'].includes(e.code)){e.preventDefault();e.stopImmediatePropagation()}},true);
 
 /* ---------- loop ---------- */
 let last=performance.now(),lastWorldPaint=0;
