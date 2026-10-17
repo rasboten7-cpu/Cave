@@ -3893,6 +3893,32 @@ addEventListener('keydown',e=>{if(!typing()&&e.code==='KeyV')cycleAudio()});
 // The atlas owns input while open, including inventory and movement shortcuts.
 addEventListener('keydown',e=>{if(!atlasModal.hidden&&!['KeyM','Escape'].includes(e.code)){e.preventDefault();e.stopImmediatePropagation()}},true);
 
+/* Equip owned items only. Power is monotonic for each armor/accessory type. */
+const quickEquipBar=document.createElement('div');quickEquipBar.id='quickEquipBar';quickEquipBar.innerHTML='<button type="button" id="equipBestBtn">تجهيز الأفضل</button><label><input id="keepWeaponType" type="checkbox" checked> حافظ على نوع سلاحي</label><small>أعلى قوة لكل خانة، والسلاح بحسب الضرر بالثانية. تأثيرات الزعماء لا تدخل في المقارنة.</small>';
+document.querySelector('#drawer .inv-main').prepend(quickEquipBar);
+function bestOwnedPlan(keepType=true){
+ const equipped=new Set(EQK.map(k=>S[k])),plan=Object.fromEntries(EQK.map(k=>[k,S[k]||0])),type=eqItem()?.type;
+ const score=it=>WEAP[it.type]?playerAtk(it)*WEAP[it.type].pow/WEAP[it.type].cd:it.power;
+ const ranked=typeFilter=>S.inv.filter(typeFilter).slice().sort((a,b)=>score(b)-score(a)||Number(equipped.has(b.uid))-Number(equipped.has(a.uid))||Number(!!b.uniq)-Number(!!a.uniq)||b.rar-a.rar||b.grade-a.grade||a.uid-b.uid);
+ const weapon=ranked(it=>!!WEAP[it.type]&&(!keepType||it.type===type))[0];if(weapon)plan.eq=weapon.uid;
+ for(const[t,k]of GSLOTS)if(t!=='ring'){const it=ranked(it=>it.type===t)[0];plan[k]=it?.uid||0}
+ // Keep the two strongest distinct rings and retain their existing hands where possible.
+ const rings=ranked(it=>it.type==='ring').slice(0,2),remaining=new Set(rings.map(it=>it.uid));
+ for(const k of ['eqRing1','eqRing2']){if(remaining.has(S[k])){plan[k]=S[k];remaining.delete(S[k])}else plan[k]=0}
+ for(const k of ['eqRing1','eqRing2'])if(!plan[k]&&remaining.size){plan[k]=remaining.values().next().value;remaining.delete(plan[k])}
+ return plan;
+}
+function equipBestOwned(){
+ if(!S.running||S.p.dead||$('drawer').hidden)return false;
+ const plan=bestOwnedPlan($('keepWeaponType').checked),changed=EQK.filter(k=>(S[k]||0)!==plan[k]).length,tool=equippedTool();
+ Object.assign(S,plan);cancelProfession('',true);atkHeld=false;S.sel=S.eq;S.p.hp=Math.min(S.p.hp,mhp());
+ if(changed||tool)saveSoon();renderInv();if(invTab==='gear'&&!eqHeroRaf)eqHeroLoop();hud();
+ toast(changed?'جهّزت أفضل معداتك · تغيّرت '+AR(changed)+' خانات':tool?'عدت إلى سلاحك؛ أفضل معداتك مجهّزة.':'أفضل معداتك مجهّزة بالفعل.','#b8d1a0');
+ return changed;
+}
+$('equipBestBtn').onclick=equipBestOwned;
+const quickEquipRender=renderInv;renderInv=function(){quickEquipRender();quickEquipBar.hidden=!['bag','gear'].includes(invTab);$('equipBestBtn').disabled=!!S.p.dead};
+
 /* ---------- loop ---------- */
 let last=performance.now(),lastWorldPaint=0;
 function frame(now){
